@@ -10,7 +10,23 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG)
 endif ()
 
+set(USE_CCACHE "YES")
+set(CCACHE_OPTIONS "CCACHE_CPP2=true;CCACHE_SLOPPINESS=clang_index_store")
+
+CPMAddPackage(
+        NAME Ccache.cmake
+        GITHUB_REPOSITORY TheLartians/Ccache.cmake
+        VERSION 1.2.5
+        GIT_PROGRESS ON
+        GIT_SHALLOW ON
+        PATCHES
+            patches/ccache.cmake.patch
+)
+
 # --- LLVM --- #
+
+set(LLVM_ENABLE_PROJECTS "clang;clang-tools-extra" CACHE STRING "")
+set(LLVM_ENABLE_RTTI "ON" CACHE STRING "")
 
 CPMAddPackage(
         NAME llvm-project
@@ -21,15 +37,6 @@ CPMAddPackage(
         GIT_SHALLOW ON
         SOURCE_SUBDIR "llvm"
 )
-
-set(LLVM_TARGETS_TO_BUILD "X86" CACHE STRING "")
-set(LLVM_ENABLE_PROJECTS "llvm;clang;clang-tools-extra" CACHE STRING "")
-set(LLVM_ENABLE_RTTI "ON" CACHE STRING "")
-
-#add_subdirectory(
-#        ${llvm-project_SOURCE_DIR}/llvm
-#        ${CMAKE_BINARY_DIR}/_deps/llvm-build
-#)
 
 add_library(refl-cpp_llvm INTERFACE)
 target_link_libraries(refl-cpp_llvm INTERFACE

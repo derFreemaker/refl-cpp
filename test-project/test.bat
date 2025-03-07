@@ -1,0 +1,1 @@
+.\build\debug\refl-cpp.exe .\test-project\main.cpp -p ./build/debug/
