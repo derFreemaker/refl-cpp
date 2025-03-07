@@ -19,32 +19,40 @@ CPMAddPackage(
         GIT_TAG llvmorg-19.1.7
         GIT_PROGRESS ON
         GIT_SHALLOW ON
-        DOWNLOAD_ONLY YES
+        SOURCE_SUBDIR "llvm"
 )
 
 set(LLVM_TARGETS_TO_BUILD "X86" CACHE STRING "")
 set(LLVM_ENABLE_PROJECTS "llvm;clang;clang-tools-extra" CACHE STRING "")
+set(LLVM_ENABLE_RTTI "ON" CACHE STRING "")
 
-add_subdirectory(
-        ${llvm-project_SOURCE_DIR}/llvm
-        ${CMAKE_BINARY_DIR}/_deps/llvm-build
-)
+#add_subdirectory(
+#        ${llvm-project_SOURCE_DIR}/llvm
+#        ${CMAKE_BINARY_DIR}/_deps/llvm-build
+#)
 
 add_library(refl-cpp_llvm INTERFACE)
 target_link_libraries(refl-cpp_llvm INTERFACE
         clangTooling
-        clangASTMatchers
-        clangBasic
-        clangAST
         clangFrontend
+        clangSerialization
+        clangDriver
+        clangParse
+        clangSema
+        clangAnalysis
+        clangEdit
+        clangAST
+        clangLex
+        clangBasic
+        LLVMCore
         LLVMSupport
 )
 target_include_directories(refl-cpp_llvm INTERFACE
         ${llvm-project_SOURCE_DIR}/clang/include
         ${llvm-project_SOURCE_DIR}/llvm/include
 
-        ${CMAKE_BINARY_DIR}/_deps/llvm-build/include
-        ${CMAKE_BINARY_DIR}/_deps/llvm-build/tools/clang/include
+        ${CMAKE_BINARY_DIR}/_deps/llvm-project-build/include
+        ${CMAKE_BINARY_DIR}/_deps/llvm-project-build/tools/clang/include
 )
 
 # --- LLVM --- #
