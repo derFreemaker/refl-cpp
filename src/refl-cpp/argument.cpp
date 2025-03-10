@@ -1,18 +1,14 @@
 #include "refl-cpp/argument.hpp"
 
-#include "refl-cpp/refl-cpp.hpp"
-#include "refl-cpp/database.hpp"
+#include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
 template <typename T>
-Argument::Argument(const char* name)
-    : m_Name(name), m_TypeID(Reflect<T>()) {}
-
-const char* Argument::GetName() const {
-    return m_Name;
-}
+Argument::Argument(T& data)
+    : m_Data(&data),
+      m_Type(Reflect<T>()) {}
 
 const Type& Argument::GetType() const {
-    return ReflectionDatabase::Instance().GetType(m_TypeID);
+    return Reflect(m_Type);
 }
 }

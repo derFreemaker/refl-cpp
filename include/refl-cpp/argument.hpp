@@ -5,18 +5,26 @@
 namespace ReflCpp {
 struct Type;
 
-struct Argument {
-    template <typename T>
-    Argument(const char* name);
+struct ArgumentInfo {
+    const char* name;
+    const TypeID type;
+};
 
-    [[nodiscard]]
-    const char* GetName() const;
-    
+struct Argument {
+private:
+    void* m_Data;
+    const TypeID m_Type;
+
+public:
+    template <typename T>
+    Argument(T& data);
+
     [[nodiscard]]
     const Type& GetType() const;
 
-private:
-    const char* m_Name;
-    const TypeID m_TypeID;
+    [[nodiscard]]
+    void* GetData() const {
+        return m_Data;
+    }
 };
 }

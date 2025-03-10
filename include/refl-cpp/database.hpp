@@ -24,7 +24,7 @@ public:
     }
 
     template <typename T>
-    const Type* RegisterType() {
+    const Type& RegisterType() {
         const ReflectTypeData& type_data = ReflectData<T>::Create();
         const auto type_id = TypeID(m_types_data.size() + 1);
 
@@ -35,12 +35,12 @@ public:
 
         const auto type = new Type(type_id, type_data, print_func);
         m_types_data.push_back(type);
-        return type;
+        return *type;
     }
 
     [[nodiscard]]
     const Type& GetType(const TypeID id) const {
-        if (id.id > m_types_data.size()) {
+        if (id.IsInvalid() || id.id > m_types_data.size()) {
             throw std::invalid_argument("Invalid type");
         }
 

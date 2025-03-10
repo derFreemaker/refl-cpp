@@ -9,18 +9,15 @@
 namespace kpop {
 class REFLECT() Test {
 public:
-    explicit Test(int* foo)
-        : foo(foo) {}
-
-private:
-    int* foo;
+    void foo() {
+        std::cout << "foo" << std::endl;
+    }
 };
 }
 
 struct REFLECT() Test2 : kpop::Test {
-    Test2(int* foo, const std::optional<bool>& foo1)
-        : Test(foo),
-          foo(foo1) {}
+    Test2(const std::optional<bool>& foo1)
+        : foo(foo1) {}
 
     std::optional<bool> foo;
 };
@@ -38,7 +35,10 @@ int main(int argc, char* argv[]) {
 
     info.Print(std::cout);
     std::cout << "\n";
-    
+
+    ReflCpp::Reflect<char*[]>().Print(std::cout);
+    std::cout << "\n";
+
     info2.Print(std::cout);
     std::cout << "\n";
 }

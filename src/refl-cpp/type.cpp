@@ -1,6 +1,6 @@
 #include "refl-cpp/type.hpp"
 
-#include "refl-cpp/refl-cpp.hpp"
+#include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
 const Type& Type::GetInner() const {

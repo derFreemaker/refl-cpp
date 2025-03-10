@@ -8,7 +8,7 @@ template <typename T>
 struct ReflectDataInstance {
     static const Type& Instance() {
         auto& database = ReflectionDatabase::Instance();
-        static auto instance = database.RegisterType<T>()->GetID();
+        static auto instance = database.RegisterType<T>().GetID();
         return database.GetType(instance);
     }
 };

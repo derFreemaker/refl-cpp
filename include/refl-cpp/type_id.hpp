@@ -3,22 +3,30 @@
 #include <cstdint>
 
 namespace ReflCpp {
-
 struct TypeID {
-    const uint32_t id;
+    static const TypeID Invalid;
+
+    const uint32_t id = Invalid;
 
     operator uint32_t() const {
         return id;
     }
-    
-    TypeID() = delete;
-    
+
     constexpr TypeID(const uint32_t id)
         : id(id) {}
 
     bool operator==(const TypeID other) const {
         return id == other.id;
     }
-};
 
+    [[nodiscard]]
+    bool IsValid() const {
+        return *this != Invalid;
+    }
+
+    [[nodiscard]]
+    bool IsInvalid() const {
+        return *this == Invalid;
+    }
+};
 }

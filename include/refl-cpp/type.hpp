@@ -7,6 +7,7 @@
 #include "refl-cpp/type_id.hpp"
 #include "refl-cpp/reflect_data.hpp"
 #include "refl-cpp/reflect_printer.hpp"
+#include "refl-cpp/method.hpp"
 
 namespace ReflCpp {
 struct Type {
@@ -133,6 +134,8 @@ private:
     const bool m_IsReference;
     const bool m_IsConst;
     const bool m_IsVolatile;
+
+    const std::vector<Method> m_Methods;
 
     const ReflectPrintFunc m_PrintFunc;
 };

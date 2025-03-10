@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <optional>
-#include <functional>
 
+#include "refl-cpp/method_data.hpp"
 #include "refl-cpp/type_id.hpp"
 
 namespace ReflCpp {
@@ -21,7 +21,7 @@ struct ReflectTypeData {
     bool is_const = false;
     bool is_volatile = false;
     
-    //TODO: add some kind of print method
+    std::vector<MethodData> methods;
 };
 
 template <typename T>

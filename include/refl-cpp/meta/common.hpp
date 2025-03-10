@@ -5,7 +5,7 @@
 template <typename T>
 struct ReflCpp::ReflectData<T[]> {
     static ReflectTypeData Create() {
-        return ReflectTypeData{
+        return {
             .name = "Array",
             .inner = Reflect<T>(),
             .is_array = true,

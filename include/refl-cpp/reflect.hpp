@@ -14,3 +14,5 @@ inline const Type& Reflect(const TypeID id) {
     return ReflectionDatabase::Instance().GetType(id);
 }
 }
+
+#include "refl-cpp/meta/builtin.hpp"
