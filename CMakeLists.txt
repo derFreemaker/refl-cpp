@@ -68,9 +68,14 @@ add_library(refl-cpp STATIC include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/function.hpp
         include/refl-cpp/argument.hpp
         include/refl-cpp/database.hpp
+        include/refl-cpp/reflect_printer.hpp
+        include/refl-cpp/reflect.hpp
         
         src/refl-cpp/argument.cpp
         src/refl-cpp/type.cpp
+
+        include/refl-cpp/meta/std.hpp
+        include/refl-cpp/meta/common.hpp
 )
 
 add_executable(refl-cpp_generator

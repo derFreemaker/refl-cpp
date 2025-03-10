@@ -8,6 +8,7 @@ project(refl-cpp-test)
 
 add_executable(refl-cpp-test
         main.cpp
+        refl-cpp.generated.hpp
 )
 target_link_libraries(refl-cpp-test
         refl-cpp

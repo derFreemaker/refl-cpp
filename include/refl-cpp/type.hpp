@@ -6,17 +6,9 @@
 
 #include "refl-cpp/type_id.hpp"
 #include "refl-cpp/reflect_data.hpp"
+#include "refl-cpp/reflect_printer.hpp"
 
 namespace ReflCpp {
-
-struct Type;
-using ReflectPrintFunc = std::function<void(std::ostream& stream, const Type& type)>;
-
-template <typename T>
-concept has_reflect_printer = requires(std::ostream& stream, const Type& type) {
-    { ReflectData<T>::Print(stream, type) } -> std::same_as<void>;
-};
-
 struct Type {
     Type() = delete;
     Type(Type&) = delete;
@@ -26,6 +18,7 @@ struct Type {
         : m_ID(id),
 
           m_Name(data.name),
+          m_Namespace(data._namespace),
           m_Bases(data.bases),
           m_Inner(data.inner),
 
@@ -51,8 +44,17 @@ struct Type {
         return m_Name;
     }
 
-    operator const char*() const {
-        return m_Name;
+    [[nodiscard]]
+    const char* GetNamespace() const {
+        if (m_Namespace.has_value()) {
+            return m_Namespace.value();
+        }
+        return "";
+    }
+
+    [[nodiscard]]
+    bool InNamespace() const {
+        return m_Namespace.has_value();
     }
 
     [[nodiscard]]
@@ -112,6 +114,9 @@ struct Type {
             return m_PrintFunc(stream, *this);
         }
 
+        if (InNamespace()) {
+            stream << GetNamespace() << "::";
+        }
         stream << GetName();
     }
 
@@ -119,6 +124,7 @@ private:
     const TypeID m_ID;
 
     const char* m_Name;
+    std::optional<const char*> m_Namespace;
     const std::vector<TypeID> m_Bases;
     const std::optional<TypeID> m_Inner;
 

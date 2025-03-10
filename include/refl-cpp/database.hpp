@@ -30,7 +30,7 @@ public:
 
         ReflectPrintFunc print_func = nullptr;
         if constexpr (has_reflect_printer<T>) {
-            print_func = &ReflectData<T>::Print;
+            print_func = &ReflectPrinter<T>::Print;
         }
 
         const auto type = new Type(type_id, type_data, print_func);
