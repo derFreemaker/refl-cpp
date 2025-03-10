@@ -4,14 +4,12 @@ set(CMAKE_CXX_STANDARD 20)
 include(cmake/CPM.cmake)
 
 project(refl-cpp)
+include_directories(include)
 
 include_directories("src")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG)
 endif ()
-
-set(USE_CCACHE "YES")
-set(CCACHE_OPTIONS "CCACHE_CPP2=true;CCACHE_SLOPPINESS=clang_index_store")
 
 CPMAddPackage(
         NAME Ccache.cmake
@@ -24,7 +22,6 @@ CPMAddPackage(
 )
 
 # --- LLVM --- #
-
 set(LLVM_ENABLE_PROJECTS "clang;clang-tools-extra" CACHE STRING "")
 set(LLVM_ENABLE_RTTI "ON" CACHE STRING "")
 
@@ -55,18 +52,32 @@ target_link_libraries(refl-cpp_llvm INTERFACE
         LLVMSupport
 )
 target_include_directories(refl-cpp_llvm INTERFACE
-        ${llvm-project_SOURCE_DIR}/clang/include
         ${llvm-project_SOURCE_DIR}/llvm/include
-
         ${CMAKE_BINARY_DIR}/_deps/llvm-project-build/include
+
+        ${llvm-project_SOURCE_DIR}/clang/include
         ${CMAKE_BINARY_DIR}/_deps/llvm-project-build/tools/clang/include
 )
-
 # --- LLVM --- #
 
-add_executable(refl-cpp
-        src/main.cpp
+add_library(refl-cpp STATIC include/refl-cpp/refl-cpp.hpp
+        include/refl-cpp/type_id.hpp
+        include/refl-cpp/type.hpp
+        include/refl-cpp/reflect_data.hpp
+        include/refl-cpp/reflect_data_instance.hpp
+        include/refl-cpp/function.hpp
+        include/refl-cpp/argument.hpp
+        include/refl-cpp/database.hpp
+        
+        src/refl-cpp/argument.cpp
+        src/refl-cpp/type.cpp
 )
-target_link_libraries(refl-cpp PUBLIC
+
+add_executable(refl-cpp_generator
+        src/generator/main.cpp
+)
+target_link_libraries(refl-cpp_generator PUBLIC
         refl-cpp_llvm
 )
+
+add_subdirectory(test-project)

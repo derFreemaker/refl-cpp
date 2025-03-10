@@ -1,1 +1,1 @@
-.\build\debug\refl-cpp.exe .\test-project\main.cpp -p ./build/debug/
+.\build\release\refl-cpp_generator.exe .\test-project\main.cpp -p ./build/debug/

@@ -1,3 +1,5 @@
+#include <clang/ExtractAPI/API.h>
+
 #include "clang/AST/AST.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Attr.h"
@@ -7,14 +9,11 @@
 #include "clang/Tooling/Tooling.h"
 #include <llvm/Support/raw_ostream.h>
 
-using namespace clang;
-using namespace clang::tooling;
-
 static llvm::cl::OptionCategory ReflectCategory("reflect-tool options");
 
-bool IsMarked(const TagDecl* Decl) {
+bool isMarked(const clang::TagDecl* Decl) {
     return std::any_of(Decl->attrs().begin(), Decl->attrs().end(), [](const auto* Attr) {
-        if (const auto* Ann = dyn_cast<AnnotateAttr>(Attr))
+        if (const auto* Ann = dyn_cast<clang::AnnotateAttr>(Attr))
             if (Ann->getAnnotation() == "reflect")
                 return true;
 
@@ -25,43 +24,55 @@ bool IsMarked(const TagDecl* Decl) {
 // Visitor that checks for REFLECT-marked classes/structs and enums.
 // Define your REFLECT macro as:
 //   #define REFLECT __attribute__((annotate("reflect")))
-class ReflectVisitor : public RecursiveASTVisitor<ReflectVisitor> {
+class ReflectVisitor : public clang::RecursiveASTVisitor<ReflectVisitor> {
 public:
-    explicit ReflectVisitor(ASTContext* Context) : Context(Context) {}
+    explicit ReflectVisitor(clang::ASTContext* Context) : Context(Context) {}
 
     // ReSharper disable once CppDFAConstantFunctionResult
-    static bool VisitCXXRecordDecl(const CXXRecordDecl* Decl) {
-        if (!Decl->isCompleteDefinition() || !IsMarked(Decl))
+    static bool VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) {
+        if (!decl->isCompleteDefinition() || !isMarked(decl))
             return true;
 
-        llvm::outs() << "Reflect: " << Decl->getNameAsString();
+        llvm::outs() << "\nReflect: " << decl->getNameAsString();
 
-        if (Decl->isClass()) {
+        if (decl->isClass()) {
             llvm::outs() << " class";
         }
-        else if (Decl->isStruct()) {
+        else if (decl->isStruct()) {
             llvm::outs() << " struct";
         }
 
-        if (const auto enclosing_context = Decl->getEnclosingNamespaceContext(); enclosing_context->getDeclKind() == Decl::Kind::Namespace) {
-            const auto _namespace = clang::cast<clang::NamespaceDecl>(enclosing_context);
+        if (decl->getNumBases() + decl->getNumVBases() > 0) {
+            llvm::ListSeparator sep;
+            llvm::outs() << " with bases: ";
+            for (const auto& base : decl->bases()) {
+                const clang::CXXRecordDecl* baseClass = base.getType()->getAsCXXRecordDecl();
+                if (baseClass && isMarked(baseClass)) {
+                    llvm::outs() << sep << baseClass->getNameAsString();
+                }
+            }
+        }
+
+        if (const auto enclosingContext = decl->getEnclosingNamespaceContext();
+            enclosingContext->getDeclKind() == clang::Decl::Kind::Namespace) {
+            const auto _namespace = clang::cast<clang::NamespaceDecl>(enclosingContext);
             llvm::outs() << " in namespace: " << _namespace->getNameAsString();
         }
-        
+
         llvm::outs() << "\n";
 
-        for (const auto* member : Decl->decls()) {
+        for (const auto* member : decl->decls()) {
             llvm::outs() << "  Member (" << member->getDeclKindName() << "): ";
-            if (const auto* field = dyn_cast<FieldDecl>(member)) {
-                auto lang_options = LangOptions();
-                lang_options.Bool = true;
+            if (const auto* field = dyn_cast<clang::FieldDecl>(member)) {
+                auto langOptions = clang::LangOptions();
+                langOptions.Bool = true;
 
-                llvm::outs() << field->getNameAsString() << " type: " << field->getType().getAsString(lang_options);
+                llvm::outs() << field->getNameAsString() << " type: " << field->getType().getAsString(langOptions);
             }
-            else if (const auto* method = dyn_cast<CXXMethodDecl>(member)) {
+            else if (const auto* method = dyn_cast<clang::CXXMethodDecl>(member)) {
                 llvm::outs() << method->getNameAsString();
             }
-            else if (const auto* inner = dyn_cast<CXXRecordDecl>(member)) {
+            else if (const auto* inner = dyn_cast<clang::CXXRecordDecl>(member)) {
                 llvm::outs() << inner->getQualifiedNameAsString();
             }
             else {
@@ -74,11 +85,11 @@ public:
     }
 
     // ReSharper disable once CppDFAConstantFunctionResult
-    static bool VisitEnumDecl(const EnumDecl* Decl) {
-        if (!Decl->isCompleteDefinition() || !IsMarked(Decl))
+    static bool VisitEnumDecl(const clang::EnumDecl* Decl) {
+        if (!Decl->isCompleteDefinition() || !isMarked(Decl))
             return true;
 
-        llvm::outs() << "Reflect: " << Decl->getName() << " enum\n";
+        llvm::outs() << "\nReflect: " << Decl->getName() << " enum\n";
 
         for (const auto* enumerator : Decl->enumerators()) {
             llvm::outs() << "  Enumerator: " << enumerator->getNameAsString() << "\n";
@@ -88,15 +99,15 @@ public:
     }
 
 private:
-    ASTContext* Context;
+    clang::ASTContext* Context;
 };
 
-class ReflectASTConsumer : public ASTConsumer {
+class ReflectASTConsumer : public clang::ASTConsumer {
 public:
-    explicit ReflectASTConsumer(ASTContext* Context)
+    explicit ReflectASTConsumer(clang::ASTContext* Context)
         : Visitor(Context) {}
 
-    void HandleTranslationUnit(ASTContext& Context) override {
+    void HandleTranslationUnit(clang::ASTContext& Context) override {
         Visitor.TraverseDecl(Context.getTranslationUnitDecl());
     }
 
@@ -104,16 +115,16 @@ private:
     ReflectVisitor Visitor;
 };
 
-class ReflectFrontendAction : public ASTFrontendAction {
+class ReflectFrontendAction : public clang::ASTFrontendAction {
 public:
-    bool BeginSourceFileAction(CompilerInstance& CI) override {
+    bool BeginSourceFileAction(clang::CompilerInstance& CI) override {
         // Use an IgnoringDiagConsumer to drop all diagnostics.
-        CI.getDiagnostics().setClient(new IgnoringDiagConsumer(), /*ShouldOwnClient=*/true);
+        CI.getDiagnostics().setClient(new clang::IgnoringDiagConsumer(), /*ShouldOwnClient=*/true);
         return ASTFrontendAction::BeginSourceFileAction(CI);
     }
 
-    std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance& CI,
-                                                   StringRef InFile) override {
+    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& CI,
+                                                          clang::StringRef InFile) override {
         return std::make_unique<ReflectASTConsumer>(&CI.getASTContext());
     }
 };

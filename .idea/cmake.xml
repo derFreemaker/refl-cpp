@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeSharedSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" GENERATION_DIR="build/debug" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DUSE_CCACHE=&quot;YES&quot; -DCCACHE_OPTIONS=&quot;CCACHE_CPP2=true;CCACHE_SLOPPINESS=clang_index_store&quot;" />
+      <configuration PROFILE_NAME="Release" ENABLED="true" GENERATION_DIR="build/release" CONFIG_NAME="Release" GENERATION_OPTIONS="-DUSE_CCACHE=&quot;YES&quot; -DCCACHE_OPTIONS=&quot;CCACHE_CPP2=true;CCACHE_SLOPPINESS=clang_index_store&quot;" />
+    </configurations>
+  </component>
+</project>
