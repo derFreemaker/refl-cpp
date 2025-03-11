@@ -9,25 +9,17 @@
 namespace ReflCpp {
 struct Method {
 private:
-    void* m_MethodPtr;
+    MethodBase& m_Func;
 
     const char* m_Name;
-    const TypeID m_ReturnType = TypeID::Invalid;
     const std::vector<ArgumentInfo> m_Arguments;
 
-    const bool m_IsStatic;
-    const bool m_IsConst;
-
 public:
-    Method(const MethodData& data)
-        : m_MethodPtr(data.method_ptr),
-
-          m_Name(data.name),
-          m_ReturnType(data.return_type),
-          m_Arguments(data.arguments),
-
-          m_IsStatic(data.is_static),
-          m_IsConst(data.is_const) {}
+    template <typename Func_>
+    Method(const MethodData<Func_>& builder)
+        : m_Func(*new MethodWrapper<Func_>(builder.func)),
+          m_Name(builder.name),
+          m_Arguments(builder.arguments) {}
 
     [[nodiscard]]
     const char* GetName() const {
@@ -35,7 +27,9 @@ public:
     }
 
     [[nodiscard]]
-    const Type& GetReturnType() const;
+    const Type& GetReturnType() const {
+        return Reflect(m_Func.GetReturnType());
+    }
 
     [[nodiscard]]
     const std::vector<ArgumentInfo>& GetArguments() const {
@@ -43,20 +37,23 @@ public:
     }
 
     [[nodiscard]]
+    const ArgumentInfo& GetArgument(const size_t index) const {
+        return m_Arguments[index];
+    }
+
+    [[nodiscard]]
     bool IsStatic() const {
-        return m_IsStatic;
+        return m_Func.GetIsStatic();
     }
 
     [[nodiscard]]
     bool IsConst() const {
-        return m_IsConst;
+        return m_Func.GetIsConst();
     }
 
-    template <typename ClassType, typename A1>
-    Variant Invoke(Variant& instance, std::vector<Variant>& args) const {
-        return (instance.GetValue<ClassType>().*m_MethodPtr)(
-            args[0].GetValue<A1>()
-        );
+    [[nodiscard]]
+    Variant Invoke(const Variant& instance, const ArgumentList& args) const {
+        return m_Func.Invoke(instance, args);
     }
 };
 }

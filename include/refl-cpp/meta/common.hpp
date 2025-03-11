@@ -7,7 +7,7 @@ struct ReflCpp::ReflectData<T[]> {
     static ReflectTypeData Create() {
         return {
             .name = "Array",
-            .inner = Reflect<T>(),
+            .inner = ReflectID<T>(),
             .is_array = true,
         };
     }
@@ -24,9 +24,9 @@ struct ReflCpp::ReflectPrinter<T[]> {
 template <typename T>
 struct ReflCpp::ReflectData<T*> {
     static ReflectTypeData Create() {
-        return ReflectTypeData{
+        return {
             .name = "Pointer",
-            .inner = Reflect<T>(),
+            .inner = ReflectID<T>(),
             .is_pointer = true,
         };
     }
@@ -43,9 +43,9 @@ struct ReflCpp::ReflectPrinter<T*> {
 template <typename T>
 struct ReflCpp::ReflectData<T&> {
     static ReflectTypeData Create() {
-        return ReflectTypeData{
+        return {
             .name = "Reference",
-            .inner = Reflect<T>(),
+            .inner = ReflectID<T>(),
             .is_reference = true,
         };
     }
@@ -62,9 +62,9 @@ struct ReflCpp::ReflectPrinter<T&> {
 template <typename T>
 struct ReflCpp::ReflectData<const T> {
     static ReflectTypeData Create() {
-        return ReflectTypeData{
+        return {
             .name = "Constant",
-            .inner = Reflect<T>(),
+            .inner = ReflectID<T>(),
             .is_const = true,
         };
     }
@@ -81,9 +81,9 @@ struct ReflCpp::ReflectPrinter<const T> {
 template <typename T>
 struct ReflCpp::ReflectData<volatile T> {
     static ReflectTypeData Create() {
-        return ReflectTypeData{
+        return {
             .name = "Volatile",
-            .inner = Reflect<T>(),
+            .inner = ReflectID<T>(),
             .is_volatile = true,
         };
     }

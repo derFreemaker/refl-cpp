@@ -1,6 +1,10 @@
 #pragma once
 
+#include <stdexcept>
+#include <vector>
+
 #include "refl-cpp/type_id.hpp"
+#include "refl-cpp/variant.hpp"
 
 namespace ReflCpp {
 struct Type;
@@ -10,21 +14,6 @@ struct ArgumentInfo {
     const TypeID type;
 };
 
-struct Argument {
-private:
-    void* m_Data;
-    const TypeID m_Type;
+typedef std::vector<Variant> ArgumentList;
 
-public:
-    template <typename T>
-    Argument(T& data);
-
-    [[nodiscard]]
-    const Type& GetType() const;
-
-    [[nodiscard]]
-    void* GetData() const {
-        return m_Data;
-    }
-};
 }

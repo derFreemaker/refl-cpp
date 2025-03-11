@@ -1,2 +1,10 @@
+# Editor files
+**/.idea/*
+**/.vs/*
+**/.vscode/*
+
+# dont ignore 
+!**/.idea/cmake.xml
+
 # build files
 **/build

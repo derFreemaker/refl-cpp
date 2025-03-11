@@ -40,7 +40,7 @@ public:
 
     [[nodiscard]]
     const Type& GetType(const TypeID id) const {
-        if (id.IsInvalid() || id.id > m_types_data.size()) {
+        if (id.IsInvalid() || id > m_types_data.size()) {
             throw std::invalid_argument("Invalid type");
         }
 

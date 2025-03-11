@@ -3,6 +3,7 @@
 #include <vector>
 #include <optional>
 #include <ostream>
+#include <sstream>
 
 #include "refl-cpp/type_id.hpp"
 #include "refl-cpp/reflect_data.hpp"
@@ -29,14 +30,12 @@ struct Type {
           m_IsConst(data.is_const),
           m_IsVolatile(data.is_volatile),
 
+          m_Methods(data.methods),
+
           m_PrintFunc(print_func) {}
 
     [[nodiscard]]
     TypeID GetID() const {
-        return m_ID;
-    }
-
-    operator TypeID() const {
         return m_ID;
     }
 
@@ -69,8 +68,24 @@ struct Type {
     }
 
     [[nodiscard]]
-    const Type& GetInner() const;
+    const Type& GetInner() const {
+        return Reflect(m_Inner.value());
+    }
 
+    [[nodiscard]]
+    const std::vector<Method>& GetMethods() const {
+        return m_Methods;
+    }
+
+    std::optional<Method> GetMethod(const char* name) const {
+        for (const Method& method : m_Methods) {
+            if (method.GetName() == name) {
+                return method;
+            }
+        }
+        return std::nullopt;
+    }
+    
     // flags
 
     [[nodiscard]]
@@ -119,6 +134,21 @@ struct Type {
             stream << GetNamespace() << "::";
         }
         stream << GetName();
+    }
+
+    [[nodiscard]]
+    std::string Dump() const {
+        std::stringstream stream;
+        if (m_PrintFunc != nullptr) {
+            m_PrintFunc(stream, *this);
+            return stream.str();
+        }
+
+        if (InNamespace()) {
+            stream << GetNamespace() << "::";
+        }
+        stream << GetName();
+        return stream.str();
     }
 
 private:

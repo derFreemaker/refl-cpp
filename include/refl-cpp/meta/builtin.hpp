@@ -20,17 +20,39 @@
     };
 
 REFLECT_BUILTIN_TYPE(void, "Void")
+
 REFLECT_BUILTIN_TYPE(bool, "Boolean")
+
 REFLECT_BUILTIN_TYPE(char, "Character")
 
+template <size_t Size_>
+struct ReflCpp::ReflectData<char[Size_]> {
+    static ReflectTypeData Create() {
+        return {.name = "String"};
+    }
+};
+
+template <size_t Size_>
+struct ReflCpp::ReflectPrinter<char[Size_]> {
+    static void Print(std::ostream& stream, const Type& type) {
+        stream << "char*";
+    }
+};
+
 REFLECT_BUILTIN_TYPE(uint8_t, "Unsigned 8 Bit Integer")
+
 REFLECT_BUILTIN_TYPE(uint16_t, "Unsigned 16 Bit Integer")
+
 REFLECT_BUILTIN_TYPE(uint32_t, "Unsigned 32 Bit Integer")
+
 REFLECT_BUILTIN_TYPE(uint64_t, "Unsigned 64 Bit Integer")
 
 REFLECT_BUILTIN_TYPE(int8_t, "Unsigned 8 Bit Integer")
+
 REFLECT_BUILTIN_TYPE(int16_t, "Unsigned 16 Bit Integer")
+
 REFLECT_BUILTIN_TYPE(int32_t, "Unsigned 32 Bit Integer")
+
 REFLECT_BUILTIN_TYPE(int64_t, "Unsigned 64 Bit Integer")
 
 #undef REFLECT_BUILTIN_TYPE

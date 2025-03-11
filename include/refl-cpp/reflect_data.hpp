@@ -3,7 +3,7 @@
 #include <vector>
 #include <optional>
 
-#include "refl-cpp/method_data.hpp"
+#include "refl-cpp/method.hpp"
 #include "refl-cpp/type_id.hpp"
 
 namespace ReflCpp {
@@ -21,7 +21,7 @@ struct ReflectTypeData {
     bool is_const = false;
     bool is_volatile = false;
     
-    std::vector<MethodData> methods;
+    std::vector<Method> methods;
 };
 
 template <typename T>

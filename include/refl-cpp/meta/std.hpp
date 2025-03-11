@@ -1,5 +1,8 @@
 #pragma once
 
+#include <optional>
+#include <vector>
+
 #include "refl-cpp/reflect.hpp"
 
 template <typename T>
@@ -8,7 +11,7 @@ struct ReflCpp::ReflectData<std::optional<T>> {
         return ReflectTypeData{
             .name = "optional",
             ._namespace = "std",
-            .inner = Reflect<T>(),
+            .inner = ReflectID<T>(),
         };
     }
 };
@@ -28,7 +31,7 @@ struct ReflCpp::ReflectData<std::vector<T>> {
         return ReflectTypeData{
             .name = "vector",
             ._namespace = "std",
-            .inner = Reflect<T>(),
+            .inner = ReflectID<T>(),
         };
     }
 };

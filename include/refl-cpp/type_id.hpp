@@ -4,10 +4,16 @@
 
 namespace ReflCpp {
 struct TypeID {
-    static const TypeID Invalid;
+private:
+    static constexpr auto m_Invalid = 0;
+    
+    uint32_t id = m_Invalid;
 
-    const uint32_t id = Invalid;
-
+public:
+    static constexpr auto Invalid() {
+        return TypeID(m_Invalid);
+    }
+    
     operator uint32_t() const {
         return id;
     }
@@ -21,12 +27,12 @@ struct TypeID {
 
     [[nodiscard]]
     bool IsValid() const {
-        return *this != Invalid;
+        return this->id != m_Invalid;
     }
 
     [[nodiscard]]
     bool IsInvalid() const {
-        return *this == Invalid;
+        return this->id == m_Invalid;
     }
 };
 }

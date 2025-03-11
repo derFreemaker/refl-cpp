@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "refl-cpp/type_id.hpp"
+#include "refl-cpp/declare_reflect.hpp"
 
 namespace ReflCpp {
 struct Variant {
@@ -14,7 +15,10 @@ public:
     Variant() = delete;
 
     template <typename T>
-    Variant(T& data);
+        requires (!std::is_same_v<T, Variant>)
+    Variant(T& data)
+        : m_Data((void*)&data),
+          m_Type(ReflectID<T>()) {}
 
     Variant(void* data, const TypeID type_id)
         : m_Data(data), m_Type(type_id) {}
@@ -22,13 +26,25 @@ public:
     [[nodiscard]]
     void* GetValue(const TypeID type) const {
         if (m_Type != type) {
-            throw std::invalid_argument("Variant::GetData(TypeID) called with not stored type id");
+            throw std::invalid_argument("Variant::GetValue(TypeID) called with not stored type id");
         }
         return m_Data;
     }
-    
+
     template <typename T>
     [[nodiscard]]
-    T* GetValue() const;
+    T* GetValue() const {
+        if (m_Type != ReflectID<T>()) {
+            throw std::invalid_argument("Variant::GetValue() with not stored type");
+        }
+
+        return static_cast<T*>(m_Data);
+    }
+
+    [[nodiscard]]
+    void* GetDataRaw() const {
+        return m_Data;
+    }
+    
 };
 }

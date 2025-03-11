@@ -3,16 +3,14 @@
 #include <vector>
 
 #include "refl-cpp/argument.hpp"
+#include "refl-cpp/method_wrapper.hpp"
 
 namespace ReflCpp {
+template <typename Func_>
 struct MethodData {
-    void* ptr;
+    const char* name = "$NONE$";
+    Func_ func;
 
-    const char* name;
-    TypeID return_type;
     std::vector<ArgumentInfo> arguments;
-
-    bool is_static;
-    bool is_const;
 };
 }

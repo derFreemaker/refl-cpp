@@ -1,44 +1,47 @@
-#include <array>
-#include <cstdio>
 #include <optional>
 #include <iostream>
 
 #include "refl-cpp/refl-cpp.hpp"
-#include "refl-cpp.generated.hpp"
 
-namespace kpop {
-class REFLECT() Test {
-public:
-    void foo() {
-        std::cout << "foo" << std::endl;
-    }
-};
-}
+#include "test.hpp"
 
-struct REFLECT() Test2 : kpop::Test {
+struct Test2 : kpop::Test {
     Test2(const std::optional<bool>& foo1)
         : foo(foo1) {}
 
     std::optional<bool> foo;
 };
 
-template <>
-struct ReflCpp::ReflectPrinter<Test2> {
-    static void Print(std::ostream& stream, const Type& type) {
-        stream << "Test2 Print Override";
-    }
-};
+// namespace ReflCpp {
+// template <>
+// struct ReflectData<Test2> : ReflectTypeData {
+//     static ReflectTypeData Create() {
+//         return {
+//             .name = "Test2",
+//             .bases = {
+//                 Reflect<kpop::Test>()
+//             }
+//         };
+//     }
+// };
+// }
+// template <>
+// struct ReflCpp::ReflectPrinter<Test2> {
+//     static void Print(std::ostream& stream, const Type& type) {
+//         stream << "Test2 Print Override";
+//     }
+// };
 
-int main(int argc, char* argv[]) {
-    const auto& info = ReflCpp::Reflect<std::optional<kpop::Test>>();
-    const auto& info2 = ReflCpp::Reflect<std::optional<Test2*&>[]>();
+int main() {
+    kpop::Test test;
 
-    info.Print(std::cout);
-    std::cout << "\n";
+    auto name = ReflCpp::Reflect<kpop::Test>().GetMethod("foo")->GetArgument(0).name;
+    ReflCpp::Variant arg(name);
 
-    ReflCpp::Reflect<char*[]>().Print(std::cout);
-    std::cout << "\n";
-
-    info2.Print(std::cout);
-    std::cout << "\n";
+    (void)ReflCpp::Reflect<kpop::Test>()
+          .GetMethod("foo")->Invoke(
+              test, {
+                  arg
+              }
+          );
 }
