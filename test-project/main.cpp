@@ -14,8 +14,4 @@ int main() {
                   "test"
               }
           );
-
-    auto database = ReflCpp::ReflectionDatabase::Instance();
-
-    printf("test");
 }
