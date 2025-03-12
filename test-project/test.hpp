@@ -6,8 +6,9 @@
 
 namespace kpop {
 struct REFLECT() Test {
-    void foo(const char* str) {
-        std::cout << str << ReflCpp::Reflect<Test>().GetMethod("foo")->GetArgument(0).name << std::endl;
+    template <std::indirectly_writable T>
+    void foo(T str, const char* test) {
+        std::cout << str << test << std::endl;
     }
 };
 }

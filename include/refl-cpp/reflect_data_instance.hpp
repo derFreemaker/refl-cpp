@@ -12,7 +12,7 @@ struct ReflectDataInstance {
         return instance;
     }
 
-    static const Type& Instance() {
+    static const Type& Type() {
         const auto& database = ReflectionDatabase::Instance();
         return database.GetType(ID());
     }

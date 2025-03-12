@@ -41,7 +41,8 @@ int main() {
     (void)ReflCpp::Reflect<kpop::Test>()
           .GetMethod("foo")->Invoke(
               test, {
-                  arg
+                  "test",
+                  "test"
               }
           );
 }

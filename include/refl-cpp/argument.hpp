@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdexcept>
 #include <vector>
 
 #include "refl-cpp/type_id.hpp"
@@ -14,6 +13,6 @@ struct ArgumentInfo {
     const TypeID type;
 };
 
-typedef std::vector<Variant> ArgumentList;
+typedef const std::vector<Variant>& ArgumentList;
 
 }

@@ -6,10 +6,11 @@
 #include "refl-cpp/reflect_data_instance.hpp"
 
 namespace ReflCpp {
+
 template <typename T>
 [[nodiscard]]
 const Type& Reflect() {
-    return ReflectDataInstance<T>::Instance();
+    return ReflectDataInstance<T>::Type();
 }
 
 template <typename T>

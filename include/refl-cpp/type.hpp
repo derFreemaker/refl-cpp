@@ -8,7 +8,6 @@
 #include "refl-cpp/type_id.hpp"
 #include "refl-cpp/reflect_data.hpp"
 #include "refl-cpp/reflect_printer.hpp"
-#include "refl-cpp/method.hpp"
 
 namespace ReflCpp {
 struct Type {
@@ -169,4 +168,9 @@ private:
 
     const ReflectPrintFunc m_PrintFunc;
 };
+}
+
+inline std::ostream& operator<<(std::ostream& stream, const ReflCpp::Type& type) {
+    type.Print(stream);
+    return stream;
 }

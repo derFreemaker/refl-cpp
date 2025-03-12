@@ -11,6 +11,6 @@ struct MethodData {
     const char* name = "$NONE$";
     Func_ func;
 
-    std::vector<ArgumentInfo> arguments;
+    std::vector<const char*> arguments;
 };
 }

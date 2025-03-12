@@ -10,6 +10,8 @@ if (NOT DISABLE_REFLCPP_GENERATOR)
 endif()
 
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
+        include/refl-cpp/common/list_seperator.hpp
+        
         include/refl-cpp/type_id.hpp
         include/refl-cpp/type.hpp
         include/refl-cpp/reflect_data.hpp
@@ -28,6 +30,9 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/meta/builtin.hpp
         include/refl-cpp/meta/common.hpp
         include/refl-cpp/meta/std.hpp
+ 
+        include/refl-cpp/impl/method.hpp
+        include/refl-cpp/impl/impl.hpp
 )
 
 add_subdirectory(test-project)

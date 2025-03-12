@@ -29,23 +29,25 @@ struct MethodBase {
     virtual int8_t GetArgumentsCount() const = 0;
 
     [[nodiscard]]
-    virtual Variant Invoke(const Variant& instance, const ArgumentList& arguments) const = 0;
+    virtual Variant Invoke(const Variant& instance, ArgumentList arguments) const = 0;
 };
 
 namespace detail {
 template <typename Func_, size_t... Indices>
-Variant InvokeImpl(const Variant& instance, Func_ func, const ArgumentList& arguments, std::index_sequence<Indices...>) {
+Variant InvokeImpl(const Variant& instance, Func_ func, ArgumentList arguments, std::index_sequence<Indices...>) {
     if constexpr (std::is_void_v<typename FunctionTraits<Func_>::ReturnType>) {
-        (instance.GetValue<typename FunctionTraits<Func_>::ClassType>()->*func)(
-            static_cast<typename FunctionTraits<Func_>::template Arg<Indices>::Type>(arguments[Indices].GetDataRaw())...
+        (instance.GetValue<typename FunctionTraits<Func_>::ClassType>().*func)(
+            arguments[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
         );
 
         return Variant(nullptr, ReflectID<void>());
     }
     else {
         return Variant(
-            (instance.GetValue<typename FunctionTraits<Func_>::ClassType>()->*func)(
-                static_cast<typename FunctionTraits<Func_>::template Arg<Indices>::Type>(arguments[Indices].GetDataRaw())...
+            (instance.GetValue<typename FunctionTraits<Func_>::ClassType>().*func)(
+                arguments[Indices].GetValue
+                    < typename FunctionTraits<Func_>::template Arg<Indices>::Type >
+                        ()...
             )
         );
     }
@@ -88,7 +90,7 @@ public:
     }
 
     [[nodiscard]]
-    Variant Invoke(const Variant& instance, const ArgumentList& arguments) const override {
+    Variant Invoke(const Variant& instance, ArgumentList arguments) const override {
         if (arguments.size() != m_FuncTraits::ArgCount) {
             throw std::invalid_argument("incorrect number of arguments");
         }

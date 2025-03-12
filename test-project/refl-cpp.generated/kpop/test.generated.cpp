@@ -7,14 +7,12 @@ ReflectTypeData ReflectData<kpop::Test>::Create() {
         .name = "Test",
         ._namespace = "kpop",
         .methods = {
-            MethodData {
+            MethodData{
                 .name = "foo",
                 .func = &kpop::Test::foo,
                 .arguments = {
-                    {
-                        .name = "str",
-                        .type = ReflectID<const char*>(),
-                    }
+                    "str",
+                    "test",
                 }
             },
         },
