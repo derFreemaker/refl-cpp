@@ -6,8 +6,7 @@
 
 namespace kpop {
 struct REFLECT() Test {
-    template <std::indirectly_writable T>
-    void foo(T str, const char* test) {
+    void foo(const char* str, const char* test) {
         std::cout << str << test << std::endl;
     }
 };

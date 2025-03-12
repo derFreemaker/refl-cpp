@@ -13,6 +13,11 @@ struct ArgumentInfo {
     const TypeID type;
 };
 
-typedef const std::vector<Variant>& ArgumentList;
+struct ArgumentList {
+    std::vector<Variant> data;
 
+    template <typename... Args>
+    ArgumentList(Args&&... args)
+        : data({Variant(std::forward<Args>(args))...}) {}
+};
 }

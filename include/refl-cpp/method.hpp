@@ -47,7 +47,11 @@ public:
 
     [[nodiscard]]
     ArgumentInfo GetArgument(const size_t index) const {
-        return {m_ArgumentNames[1], m_Func.GetArgumentsTypes()[index]};
+        if (index >= m_ArgumentNames.size()) {
+            throw std::invalid_argument("index out of range");
+        }
+        
+        return {m_ArgumentNames[index], m_Func.GetArgumentsTypes()[index]};
     }
 
     [[nodiscard]]
@@ -61,7 +65,7 @@ public:
     }
 
     [[nodiscard]]
-    Variant Invoke(const Variant& instance, ArgumentList args) const {
+    Variant Invoke(const Variant& instance, const ArgumentList& args) const {
         return m_Func.Invoke(instance, args);
     }
 
