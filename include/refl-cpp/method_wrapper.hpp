@@ -1,6 +1,5 @@
 #pragma once
 
-#include <optional>
 #include <vector>
 
 #include "refl-cpp/variant.hpp"
@@ -14,10 +13,10 @@ struct MethodBase {
     virtual ~MethodBase() = default;
 
     [[nodiscard]]
-    virtual bool GetIsStatic() const = 0;
+    virtual bool IsStatic() const = 0;
 
     [[nodiscard]]
-    virtual bool GetIsConst() const = 0;
+    virtual bool IsConst() const = 0;
 
     [[nodiscard]]
     virtual TypeID GetReturnType() const = 0;
@@ -29,18 +28,47 @@ struct MethodBase {
     virtual int8_t GetArgumentsCount() const = 0;
 
     [[nodiscard]]
+    virtual Variant Invoke(const ArgumentList& arguments) const = 0;
+
+    [[nodiscard]]
     virtual Variant Invoke(const Variant& instance, const ArgumentList& arguments) const = 0;
 };
 
 namespace detail {
 template <typename Func_, size_t... Indices>
+Variant InvokeImpl(Func_ func, const ArgumentList& arguments, std::index_sequence<Indices...>) {
+    if (arguments.data.size() != FunctionTraits<Func_>::ArgCount) {
+        throw std::invalid_argument("incorrect number of arguments");
+    }
+
+    if constexpr (std::is_void_v<typename FunctionTraits<Func_>::ReturnType>) {
+        func(
+            arguments.data[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
+        );
+
+        return Variant::Void();
+    }
+    else {
+        return Variant(
+            func(
+                arguments.data[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
+            )
+        );
+    }
+}
+
+template <typename Func_, size_t... Indices>
 Variant InvokeImpl(const Variant& instance, Func_ func, const ArgumentList& arguments, std::index_sequence<Indices...>) {
+    if (arguments.data.size() != FunctionTraits<Func_>::ArgCount) {
+        throw std::invalid_argument("incorrect number of arguments");
+    }
+
     if constexpr (std::is_void_v<typename FunctionTraits<Func_>::ReturnType>) {
         (instance.GetValue<typename FunctionTraits<Func_>::ClassType>().*func)(
             arguments.data[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
         );
 
-        return Variant(nullptr, ReflectID<void>());
+        return Variant::Void();
     }
     else {
         return Variant(
@@ -63,12 +91,12 @@ public:
         : m_Func(func) {}
 
     [[nodiscard]]
-    constexpr bool GetIsStatic() const override {
+    constexpr bool IsStatic() const override {
         return m_FuncTraits::IsStatic;
     }
 
     [[nodiscard]]
-    constexpr bool GetIsConst() const override {
+    constexpr bool IsConst() const override {
         return m_FuncTraits::IsConst;
     }
 
@@ -88,12 +116,23 @@ public:
     }
 
     [[nodiscard]]
-    Variant Invoke(const Variant& instance, const ArgumentList& arguments) const override {
-        if (arguments.data.size() != m_FuncTraits::ArgCount) {
-            throw std::invalid_argument("incorrect number of arguments");
+    Variant Invoke(const ArgumentList& arguments) const override {
+        if constexpr (!m_FuncTraits::IsStatic) {
+            throw std::invalid_argument("not a static method");
         }
+        else {
+            return detail::InvokeImpl(m_Func, arguments, std::make_index_sequence<m_FuncTraits::ArgCount>{});
+        }
+    }
 
-        return detail::InvokeImpl(instance, m_Func, arguments, std::make_index_sequence<m_FuncTraits::ArgCount>{});
+    [[nodiscard]]
+    Variant Invoke(const Variant& instance, const ArgumentList& arguments) const override {
+        if constexpr (m_FuncTraits::IsStatic) {
+            return Invoke(arguments);
+        }
+        else {
+            return detail::InvokeImpl(instance, m_Func, arguments, std::make_index_sequence<m_FuncTraits::ArgCount>{});
+        }
     }
 };
 };

@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "type.hpp"
 #include "refl-cpp/method_data.hpp"
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/argument.hpp"
@@ -25,6 +24,16 @@ public:
     [[nodiscard]]
     const char* GetName() const {
         return m_Name;
+    }
+
+    [[nodiscard]]
+    bool IsStatic() const {
+        return m_Func.IsStatic();
+    }
+
+    [[nodiscard]]
+    bool IsConst() const {
+        return m_Func.IsConst();
     }
 
     [[nodiscard]]
@@ -53,17 +62,12 @@ public:
         
         return {m_ArgumentNames[index], m_Func.GetArgumentsTypes()[index]};
     }
-
+    
     [[nodiscard]]
-    bool IsStatic() const {
-        return m_Func.GetIsStatic();
+    Variant Invoke(const ArgumentList& args) const {
+        return m_Func.Invoke(args);
     }
-
-    [[nodiscard]]
-    bool IsConst() const {
-        return m_Func.GetIsConst();
-    }
-
+    
     [[nodiscard]]
     Variant Invoke(const Variant& instance, const ArgumentList& args) const {
         return m_Func.Invoke(instance, args);

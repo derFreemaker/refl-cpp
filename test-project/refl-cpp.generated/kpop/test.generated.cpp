@@ -1,5 +1,5 @@
 #include "test.generated.hpp"
-#include "../../test.hpp"
+#include "test.hpp"
 
 namespace ReflCpp {
 ReflectTypeData ReflectData<kpop::Test>::Create() {

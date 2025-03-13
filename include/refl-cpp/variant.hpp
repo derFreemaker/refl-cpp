@@ -13,6 +13,10 @@ private:
     const TypeID m_Type;
 
 public:
+    static Variant Void() {
+        return Variant(nullptr, ReflectID<void>());
+    }
+    
     Variant() = delete;
 
     template <typename T>
@@ -27,6 +31,10 @@ public:
     template <typename T>
     [[nodiscard]]
     T GetValue() const {
+        if (this->m_Type == Void().m_Type) {
+            throw std::runtime_error("cannot get value from an void type.");
+        }
+        
         return std::any_cast<T>(m_Data);
     }
 
