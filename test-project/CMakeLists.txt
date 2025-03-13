@@ -16,5 +16,5 @@ target_link_libraries(refl-cpp-test
         refl-cpp
 )
 target_include_directories(refl-cpp-test PUBLIC
-        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/test-project
 )

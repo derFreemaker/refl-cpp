@@ -21,6 +21,7 @@ public:
 
     using ClassType = C_;
     using ReturnType = R_;
+    static constexpr bool HasReturn = !std::is_same_v<R_, void>;
 
     static constexpr uint8_t ArgCount = m_ArgCount;
     using Args = std::tuple<Args_...>;
