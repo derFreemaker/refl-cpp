@@ -24,7 +24,7 @@ bool isMarked(const clang::TagDecl* Decl) {
 // Visitor that checks for REFLECT-marked classes/structs and enums.
 // Define your REFLECT macro as:
 //   #define REFLECT __attribute__((annotate("reflect")))
-class ReflectVisitor : public clang::RecursiveASTVisitor<ReflectVisitor> {
+class ReflectVisitor final : public clang::RecursiveASTVisitor<ReflectVisitor> {
 public:
     explicit ReflectVisitor(clang::ASTContext* Context) : Context(Context) {}
 
@@ -102,7 +102,7 @@ private:
     clang::ASTContext* Context;
 };
 
-class ReflectASTConsumer : public clang::ASTConsumer {
+class ReflectASTConsumer final : public clang::ASTConsumer {
 public:
     explicit ReflectASTConsumer(clang::ASTContext* Context)
         : Visitor(Context) {}
@@ -115,7 +115,7 @@ private:
     ReflectVisitor Visitor;
 };
 
-class ReflectFrontendAction : public clang::ASTFrontendAction {
+class ReflectFrontendAction final : public clang::ASTFrontendAction {
 public:
     bool BeginSourceFileAction(clang::CompilerInstance& CI) override {
         // Use an IgnoringDiagConsumer to drop all diagnostics.

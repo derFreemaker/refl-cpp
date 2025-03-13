@@ -6,8 +6,10 @@
 
 namespace kpop {
 struct REFLECT() Test {
-    static void foo(const char* str, const char* test) {
-        std::cout << str << " " << test << std::endl;
+    int test = 0;
+
+    void foo() {
+        std::cout << test << std::endl;
     }
 };
 }

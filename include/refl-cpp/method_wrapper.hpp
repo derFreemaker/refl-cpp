@@ -28,7 +28,7 @@ struct MethodBase {
     virtual int8_t GetArgumentsCount() const = 0;
 
     [[nodiscard]]
-    virtual Variant Invoke(const ArgumentList& arguments) const = 0;
+    virtual Variant InvokeStatic(const ArgumentList& arguments) const = 0;
 
     [[nodiscard]]
     virtual Variant Invoke(const Variant& instance, const ArgumentList& arguments) const = 0;
@@ -99,7 +99,7 @@ public:
     }
 
     [[nodiscard]]
-    Variant Invoke(const ArgumentList& arguments) const override {
+    Variant InvokeStatic(const ArgumentList& arguments) const override {
         if constexpr (!Traits::IsStatic) {
             throw std::invalid_argument("not a static method");
         }
@@ -114,8 +114,8 @@ public:
             return detail::InvokeFunction(m_Func, arguments);
         }
         else {
-            auto func = instance.GetValue<typename Traits::ClassType>().*m_Func;
-            return detail::InvokeFunction(func, arguments, std::make_index_sequence<Traits::ArgCount>{});
+            auto func = &(instance.GetValue<typename Traits::ClassType>().*m_Func);
+            return detail::InvokeFunction(func, arguments);
         }
     }
 };

@@ -8,7 +8,7 @@ struct Test;
 
 namespace ReflCpp {
 template <>
-struct ReflectData<kpop::Test> : ReflectTypeData {
-    static ReflectTypeData Create();
+struct ReflectData<kpop::Test> {
+    static TypeData Create();
 };
 }

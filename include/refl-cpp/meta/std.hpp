@@ -3,12 +3,12 @@
 #include <optional>
 #include <vector>
 
-#include "refl-cpp/reflect.hpp"
+#include "refl-cpp/declare_reflect.hpp"
 
 template <typename T>
 struct ReflCpp::ReflectData<std::optional<T>> {
-    static ReflectTypeData Create() {
-        return ReflectTypeData{
+    static TypeData Create() {
+        return {
             .name = "optional",
             ._namespace = "std",
             .inner = ReflectID<T>(),
@@ -27,8 +27,8 @@ struct ReflCpp::ReflectPrinter<std::optional<T>> {
 
 template <typename T>
 struct ReflCpp::ReflectData<std::vector<T>> {
-    static ReflectTypeData Create() {
-        return ReflectTypeData{
+    static TypeData Create() {
+        return {
             .name = "vector",
             ._namespace = "std",
             .inner = ReflectID<T>(),

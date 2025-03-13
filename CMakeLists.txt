@@ -33,6 +33,9 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
  
         include/refl-cpp/impl/method.hpp
         include/refl-cpp/impl/impl.hpp
+        include/refl-cpp/member.hpp
+        include/refl-cpp/member_data.hpp
+        include/refl-cpp/field_traits.hpp
 )
 
 add_subdirectory(test-project)

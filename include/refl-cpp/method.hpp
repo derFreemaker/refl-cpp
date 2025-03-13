@@ -5,6 +5,7 @@
 #include "refl-cpp/method_data.hpp"
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/argument.hpp"
+#include "refl-cpp/method_wrapper.hpp"
 
 namespace ReflCpp {
 struct Method {
@@ -64,8 +65,13 @@ public:
     }
     
     [[nodiscard]]
-    Variant Invoke(const ArgumentList& args) const {
-        return m_Func.Invoke(args);
+    Variant InvokeStatic(const ArgumentList& args) const {
+        return m_Func.InvokeStatic(args);
+    }
+
+    [[nodiscard]]
+    Variant Invoke(const Variant& instance) const {
+        return m_Func.Invoke(instance, {});
     }
     
     [[nodiscard]]

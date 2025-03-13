@@ -25,15 +25,16 @@ public:
 
     template <typename T>
     const Type& RegisterType() {
-        const ReflectTypeData& type_data = ReflectData<T>::Create();
+        const TypeData& type_data = ReflectData<T>::Create();
         const auto type_id = TypeID(m_types_data.size() + 1);
 
-        ReflectPrintFunc print_func = nullptr;
-        if constexpr (has_reflect_printer<T>) {
-            print_func = &ReflectPrinter<T>::Print;
+        TypeOptions type_options{};
+        
+        if constexpr (detail::HasReflectPrinter<T>) {
+            type_options.print_func = ReflectPrinter<T>::Print;
         }
 
-        const auto type = new Type(type_id, type_data, print_func);
+        const auto type = new Type(type_id, type_data, type_options);
         m_types_data.push_back(type);
         return *type;
     }

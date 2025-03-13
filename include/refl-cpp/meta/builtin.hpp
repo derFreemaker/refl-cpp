@@ -2,22 +2,25 @@
 
 #include <ostream>
 
-#include "refl-cpp/reflect_data.hpp"
+#include "refl-cpp/type_data.hpp"
 #include "refl-cpp/reflect_printer.hpp"
 
-#define REFLECT_BUILTIN_TYPE(TYPE, NAME) \
-    template <> \
+#define REFLECT_BUILTIN_TYPE_IMPL(TEMPLATE, TYPE, NAME, PRINT) \
+    template <TEMPLATE> \
     struct ReflCpp::ReflectData<TYPE> { \
-        static ReflectTypeData Create() { \
+        static TypeData Create() { \
             return { .name = NAME }; \
         } \
     }; \
-    template <> \
+    template <TEMPLATE> \
     struct ReflCpp::ReflectPrinter<TYPE> { \
         static void Print(std::ostream& stream, const Type& type) { \
-            stream << #TYPE; \
+            stream << PRINT; \
         } \
     };
+
+#define REFLECT_BUILTIN_TYPE(TYPE, NAME) \
+    REFLECT_BUILTIN_TYPE_IMPL( ,TYPE, NAME, #TYPE)
 
 REFLECT_BUILTIN_TYPE(void, "Void")
 
@@ -25,19 +28,7 @@ REFLECT_BUILTIN_TYPE(bool, "Boolean")
 
 REFLECT_BUILTIN_TYPE(char, "Character")
 
-template <size_t Size_>
-struct ReflCpp::ReflectData<char[Size_]> {
-    static ReflectTypeData Create() {
-        return {.name = "String"};
-    }
-};
-
-template <size_t Size_>
-struct ReflCpp::ReflectPrinter<char[Size_]> {
-    static void Print(std::ostream& stream, const Type& type) {
-        stream << "char*";
-    }
-};
+REFLECT_BUILTIN_TYPE_IMPL(size_t Size_, char[Size_], "String", "char[" << Size_ << "]")
 
 REFLECT_BUILTIN_TYPE(uint8_t, "Unsigned 8 Bit Integer")
 

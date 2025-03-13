@@ -9,9 +9,6 @@ int main() {
 
     (void)ReflCpp::Reflect<kpop::Test>()
           .GetMethod("foo")->Invoke(
-              test, {
-                  "test",
-                  "test"
-              }
+              test
           );
 }

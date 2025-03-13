@@ -1,10 +1,10 @@
 #pragma once
 
-#include "refl-cpp/reflect.hpp"
+#include "refl-cpp/declare_reflect.hpp"
 
 template <typename T>
 struct ReflCpp::ReflectData<T[]> {
-    static ReflectTypeData Create() {
+    static TypeData Create() {
         return {
             .name = "Array",
             .inner = ReflectID<T>(),
@@ -23,7 +23,7 @@ struct ReflCpp::ReflectPrinter<T[]> {
 
 template <typename T>
 struct ReflCpp::ReflectData<T*> {
-    static ReflectTypeData Create() {
+    static TypeData Create() {
         return {
             .name = "Pointer",
             .inner = ReflectID<T>(),
@@ -42,7 +42,7 @@ struct ReflCpp::ReflectPrinter<T*> {
 
 template <typename T>
 struct ReflCpp::ReflectData<T&> {
-    static ReflectTypeData Create() {
+    static TypeData Create() {
         return {
             .name = "Reference",
             .inner = ReflectID<T>(),
@@ -61,7 +61,7 @@ struct ReflCpp::ReflectPrinter<T&> {
 
 template <typename T>
 struct ReflCpp::ReflectData<const T> {
-    static ReflectTypeData Create() {
+    static TypeData Create() {
         return {
             .name = "Constant",
             .inner = ReflectID<T>(),
@@ -80,7 +80,7 @@ struct ReflCpp::ReflectPrinter<const T> {
 
 template <typename T>
 struct ReflCpp::ReflectData<volatile T> {
-    static ReflectTypeData Create() {
+    static TypeData Create() {
         return {
             .name = "Volatile",
             .inner = ReflectID<T>(),

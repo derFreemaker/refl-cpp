@@ -5,9 +5,11 @@
 #include <ostream>
 #include <sstream>
 
-#include "refl-cpp/type_id.hpp"
-#include "refl-cpp/reflect_data.hpp"
+#include "refl-cpp/declare_reflect.hpp"
+#include "refl-cpp/type_data.hpp"
 #include "refl-cpp/reflect_printer.hpp"
+#include "refl-cpp/method.hpp"
+#include "refl-cpp/field.hpp"
 
 namespace ReflCpp {
 struct Type {
@@ -15,7 +17,7 @@ struct Type {
     Type(Type&) = delete;
     Type(Type&&) = delete;
 
-    Type(const TypeID id, const ReflectTypeData& data, const ReflectPrintFunc& print_func)
+    Type(const TypeID id, const TypeData& data, const TypeOptions& options)
         : m_ID(id),
 
           m_Name(data.name),
@@ -30,8 +32,9 @@ struct Type {
           m_IsVolatile(data.is_volatile),
 
           m_Methods(data.methods),
-
-          m_PrintFunc(print_func) {}
+          m_Fields(data.fields),
+    
+          m_PrintFunc(options.print_func) {}
 
     [[nodiscard]]
     TypeID GetID() const {
@@ -124,6 +127,12 @@ struct Type {
         return Is(type.GetID());
     }
 
+    template <typename T>
+    [[nodiscard]]
+    bool Is() const {
+        return Is(ReflectID<T>());
+    }
+
     void Print(std::ostream& stream) const {
         if (m_PrintFunc != nullptr) {
             return m_PrintFunc(stream, *this);
@@ -165,6 +174,7 @@ private:
     const bool m_IsVolatile;
 
     const std::vector<Method> m_Methods;
+    const std::vector<Field> m_Fields;
 
     const ReflectPrintFunc m_PrintFunc;
 };

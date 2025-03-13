@@ -3,7 +3,7 @@
 #include "refl-cpp/declare_reflect.hpp"
 
 #include "refl-cpp/type.hpp"
-#include "refl-cpp/reflect_data_instance.hpp"
+#include "refl-cpp/type_instance.hpp"
 
 namespace ReflCpp {
 
