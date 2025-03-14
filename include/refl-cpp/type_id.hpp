@@ -39,7 +39,15 @@ public:
 
     [[nodiscard]]
     const Type& GetType() const {
+        if (IsInvalid()) {
+            throw std::invalid_argument("invalid type");
+        }
+        
         return Reflect(m_ID);
+    }
+
+    operator const Type& () const {
+        return GetType();
     }
 };
 }

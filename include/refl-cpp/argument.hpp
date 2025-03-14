@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "refl-cpp/type_id.hpp"
-#include "refl-cpp/variant.hpp"
+#include "refl-cpp/variant_wrapper.hpp"
 
 namespace ReflCpp {
 struct Type;

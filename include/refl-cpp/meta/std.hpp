@@ -44,3 +44,20 @@ struct ReflCpp::ReflectPrinter<std::vector<T>> {
         stream << ">";
     }
 };
+
+template <>
+struct ReflCpp::ReflectData<std::nullptr_t> {
+    static TypeData Create() {
+        return {
+            .name = "Null Pointer",
+            ._namespace = "std",
+        };
+    }
+};
+
+template <>
+struct ReflCpp::ReflectPrinter<std::nullptr_t> {
+    static void Print(std::ostream& stream, const Type& type) {
+        stream << "nullptr";
+    }
+};

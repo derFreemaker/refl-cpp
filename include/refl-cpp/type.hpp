@@ -74,13 +74,31 @@ struct Type {
         return Reflect(m_Inner.value());
     }
 
+    // fields
+
+    [[nodiscard]]
+    const std::vector<Field>& GetFields() const {
+        return m_Fields;
+    }
+
+    std::optional<const Field&> GetField(const char* name) const {
+        for (const auto& field : m_Fields) {
+            if (field.GetName() == name) {
+                return field;
+            }
+        }
+        return std::nullopt;
+    }
+    
+    // methods
+    
     [[nodiscard]]
     const std::vector<Method>& GetMethods() const {
         return m_Methods;
     }
 
-    std::optional<Method> GetMethod(const char* name) const {
-        for (const Method& method : m_Methods) {
+    std::optional<const Method&> GetMethod(const char* name) const {
+        for (const auto& method : m_Methods) {
             if (method.GetName() == name) {
                 return method;
             }

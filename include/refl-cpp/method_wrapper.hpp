@@ -61,6 +61,33 @@ template <typename Func_>
 Variant InvokeFunction(Func_ func, const ArgumentList& arguments) {
     return InvokeFunctionImpl(func, arguments, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
 }
+
+template <typename Class_, typename Func_, size_t... Indices>
+Variant InvokeMemberFunctionImpl(Class_ obj, Func_ func, const ArgumentList& args, std::index_sequence<Indices...>) {
+    if (args.Size() != FunctionTraits<Func_>::ArgCount) {
+        throw std::invalid_argument("incorrect number of arguments");
+    }
+
+    if constexpr (std::is_void_v<typename FunctionTraits<Func_>::ReturnType>) {
+        (obj.*func)(
+            args[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
+        );
+
+        return Variant::Void();
+    }
+    else {
+        return Variant(
+            (obj.*func)(
+                args[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
+            )
+        );
+    }
+}
+
+template <typename Class_, typename Func_>
+Variant InvokeMemberFunction(Class_ obj, Func_ func, const ArgumentList& arguments) {
+    return InvokeMemberFunctionImpl(obj, func, arguments, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
+}
 }
 
 template <typename Func_>
@@ -115,8 +142,8 @@ public:
             return detail::InvokeFunction(m_Func, arguments);
         }
         else {
-            auto func = &(instance.GetValue<typename Traits::ClassType>().*m_Func);
-            return detail::InvokeFunction(func, arguments);
+            auto obj = instance.GetValue<typename Traits::ClassType>();
+            return detail::InvokeMemberFunction(obj, m_Func, arguments);
         }
     }
 };

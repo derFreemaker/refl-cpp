@@ -10,7 +10,7 @@
 namespace ReflCpp {
 struct Method {
 private:
-    const MethodBase& m_Func;
+    MethodBase* m_Func;
 
     const char* m_Name;
     const std::vector<const char*> m_ArgumentNames;
@@ -18,10 +18,10 @@ private:
 public:
     template <typename Func_>
     Method(const MethodData<Func_>& builder)
-        : m_Func(*new MethodWrapper<Func_>(builder.ptr)),
+        : m_Func(new MethodWrapper<Func_>(builder.ptr)),
           m_Name(builder.name),
           m_ArgumentNames(builder.arguments) {}
-
+    
     [[nodiscard]]
     const char* GetName() const {
         return m_Name;
@@ -29,17 +29,17 @@ public:
 
     [[nodiscard]]
     bool IsStatic() const {
-        return m_Func.IsStatic();
+        return m_Func->IsStatic();
     }
 
     [[nodiscard]]
     bool IsConst() const {
-        return m_Func.IsConst();
+        return m_Func->IsConst();
     }
 
     [[nodiscard]]
     TypeID GetReturnType() const {
-        return m_Func.GetReturnType();
+        return m_Func->GetReturnType();
     }
 
     [[nodiscard]]
@@ -47,7 +47,7 @@ public:
         std::vector<ArgumentInfo> arguments;
         arguments.reserve(m_ArgumentNames.size());
 
-        const auto& arg_types = m_Func.GetArgumentsTypes();
+        const auto& arg_types = m_Func->GetArgumentsTypes();
         for (int i = 0; i < m_ArgumentNames.size(); ++i) {
             arguments.emplace_back(m_ArgumentNames[i], arg_types[i]);
         }
@@ -61,22 +61,22 @@ public:
             throw std::invalid_argument("index out of range");
         }
         
-        return {m_ArgumentNames[index], m_Func.GetArgumentsTypes()[index]};
+        return {m_ArgumentNames[index], m_Func->GetArgumentsTypes()[index]};
     }
     
     [[nodiscard]]
     Variant InvokeStatic(const ArgumentList& args) const {
-        return m_Func.InvokeStatic(args);
+        return m_Func->InvokeStatic(args);
     }
 
     [[nodiscard]]
     Variant Invoke(const Variant& instance) const {
-        return m_Func.Invoke(instance, {});
+        return m_Func->Invoke(instance, {});
     }
     
     [[nodiscard]]
     Variant Invoke(const Variant& instance, const ArgumentList& args) const {
-        return m_Func.Invoke(instance, args);
+        return m_Func->Invoke(instance, args);
     }
 
     void Print(std::ostream& stream) const;

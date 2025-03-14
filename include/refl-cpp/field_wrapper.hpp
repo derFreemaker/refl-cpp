@@ -68,6 +68,9 @@ public:
         if constexpr (!Traits::IsStatic) {
             throw std::logic_error("cannot set static value on a non-static type.");
         }
+        else if constexpr (Traits::IsConst) {
+            throw std::logic_error("cannot set value on a const type.");
+        }
         else {
             *m_Field = value.GetValue<typename Traits::Type>();
         }
@@ -79,7 +82,8 @@ public:
             return GetValueStatic();
         }
         else {
-            return static_cast<typename Traits::Type>(instance.GetValue<typename Traits::ClassType>().*m_Field);
+            auto obj = instance.GetValue<typename Traits::ClassType>();
+            return static_cast<typename Traits::Type>(obj.*m_Field);
         }
     }
 
@@ -87,8 +91,12 @@ public:
         if constexpr (Traits::IsStatic) {
             SetValueStatic(value);
         }
+        else if constexpr (Traits::IsConst) {
+            throw std::logic_error("cannot set value on a const type.");
+        }
         else {
-            static_cast<typename Traits::Type>(instance.GetValue<typename Traits::ClassType>().*m_Field) = value.GetValue<typename Traits::Type>();
+            auto obj = instance.GetValue<typename Traits::ClassType>();
+            obj.*m_Field = value.GetValue<typename Traits::Type>();
         }
     }
 };

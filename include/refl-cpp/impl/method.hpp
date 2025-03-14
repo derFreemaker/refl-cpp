@@ -7,11 +7,11 @@
 
 namespace ReflCpp {
 inline void Method::Print(std::ostream& stream) const {
-    Reflect(m_Func.GetReturnType()).Print(stream);
+    Reflect(m_Func->GetReturnType()).Print(stream);
     stream << " " << m_Name << "(";
 
     ListSeperator sep{};
-    const auto& arg_types = m_Func.GetArgumentsTypes();
+    const auto& arg_types = m_Func->GetArgumentsTypes();
     for (int i = 0; i < m_ArgumentNames.size(); ++i) {
         stream << sep;
         
