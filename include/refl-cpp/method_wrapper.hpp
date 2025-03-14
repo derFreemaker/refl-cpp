@@ -67,9 +67,10 @@ template <typename Func_>
 struct MethodWrapper final : public MethodBase {
 private:
     Func_ m_Func;
-    using Traits = FunctionTraits<Func_>;
 
 public:
+    using Traits = FunctionTraits<Func_>;
+
     MethodWrapper(const Func_& func)
         : m_Func(func) {}
 

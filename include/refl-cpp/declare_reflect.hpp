@@ -2,10 +2,9 @@
 
 #include <vector>
 
-#include "refl-cpp/type_id.hpp"
-
 namespace ReflCpp {
 struct Type;
+struct TypeID;
 
 template <typename T>
 [[nodiscard]]

@@ -16,11 +16,18 @@ public:
     static Variant Void() {
         return Variant(nullptr, ReflectID<void>());
     }
-    
+
     Variant() = delete;
 
     template <typename T>
-        requires (!std::is_same_v<T, Variant>)
+        requires (!std::is_same_v<T, Variant>
+            && sizeof(T) < 8)
+    Variant(T data)
+        : m_Data(data), m_Type(ReflectID<T>()) {}
+
+    template <typename T>
+        requires (!std::is_same_v<T, Variant>
+        && sizeof(T) > 8)
     Variant(T& data)
         : m_Data(data),
           m_Type(ReflectID<T>()) {}
@@ -34,7 +41,7 @@ public:
         if (this->m_Type == Void().m_Type) {
             throw std::runtime_error("cannot get value from an void type.");
         }
-        
+
         return std::any_cast<T>(m_Data);
     }
 

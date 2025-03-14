@@ -2,12 +2,14 @@
 
 #include <cstdint>
 
+#include "refl-cpp/declare_reflect.hpp"
+
 namespace ReflCpp {
 struct TypeID {
 private:
     static constexpr auto m_Invalid = 0;
     
-    uint32_t id = m_Invalid;
+    uint32_t m_ID = m_Invalid;
 
 public:
     static constexpr auto Invalid() {
@@ -15,24 +17,29 @@ public:
     }
     
     operator uint32_t() const {
-        return id;
+        return m_ID;
     }
 
     constexpr TypeID(const uint32_t id)
-        : id(id) {}
+        : m_ID(id) {}
 
     bool operator==(const TypeID other) const {
-        return id == other.id;
+        return m_ID == other.m_ID;
     }
 
     [[nodiscard]]
     bool IsValid() const {
-        return this->id != m_Invalid;
+        return this->m_ID != m_Invalid;
     }
 
     [[nodiscard]]
     bool IsInvalid() const {
-        return this->id == m_Invalid;
+        return this->m_ID == m_Invalid;
+    }
+
+    [[nodiscard]]
+    const Type& GetType() const {
+        return Reflect(m_ID);
     }
 };
 }

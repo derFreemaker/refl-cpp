@@ -3,7 +3,7 @@
 #include <tuple>
 
 namespace ReflCpp {
-template <typename T>
+template <typename T_>
 struct FunctionTraits;
 
 namespace detail {

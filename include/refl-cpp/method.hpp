@@ -10,7 +10,7 @@
 namespace ReflCpp {
 struct Method {
 private:
-    MethodBase& m_Func;
+    const MethodBase& m_Func;
 
     const char* m_Name;
     const std::vector<const char*> m_ArgumentNames;
@@ -18,7 +18,7 @@ private:
 public:
     template <typename Func_>
     Method(const MethodData<Func_>& builder)
-        : m_Func(*new MethodWrapper<Func_>(builder.func)),
+        : m_Func(*new MethodWrapper<Func_>(builder.ptr)),
           m_Name(builder.name),
           m_ArgumentNames(builder.arguments) {}
 
