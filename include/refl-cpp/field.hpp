@@ -7,14 +7,15 @@
 namespace ReflCpp {
 struct Field {
 private:
-    const FieldBase& m_Base;
+    FieldBase* const m_Base;
 
     const char* m_Name;
 
 public:
     template <typename T_>
     Field(const FieldData<T_>& data)
-        : m_Name(data.name), m_Base(*new FieldWrapper<T_>(data.ptr)) {}
+        : m_Base(new FieldWrapper<T_>(data.ptr)),
+          m_Name(data.name) {}
 
     [[nodiscard]]
     const char* GetName() const {
@@ -23,25 +24,25 @@ public:
 
     [[nodiscard]]
     TypeID GetType() const {
-        return m_Base.GetType();
+        return m_Base->GetType();
     }
 
     [[nodiscard]]
     Variant GetValueStatic() const {
-        return m_Base.GetValueStatic();
+        return m_Base->GetValueStatic();
     }
 
     void SetValueStatic(Variant& value) const {
-        m_Base.SetValueStatic(value);
+        m_Base->SetValueStatic(value);
     }
 
     [[nodiscard]]
     Variant GetValue(const Variant& instance) const {
-        return m_Base.GetValue(instance);
+        return m_Base->GetValue(instance);
     }
 
     void SetValue(const Variant& instance, const Variant& value) const {
-        return m_Base.SetValue(instance, value);
+        return m_Base->SetValue(instance, value);
     }
 };
 }

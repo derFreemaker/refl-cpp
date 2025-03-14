@@ -13,22 +13,5 @@ struct ArgumentInfo {
     const TypeID type;
 };
 
-struct ArgumentList {
-private:
-    std::vector<Variant> m_Data;
-
-public:
-    template <typename... Args>
-    ArgumentList(Args&&... args)
-        : m_Data({Variant(std::forward<Args>(args))...}) {}
-
-    [[nodiscard]]
-    size_t Size() const {
-        return m_Data.size();
-    }
-
-    const Variant& operator[](const size_t index) const {
-        return m_Data[index];
-    }
-};
+typedef std::vector<Variant> ArgumentList;
 }

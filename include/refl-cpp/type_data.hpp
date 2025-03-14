@@ -17,6 +17,7 @@ struct TypeData {
     std::vector<TypeID> bases;
     std::optional<TypeID> inner = std::nullopt;
 
+    //TODO: use flags instead
     bool is_array = false;
     bool is_pointer = false;
     bool is_reference = false;

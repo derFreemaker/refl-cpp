@@ -37,13 +37,13 @@ struct MethodBase {
 namespace detail {
 template <typename Func_, size_t... Indices>
 Variant InvokeFunctionImpl(Func_ func, const ArgumentList& args, std::index_sequence<Indices...>) {
-    if (args.Size() != FunctionTraits<Func_>::ArgCount) {
+    if (args.size() != FunctionTraits<Func_>::ArgCount) {
         throw std::invalid_argument("incorrect number of arguments");
     }
 
     if constexpr (std::is_void_v<typename FunctionTraits<Func_>::ReturnType>) {
         func(
-            args[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
+            args[Indices].GetRef < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
         );
 
         return Variant::Void();
@@ -51,7 +51,7 @@ Variant InvokeFunctionImpl(Func_ func, const ArgumentList& args, std::index_sequ
     else {
         return Variant(
             func(
-                args[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
+                args[Indices].GetRef < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
             )
         );
     }
@@ -63,8 +63,8 @@ Variant InvokeFunction(Func_ func, const ArgumentList& arguments) {
 }
 
 template <typename Class_, typename Func_, size_t... Indices>
-Variant InvokeMemberFunctionImpl(Class_ obj, Func_ func, const ArgumentList& args, std::index_sequence<Indices...>) {
-    if (args.Size() != FunctionTraits<Func_>::ArgCount) {
+Variant InvokeMemberFunctionImpl(Class_& obj, Func_ func, const ArgumentList& args, std::index_sequence<Indices...>) {
+    if (args.size() != FunctionTraits<Func_>::ArgCount) {
         throw std::invalid_argument("incorrect number of arguments");
     }
 
@@ -85,7 +85,7 @@ Variant InvokeMemberFunctionImpl(Class_ obj, Func_ func, const ArgumentList& arg
 }
 
 template <typename Class_, typename Func_>
-Variant InvokeMemberFunction(Class_ obj, Func_ func, const ArgumentList& arguments) {
+Variant InvokeMemberFunction(Class_& obj, Func_ func, const ArgumentList& arguments) {
     return InvokeMemberFunctionImpl(obj, func, arguments, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
 }
 }
@@ -142,7 +142,7 @@ public:
             return detail::InvokeFunction(m_Func, arguments);
         }
         else {
-            auto obj = instance.GetValue<typename Traits::ClassType>();
+            auto& obj = instance.GetRef<typename Traits::ClassType>();
             return detail::InvokeMemberFunction(obj, m_Func, arguments);
         }
     }

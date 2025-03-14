@@ -79,6 +79,12 @@ public:
         return m_Func->Invoke(instance, args);
     }
 
+    template <typename... Args>
+    [[nodiscard]]
+    Variant Invoke(const Variant& instance, Args&&... args) const {
+        return m_Func->Invoke(instance, { std::forward<Args>(args)... });
+    }
+
     void Print(std::ostream& stream) const;
 
     [[nodiscard]]

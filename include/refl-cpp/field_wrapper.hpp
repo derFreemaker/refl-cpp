@@ -72,7 +72,7 @@ public:
             throw std::logic_error("cannot set value on a const type.");
         }
         else {
-            *m_Field = value.GetValue<typename Traits::Type>();
+            *m_Field = value.GetRef<typename Traits::Type>();
         }
     }
 
@@ -82,7 +82,7 @@ public:
             return GetValueStatic();
         }
         else {
-            auto obj = instance.GetValue<typename Traits::ClassType>();
+            auto& obj = instance.GetRef<typename Traits::ClassType>();
             return static_cast<typename Traits::Type>(obj.*m_Field);
         }
     }
@@ -95,7 +95,7 @@ public:
             throw std::logic_error("cannot set value on a const type.");
         }
         else {
-            auto obj = instance.GetValue<typename Traits::ClassType>();
+            auto& obj = instance.GetRef<typename Traits::ClassType>();
             obj.*m_Field = value.GetValue<typename Traits::Type>();
         }
     }

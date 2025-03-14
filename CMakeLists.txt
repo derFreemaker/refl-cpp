@@ -29,6 +29,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/field_traits.hpp
         include/refl-cpp/field_data.hpp
         include/refl-cpp/field.hpp
+        include/refl-cpp/field_wrapper.hpp
 
         include/refl-cpp/meta/builtin.hpp
         include/refl-cpp/meta/common.hpp
@@ -36,9 +37,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
  
         include/refl-cpp/impl/method.hpp
         include/refl-cpp/impl/impl.hpp
-        include/refl-cpp/field_wrapper.hpp
-        include/refl-cpp/variant_traits.hpp
-        include/refl-cpp/variant.hpp
+        include/refl-cpp/impl/variant.hpp
 )
 
 add_subdirectory(test-project)

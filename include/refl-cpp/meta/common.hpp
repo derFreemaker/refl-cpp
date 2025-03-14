@@ -41,6 +41,26 @@ struct ReflCpp::ReflectPrinter<T_*> {
 };
 
 template <typename T_>
+struct ReflCpp::ReflectData<T_* const> {
+    static TypeData Create() {
+        return {
+            .name = "Constant Pointer",
+            .inner = ReflectID<T_>(),
+            .is_pointer = true,
+            .is_const = true,
+        };
+    }
+};
+
+template <typename T_>
+struct ReflCpp::ReflectPrinter<T_* const> {
+    static void Print(std::ostream& stream, const Type& type) {
+        type.GetInner().Print(stream);
+        stream << "* const";
+    }
+};
+
+template <typename T_>
 struct ReflCpp::ReflectData<T_&> {
     static TypeData Create() {
         return {
