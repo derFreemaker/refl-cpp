@@ -47,3 +47,4 @@ REFLECT_BUILTIN_TYPE(int32_t, "Unsigned 32 Bit Integer")
 REFLECT_BUILTIN_TYPE(int64_t, "Unsigned 64 Bit Integer")
 
 #undef REFLECT_BUILTIN_TYPE
+#undef REFLECT_BUILTIN_TYPE_IMPL

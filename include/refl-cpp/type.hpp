@@ -81,7 +81,7 @@ struct Type {
         return m_Fields;
     }
 
-    std::optional<const Field&> GetField(const char* name) const {
+    std::optional<Field> GetField(const char* name) const {
         for (const auto& field : m_Fields) {
             if (field.GetName() == name) {
                 return field;
@@ -97,7 +97,7 @@ struct Type {
         return m_Methods;
     }
 
-    std::optional<const Method&> GetMethod(const char* name) const {
+    std::optional<Method> GetMethod(const char* name) const {
         for (const auto& method : m_Methods) {
             if (method.GetName() == name) {
                 return method;

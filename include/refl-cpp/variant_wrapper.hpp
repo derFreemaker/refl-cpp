@@ -1,8 +1,6 @@
 #pragma once
 
-#include <stdexcept>
 #include <any>
-#include <type_traits>
 
 #include "refl-cpp/variant_traits.hpp"
 #include "refl-cpp/type_id.hpp"
@@ -14,19 +12,16 @@ struct VariantBase {
 
     [[nodiscard]]
     virtual TypeID GetType() const = 0;
-
-    [[nodiscard]]
-    virtual std::any GetValue() const = 0;
 };
 
 template <typename T_>
 struct VariantWrapper final : public VariantBase {
 private:
-    T_ m_Value;
+    T_& m_Value;
     using Traits = VariantTraits<T_>;
 
 public:
-    VariantWrapper(T_ value)
+    VariantWrapper(T_& value)
         : m_Value(value) {}
     
     [[nodiscard]]
@@ -35,7 +30,7 @@ public:
     }
 
     [[nodiscard]]
-    std::any GetValue() const override {
+    T_ GetValue() const {
         return m_Value;
     }
 };

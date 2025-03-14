@@ -40,7 +40,7 @@ public:
         return m_Base.GetValue(instance);
     }
 
-    void GetValue(const Variant& instance, const Variant& value) const {
+    void SetValue(const Variant& instance, const Variant& value) const {
         return m_Base.SetValue(instance, value);
     }
 };

@@ -7,8 +7,8 @@
 int main() {
     kpop::Test test;
 
-    (void)ReflCpp::Reflect<kpop::Test>()
-          .GetMethod("foo")->Invoke(
-              test
-          );
+    const auto field = *ReflCpp::Reflect<kpop::Test>().GetField("test");
+    field.SetValue(test, 123);
+
+    test.foo();
 }
