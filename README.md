@@ -15,7 +15,6 @@ Only one macro to mark the `class/struct` to be reflected.
 - [critical] add code generator
 - [critical] add easy build hook for projects
 - support template parameters
-- add constructor support
 
 ## Dependencies
 these are getting managed through [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)

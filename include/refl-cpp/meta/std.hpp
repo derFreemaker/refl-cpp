@@ -12,7 +12,9 @@ struct ReflCpp::ReflectData<std::optional<T>> {
         return {
             .name = "optional",
             ._namespace = "std",
-            .inner = ReflectID<T>(),
+            .inners = {
+                ReflectID<T>()
+            },
         };
     }
 };
@@ -21,7 +23,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::optional<T>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::optional<";
-        type.GetInner().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };
@@ -32,7 +34,9 @@ struct ReflCpp::ReflectData<std::vector<T>> {
         return {
             .name = "vector",
             ._namespace = "std",
-            .inner = ReflectID<T>(),
+            .inners = {
+                ReflectID<T>()
+            },
         };
     }
 };
@@ -41,7 +45,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::vector<T>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::vector<";
-        type.GetInner().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };

@@ -16,7 +16,7 @@ struct TypeData {
     std::optional<const char*> _namespace = std::nullopt;
 
     std::vector<TypeID> bases;
-    std::optional<TypeID> inner = std::nullopt;
+    std::vector<TypeID> inners;
 
     TypeFlags flags;
     

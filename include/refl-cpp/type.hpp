@@ -20,7 +20,7 @@ private:
     const char* m_Name;
     std::optional<const char*> m_Namespace;
     const std::vector<TypeID> m_Bases;
-    const std::optional<TypeID> m_Inner;
+    const std::vector<TypeID> m_Inners;
 
     const TypeFlags m_Flags;
 
@@ -40,7 +40,7 @@ public:
           m_Name(data.name),
           m_Namespace(data._namespace),
           m_Bases(data.bases),
-          m_Inner(data.inner),
+          m_Inners(data.inners),
 
           m_Flags(data.flags),
 
@@ -73,18 +73,33 @@ public:
     }
 
     [[nodiscard]]
+    bool HasBases() const {
+        return !m_Bases.empty();
+    }
+    
+    [[nodiscard]]
     const std::vector<TypeID>& GetBases() const {
         return m_Bases;
     }
 
     [[nodiscard]]
-    bool HasInner() const {
-        return m_Inner.has_value();
+    const Type& GetBase(const size_t index) const {
+        return m_Bases[index].GetType();
+    }
+    
+    [[nodiscard]]
+    bool HasInners() const {
+        return !m_Inners.empty();
     }
 
     [[nodiscard]]
-    const Type& GetInner() const {
-        return Reflect(m_Inner.value());
+    const std::vector<TypeID>& GetInners() const {
+        return m_Inners;
+    }
+
+    [[nodiscard]]
+    const Type& GetInner(const size_t index) const {
+        return m_Inners[index].GetType();
     }
 
     [[nodiscard]]
