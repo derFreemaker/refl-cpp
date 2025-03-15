@@ -6,10 +6,10 @@
 
 namespace kpop {
 struct REFLECT() Test {
-    const std::optional<int> test = 0;
+    int test = 0;
 
     void foo(const char* _foo) {
-        std::cout << *test << " " << _foo << std::endl;
+        std::cout << test << " " << _foo << std::endl;
     }
 };
 }

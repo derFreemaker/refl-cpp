@@ -24,7 +24,8 @@ private:
 
 public:
     static Variant Void() {
-        return Variant(nullptr);
+        static Variant instance(nullptr);
+        return instance;
     }
 
     template <typename T_>
@@ -70,8 +71,9 @@ public:
         if (m_Type == ReflectID<void>()) {
             throw std::logic_error("cannot get reference to void variant");
         }
-        
-        if (m_Type != ReflectID<T_>()) {
+
+        auto passed_id = ReflectID<T_>();
+        if (m_Type != passed_id) {
             throw std::invalid_argument("passed type is not the same as the stored type");
         }
 

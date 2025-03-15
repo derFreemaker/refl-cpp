@@ -4,7 +4,6 @@
 
 #include "refl-cpp/field_wrapper.hpp"
 #include "refl-cpp/field_data.hpp"
-#include "refl-cpp/declare_reflect.hpp"
 
 namespace ReflCpp {
 struct Field {
@@ -29,22 +28,30 @@ public:
         return m_Base->GetType();
     }
 
-    [[nodiscard]]
-    Variant GetValueStatic() const {
-        return m_Base->GetValueStatic();
-    }
-
-    void SetValueStatic(Variant& value) const {
-        m_Base->SetValueStatic(value);
+    void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
+        return m_Base->SetValue(value, instance);
     }
 
     [[nodiscard]]
-    Variant GetValue(const Variant& instance) const {
+    Variant GetValue(const Variant& instance = Variant::Void()) const {
         return m_Base->GetValue(instance);
     }
 
-    void SetValue(const Variant& instance, const Variant& value) const {
-        return m_Base->SetValue(instance, value);
+    template <typename T_>
+    [[nodiscard]]
+    T_ GetValue(const Variant& instance = Variant::Void()) const {
+        return m_Base->GetValue(instance).GetValue<T_>();
+    }
+    
+    [[nodiscard]]
+    Variant GetRef(const Variant& instance = Variant::Void()) const {
+        return m_Base->GetRef(instance);
+    }
+    
+    template <typename T_>
+    [[nodiscard]]
+    T_& GetRef(const Variant& instance = Variant::Void()) const {
+        return m_Base->GetRef(instance).GetRef<T_>();
     }
 };
 }

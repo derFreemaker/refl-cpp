@@ -9,10 +9,10 @@ int main() {
     
     const auto field = ReflCpp::Reflect<kpop::Test>().GetField("test")->get();
     const auto method = ReflCpp::Reflect<kpop::Test>().GetMethod("foo")->get();
+
+    field.SetValue(123, test);
+    const auto lol = field.GetValue<int>(test);
+    printf("%i\n", lol);
     
-    field.SetValue(test, std::optional(123));
-    
-    const ReflCpp::Variant test_arg("foo");
-    
-    (void)method.Invoke(test, test_arg);
+    (void)method.Invoke(test, "foo");
 }

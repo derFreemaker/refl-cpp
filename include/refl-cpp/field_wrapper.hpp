@@ -18,14 +18,12 @@ struct FieldBase {
     virtual TypeID GetType() const = 0;
 
     [[nodiscard]]
-    virtual Variant GetValueStatic() const = 0;
+    virtual Variant GetValue(const Variant& instance = Variant::Void()) const = 0;
 
-    virtual void SetValueStatic(Variant& value) const = 0;
+    virtual void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const = 0;
 
     [[nodiscard]]
-    virtual Variant GetValue(const Variant& instance) const = 0;
-
-    virtual void SetValue(const Variant& instance, const Variant& value) const = 0;
+    virtual Variant GetRef(const Variant& instance = Variant::Void()) const = 0;
 };
 
 template <typename Field_>
@@ -53,50 +51,54 @@ public:
     TypeID GetType() const override {
         return ReflectID<typename Traits::Type>();
     }
-
+    
     [[nodiscard]]
-    Variant GetValueStatic() const override {
-        if constexpr (!Traits::IsStatic) {
-            throw std::logic_error("cannot get static value on a non-static type.");
-        }
-        else {
-            return *m_Field;
-        }
-    }
-
-    void SetValueStatic(Variant& value) const override {
-        if constexpr (!Traits::IsStatic) {
-            throw std::logic_error("cannot set static value on a non-static type.");
-        }
-        else if constexpr (Traits::IsConst) {
-            throw std::logic_error("cannot set value on a const type.");
-        }
-        else {
-            *m_Field = value.GetRef<typename Traits::Type>();
-        }
-    }
-
-    [[nodiscard]]
-    Variant GetValue(const Variant& instance) const override {
+    Variant GetValue(const Variant& instance = Variant::Void()) const override {
         if constexpr (Traits::IsStatic) {
-            return GetValueStatic();
+            return static_cast<typename Traits::Type>(*m_Field);
         }
         else {
+            if (instance.IsVoid()) {
+                throw std::invalid_argument("instance is needed for non-static member fields");
+            }
+            
             auto& obj = instance.GetRef<typename Traits::ClassType>();
             return static_cast<typename Traits::Type>(obj.*m_Field);
         }
     }
 
-    void SetValue(const Variant& instance, const Variant& value) const override {
-        if constexpr (Traits::IsStatic) {
-            SetValueStatic(value);
-        }
-        else if constexpr (Traits::IsConst) {
+    void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const override {
+        if constexpr (Traits::IsConst) {
             throw std::logic_error("cannot set value on a const type.");
         }
+        else if constexpr (Traits::IsStatic) {
+            *m_Field = value.GetValue<typename Traits::Type>();
+        }
         else {
+            if (instance.IsVoid()) {
+                throw std::invalid_argument("instance is needed for non-static member fields");
+            }
+            
             auto& obj = instance.GetRef<typename Traits::ClassType>();
             obj.*m_Field = value.GetValue<typename Traits::Type>();
+        }
+    }
+
+    [[nodiscard]]
+    Variant GetRef(const Variant& instance = Variant::Void()) const override {
+        if constexpr (Traits::IsConst) {
+            throw std::logic_error("cannot get reference value on a const type. 'GetValue()' will use a const reference if the field is const.");
+        }
+        else if constexpr (Traits::IsStatic) {
+            return static_cast<typename Traits::Type&>(*m_Field);
+        }
+        else {
+            if (instance.IsVoid()) {
+                throw std::invalid_argument("instance is needed for non-static member fields");
+            }
+            
+            auto& obj = instance.GetRef<typename Traits::ClassType>();
+            return static_cast<typename Traits::Type&>(obj.*m_Field);
         }
     }
 };
