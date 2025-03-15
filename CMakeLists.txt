@@ -31,6 +31,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/field.hpp
         include/refl-cpp/field_wrapper.hpp
 
+        include/refl-cpp/meta/meta.hpp
         include/refl-cpp/meta/builtin.hpp
         include/refl-cpp/meta/common.hpp
         include/refl-cpp/meta/std.hpp

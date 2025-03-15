@@ -12,7 +12,6 @@ Only one macro to mark the `class/struct` to be reflected.
 - no idea what it looks like for `class/struct` with template parameters (probably not supported)
 
 ## TODO
-- [critical] add members support
 - [critical] add code generator
 - [critical] add easy build hook for projects
 - support template parameters

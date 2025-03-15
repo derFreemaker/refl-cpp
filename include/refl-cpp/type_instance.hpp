@@ -5,11 +5,11 @@
 
 namespace ReflCpp {
 template <typename T>
-struct ReflectDataInstance {
+struct TypeInstance {
     static TypeID ID() {
         auto& database = ReflectionDatabase::Instance();
-        static auto instance = database.RegisterType<T>().GetID();
-        return instance;
+        static auto id = database.RegisterType<T>();
+        return id;
     }
 
     static const Type& Type() {

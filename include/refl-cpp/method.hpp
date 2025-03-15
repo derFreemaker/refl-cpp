@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "refl-cpp/method_data.hpp"
@@ -10,7 +11,7 @@
 namespace ReflCpp {
 struct Method {
 private:
-    MethodBase* m_Func;
+    std::shared_ptr<MethodBase> m_Func;
 
     const char* m_Name;
     const std::vector<const char*> m_ArgumentNames;
@@ -18,7 +19,7 @@ private:
 public:
     template <typename Func_>
     Method(const MethodData<Func_>& builder)
-        : m_Func(new MethodWrapper<Func_>(builder.ptr)),
+        : m_Func(std::make_shared<MethodWrapper<Func_>>(builder.ptr)),
           m_Name(builder.name),
           m_ArgumentNames(builder.arguments) {}
     

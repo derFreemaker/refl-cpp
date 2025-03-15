@@ -9,22 +9,16 @@
 namespace ReflCpp {
 struct ReflectionDatabase {
 private:
-    std::vector<Type*> m_types_data;
+    std::vector<std::unique_ptr<Type>> m_types_data;
 
 public:
     static ReflectionDatabase& Instance() {
         static ReflectionDatabase instance;
         return instance;
     }
-
-    ~ReflectionDatabase() {
-        for (const auto type : m_types_data) {
-            delete type;
-        }
-    }
-
+    
     template <typename T>
-    const Type& RegisterType() {
+    TypeID RegisterType() {
         const TypeData& type_data = ReflectData<T>::Create();
         const auto type_id = TypeID(m_types_data.size() + 1);
 
@@ -35,8 +29,7 @@ public:
         }
 
         const auto type = new Type(type_id, type_data, type_options);
-        m_types_data.push_back(type);
-        return *type;
+        return (*m_types_data.emplace_back(type)).GetID();
     }
 
     [[nodiscard]]

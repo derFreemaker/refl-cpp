@@ -10,13 +10,13 @@ namespace ReflCpp {
 template <typename T>
 [[nodiscard]]
 const Type& Reflect() {
-    return ReflectDataInstance<T>::Type();
+    return TypeInstance<T>::Type();
 }
 
 template <typename T>
 [[nodiscard]]
 TypeID ReflectID() {
-    return ReflectDataInstance<T>::ID();
+    return TypeInstance<T>::ID();
 }
 
 [[nodiscard]]
@@ -25,6 +25,4 @@ inline const Type& Reflect(const TypeID id) {
 }
 }
 
-#include "refl-cpp/meta/builtin.hpp"
-#include "refl-cpp/meta/std.hpp"
-#include "refl-cpp/meta/common.hpp"
+#include "refl-cpp/meta/meta.hpp"

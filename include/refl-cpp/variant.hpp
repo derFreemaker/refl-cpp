@@ -19,12 +19,12 @@ private:
     bool m_IsConst = false;
 
     Variant(std::nullptr_t)
-        : m_Base(nullptr),
-          m_Type(ReflectID<std::nullptr_t>()) {}
+        : m_Base(std::make_shared<VoidVariantWrapper>()),
+          m_Type(ReflectID<void>()) {}
 
 public:
     static Variant Void() {
-        return nullptr;
+        return Variant(nullptr);
     }
 
     template <typename T_>
@@ -62,6 +62,10 @@ public:
         requires detail::LimitVariant<T_>
     [[nodiscard]]
     T_& GetRef() const {
+        if (m_Type == ReflectID<void>()) {
+            throw std::logic_error("cannot get reference to void variant");
+        }
+        
         if (m_Type != ReflectID<T_>()) {
             throw std::invalid_argument("passed type is not the same as the stored type");
         }
@@ -70,7 +74,7 @@ public:
             throw std::logic_error("cannot get reference to constant");
         }
 
-        return static_cast<VariantWrapper<T_>*>(m_Base.get())->GetValue();
+        return static_cast<VariantWrapper<T_&>*>(m_Base.get())->GetValue();
     }
 
     template <typename T_>

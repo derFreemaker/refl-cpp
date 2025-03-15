@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "refl-cpp/field_wrapper.hpp"
 #include "refl-cpp/field_data.hpp"
 #include "refl-cpp/declare_reflect.hpp"
@@ -7,14 +9,14 @@
 namespace ReflCpp {
 struct Field {
 private:
-    FieldBase* const m_Base;
+    std::shared_ptr<FieldBase> m_Base;
 
     const char* m_Name;
 
 public:
     template <typename T_>
     Field(const FieldData<T_>& data)
-        : m_Base(new FieldWrapper<T_>(data.ptr)),
+        : m_Base(std::make_shared<FieldWrapper<T_>>(data.ptr)),
           m_Name(data.name) {}
 
     [[nodiscard]]
