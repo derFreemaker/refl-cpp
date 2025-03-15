@@ -5,6 +5,7 @@
 
 #include "refl-cpp/type_id.hpp"
 #include "refl-cpp/type.hpp"
+#include "refl-cpp/reflect_printer.hpp"
 
 namespace ReflCpp {
 struct ReflectionDatabase {
@@ -17,17 +18,17 @@ public:
         return instance;
     }
     
-    template <typename T>
+    template <typename T_>
     TypeID RegisterType() {
-        const TypeData& type_data = ReflectData<T>::Create();
+        const TypeData& type_data = ReflectData<T_>::Create();
         const auto type_id = TypeID(m_types_data.size() + 1);
 
         TypeOptions type_options{};
         
-        if constexpr (detail::HasReflectPrinter<T>) {
-            type_options.print_func = ReflectPrinter<T>::Print;
+        if constexpr (detail::HasReflectPrinter<T_>) {
+            type_options.print_func = ReflectPrinter<T_>::Print;
         }
-
+        
         const auto type = new Type(type_id, type_data, type_options);
         return (*m_types_data.emplace_back(type)).GetID();
     }

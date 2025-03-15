@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace ReflCpp {
+namespace ReflCpp::Common {
 
 struct ListSeperator {
 private:

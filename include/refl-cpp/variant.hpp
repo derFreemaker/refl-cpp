@@ -54,6 +54,11 @@ public:
           m_IsConst(true) {}
 
     [[nodiscard]]
+    bool IsVoid() const {
+        return m_Type == ReflectID<void>();
+    }
+    
+    [[nodiscard]]
     TypeID GetType() const {
         return m_Type;
     }

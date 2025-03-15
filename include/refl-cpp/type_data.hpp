@@ -7,6 +7,7 @@
 #include "refl-cpp/field.hpp"
 #include "refl-cpp/method.hpp"
 #include "refl-cpp/type_id.hpp"
+#include "refl-cpp/type_flags.hpp"
 
 namespace ReflCpp {
 
@@ -17,12 +18,7 @@ struct TypeData {
     std::vector<TypeID> bases;
     std::optional<TypeID> inner = std::nullopt;
 
-    //TODO: use flags instead
-    bool is_array = false;
-    bool is_pointer = false;
-    bool is_reference = false;
-    bool is_const = false;
-    bool is_volatile = false;
+    TypeFlags flags;
     
     std::vector<Field> fields;
     std::vector<Method> methods;
@@ -34,5 +30,4 @@ struct TypeOptions {
 
 template <typename T>
 struct ReflectData;
-
 }

@@ -10,9 +10,26 @@
 #include "refl-cpp/reflect_printer.hpp"
 #include "refl-cpp/method.hpp"
 #include "refl-cpp/field.hpp"
+#include "refl-cpp/type_flags.hpp"
 
 namespace ReflCpp {
 struct Type {
+private:
+    const TypeID m_ID;
+
+    const char* m_Name;
+    std::optional<const char*> m_Namespace;
+    const std::vector<TypeID> m_Bases;
+    const std::optional<TypeID> m_Inner;
+
+    const TypeFlags m_Flags;
+
+    const std::vector<Method> m_Methods;
+    const std::vector<Field> m_Fields;
+
+    const ReflectPrintFunc m_PrintFunc;
+
+public:
     Type() = delete;
     Type(Type&) = delete;
     Type(Type&&) = delete;
@@ -25,15 +42,11 @@ struct Type {
           m_Bases(data.bases),
           m_Inner(data.inner),
 
-          m_IsArray(data.is_array),
-          m_IsPointer(data.is_pointer),
-          m_IsReference(data.is_reference),
-          m_IsConst(data.is_const),
-          m_IsVolatile(data.is_volatile),
+          m_Flags(data.flags),
 
           m_Methods(data.methods),
           m_Fields(data.fields),
-    
+
           m_PrintFunc(options.print_func) {}
 
     [[nodiscard]]
@@ -74,6 +87,11 @@ struct Type {
         return Reflect(m_Inner.value());
     }
 
+    [[nodiscard]]
+    const TypeFlags& GetFlags() const {
+        return m_Flags;
+    }
+
     // fields
 
     [[nodiscard]]
@@ -89,9 +107,9 @@ struct Type {
         }
         return std::nullopt;
     }
-    
+
     // methods
-    
+
     [[nodiscard]]
     const std::vector<Method>& GetMethods() const {
         return m_Methods;
@@ -104,33 +122,6 @@ struct Type {
             }
         }
         return std::nullopt;
-    }
-    
-    // flags
-
-    [[nodiscard]]
-    bool IsArray() const {
-        return m_IsArray;
-    }
-
-    [[nodiscard]]
-    bool IsPointer() const {
-        return m_IsPointer;
-    }
-
-    [[nodiscard]]
-    bool IsReference() const {
-        return m_IsReference;
-    }
-
-    [[nodiscard]]
-    bool IsConst() const {
-        return m_IsConst;
-    }
-
-    [[nodiscard]]
-    bool IsVolatile() const {
-        return m_IsVolatile;
     }
 
     // utils
@@ -176,25 +167,6 @@ struct Type {
         stream << GetName();
         return stream.str();
     }
-
-private:
-    const TypeID m_ID;
-
-    const char* m_Name;
-    std::optional<const char*> m_Namespace;
-    const std::vector<TypeID> m_Bases;
-    const std::optional<TypeID> m_Inner;
-
-    const bool m_IsArray;
-    const bool m_IsPointer;
-    const bool m_IsReference;
-    const bool m_IsConst;
-    const bool m_IsVolatile;
-
-    const std::vector<Method> m_Methods;
-    const std::vector<Field> m_Fields;
-
-    const ReflectPrintFunc m_PrintFunc;
 };
 }
 

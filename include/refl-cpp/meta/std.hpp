@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "refl-cpp/declare_reflect.hpp"
+#include "refl-cpp/reflect_printer.hpp"
 
 template <typename T>
 struct ReflCpp::ReflectData<std::optional<T>> {

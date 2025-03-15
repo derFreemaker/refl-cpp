@@ -8,7 +8,7 @@ struct ReflCpp::ReflectData<T_[]> {
         return {
             .name = "Array",
             .inner = ReflectID<T_>(),
-            .is_array = true,
+            .flags = TypeFlags::IsArray,
         };
     }
 };
@@ -27,7 +27,7 @@ struct ReflCpp::ReflectData<T_*> {
         return {
             .name = "Pointer",
             .inner = ReflectID<T_>(),
-            .is_pointer = true,
+            .flags = TypeFlags::IsPointer,
         };
     }
 };
@@ -46,8 +46,7 @@ struct ReflCpp::ReflectData<T_* const> {
         return {
             .name = "Constant Pointer",
             .inner = ReflectID<T_>(),
-            .is_pointer = true,
-            .is_const = true,
+            .flags = TypeFlags::IsPointer | TypeFlags::IsConst,
         };
     }
 };
@@ -66,7 +65,7 @@ struct ReflCpp::ReflectData<T_&> {
         return {
             .name = "Reference",
             .inner = ReflectID<T_>(),
-            .is_reference = true,
+            .flags = TypeFlags::IsReference,
         };
     }
 };
@@ -85,7 +84,7 @@ struct ReflCpp::ReflectData<const T_> {
         return {
             .name = "Constant",
             .inner = ReflectID<T_>(),
-            .is_const = true,
+            .flags = TypeFlags::IsConst,
         };
     }
 };
@@ -104,7 +103,7 @@ struct ReflCpp::ReflectData<volatile T_> {
         return {
             .name = "Volatile",
             .inner = ReflectID<T_>(),
-            .is_volatile = true,
+            .flags = TypeFlags::IsVolatile,
         };
     }
 };
