@@ -99,7 +99,7 @@ public:
         return m_Fields;
     }
 
-    std::optional<Field> GetField(const char* name) const {
+    std::optional<std::reference_wrapper<const Field>> GetField(const char* name) const {
         for (const auto& field : m_Fields) {
             if (field.GetName() == name) {
                 return field;
@@ -115,7 +115,7 @@ public:
         return m_Methods;
     }
 
-    std::optional<Method> GetMethod(const char* name) const {
+    std::optional<std::reference_wrapper<const Method>> GetMethod(const char* name) const {
         for (const auto& method : m_Methods) {
             if (method.GetName() == name) {
                 return method;

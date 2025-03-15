@@ -7,12 +7,10 @@
 int main() {
     kpop::Test test;
     
-    const auto field = *ReflCpp::Reflect<kpop::Test>().GetField("test");
-    const auto method = *ReflCpp::Reflect<kpop::Test>().GetMethod("foo");
+    const auto field = ReflCpp::Reflect<kpop::Test>().GetField("test")->get();
+    const auto method = ReflCpp::Reflect<kpop::Test>().GetMethod("foo")->get();
     
-    ReflCpp::Variant test_value(123);
-    
-    field.SetValue(test, test_value);
+    field.SetValue(test, std::optional(123));
     
     const ReflCpp::Variant test_arg("foo");
     

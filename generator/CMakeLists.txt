@@ -1,10 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 set(CMAKE_CXX_STANDARD 20)
 
-include(../cmake/CPM.cmake)
-
 project(refl-cpp_generator)
-include_directories(include)
 
 CPMAddPackage(
         NAME Ccache.cmake
@@ -55,7 +52,7 @@ target_include_directories(refl-cpp_llvm INTERFACE
 )
 # --- LLVM --- #
 
-add_executable(refl-cpp_generator main.cpp)
+add_executable(refl-cpp_generator src/main.cpp)
 target_link_libraries(refl-cpp_generator PUBLIC
         refl-cpp_llvm
 )
