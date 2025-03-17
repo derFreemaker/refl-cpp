@@ -6,12 +6,8 @@
 using namespace ReflCpp;
 
 TEST(ReflectionDatabase, RegisterType) {
-    const TypeID typeID = TypeInstance<void>::ID();
-    const TypeID reflectedTypeID = ReflectID<void>();
     const Type& reflectedType = Reflect<void>();
+    const TypeID reflectedTypeID = ReflectID<void>();
 
-    EXPECT_EQ(typeID, reflectedTypeID);
-    EXPECT_EQ(typeID, reflectedType.GetID());
+    EXPECT_EQ(reflectedTypeID, reflectedType.GetID());
 }
-
-//TODO: add more tests

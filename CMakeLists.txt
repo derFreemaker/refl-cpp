@@ -57,6 +57,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
 add_executable(refl-cpp_tests
         tests/reflect.cpp
         tests/reflect.cpp
+        tests/fields.cpp
 )
 target_link_libraries(refl-cpp_tests PRIVATE
         gtest

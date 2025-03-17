@@ -5,7 +5,6 @@
 
 namespace ReflCpp {
 template <typename Func_>
-    requires std::is_member_function_pointer_v<Func_>
 struct MethodData {
     Func_ ptr;
 
