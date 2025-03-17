@@ -3,8 +3,5 @@
 **/.vs/*
 **/.vscode/*
 
-# dont ignore 
-!**/.idea/cmake.xml
-
 # build files
 **/build

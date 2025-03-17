@@ -5,21 +5,6 @@ project(refl-cpp)
 
 include_directories(include)
 
-include(cmake/CPM.cmake)
-
-CPMAddPackage(
-        NAME GoogleTest
-        VERSION 1.16.0
-        GITHUB_REPOSITORY google/googletest
-        OPTIONS
-        "INSTALL_GTEST OFF"
-        "BUILD_GMOCK ON"
-)
-
-if (NOT DISABLE_REFLCPP_GENERATOR)
-    add_subdirectory(generator)
-endif ()
-
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
 
@@ -54,17 +39,13 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/flags.hpp
 )
 
-add_executable(refl-cpp_tests
-        tests/reflect.cpp
-        tests/reflect.cpp
-        tests/fields.cpp
-)
-target_link_libraries(refl-cpp_tests PRIVATE
-        gtest
-        gtest_main
-        gmock
-        refl-cpp
-)
-
+# small test project
 add_subdirectory(test-project)
 
+if (ENABLE_REFLCPP_GENERATOR)
+    add_subdirectory(generator)
+endif ()
+
+if (ENABLE_REFLCPP_TESTS)
+    add_subdirectory(tests)
+endif ()
