@@ -40,7 +40,7 @@ public:
         : m_Base(std::make_shared<ValueVariantWrapper<T_>>(data)),
           m_Type(ReflectID<const T_>()),
           m_IsConst(true) {}
-
+    
     template <typename T_>
         requires detail::LimitVariant<T_>
     Variant(T_* data)

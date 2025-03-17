@@ -1,9 +1,8 @@
 #include "test.generated.hpp"
 #include "test.hpp"
 
-namespace ReflCpp {
-TypeData ReflectData<kpop::Test>::Create() {
-    return TypeData {
+ReflCpp::TypeData ReflCpp::ReflectData<kpop::Test>::Create() {
+    return {
         .name = "Test",
         ._namespace = "kpop",
         .fields = {
@@ -17,11 +16,9 @@ TypeData ReflectData<kpop::Test>::Create() {
                 .ptr = &kpop::Test::foo,
                 .name = "foo",
                 .arguments = {
-                    "str",
-                    "test",
+                    "_foo",
                 }
             },
         },
     };
-}
 }

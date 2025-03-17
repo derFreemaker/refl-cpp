@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="refl-cpp_generator" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS=".\..\..\..\test-project\main.cpp -p ." REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="refl-cpp" TARGET_NAME="refl-cpp_generator" CONFIG_NAME="Debug Generator" RUN_TARGET_PROJECT_NAME="refl-cpp" RUN_TARGET_NAME="refl-cpp_generator">
+  <configuration default="false" name="refl-cpp_generator" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="-p . -I .\..\..\..\..\test-project\ .\..\..\..\..\test-project\main.cpp" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="refl-cpp" TARGET_NAME="refl-cpp_generator" CONFIG_NAME="Debug Generator" RUN_TARGET_PROJECT_NAME="refl-cpp" RUN_TARGET_NAME="refl-cpp_generator">
     <method v="2">
       <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
     </method>

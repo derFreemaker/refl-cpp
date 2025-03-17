@@ -6,15 +6,36 @@
 #include "refl-cpp/declare_reflect.hpp"
 #include "refl-cpp/reflect_printer.hpp"
 
-template <typename T>
-struct ReflCpp::ReflectData<std::optional<T>> {
+template <typename T_>
+struct ReflCpp::ReflectData<std::optional<T_>> {
     static TypeData Create() {
         return {
             .name = "optional",
             ._namespace = "std",
             .inners = {
-                ReflectID<T>()
+                ReflectID<T_>()
             },
+            
+            //TODO: take care of lvalue and rvalue references
+            
+            // .methods = {
+            //     MethodData<const T_& (std::optional<T_>::*)() const&> {
+            //         .ptr = &std::optional<T_>::value,
+            //         .name = "value",
+            //     },
+            //     MethodData<T_& (std::optional<T_>::*)() &> {
+            //         .ptr = &std::optional<T_>::value,
+            //         .name = "value",
+            //     },
+            //     MethodData<const T_&& (std::optional<T_>::*)() const&&> {
+            //         .ptr = &std::optional<T_>::value,
+            //         .name = "value",
+            //     },
+            //     MethodData<T_&& (std::optional<T_>::*)() &&> {
+            //         .ptr = &std::optional<T_>::value,
+            //         .name = "value",
+            //     },
+            // }
         };
     }
 };

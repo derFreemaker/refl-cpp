@@ -6,9 +6,7 @@ namespace kpop {
 struct Test;
 }
 
-namespace ReflCpp {
 template <>
-struct ReflectData<kpop::Test> {
+struct ReflCpp::ReflectData<kpop::Test> {
     static TypeData Create();
 };
-}

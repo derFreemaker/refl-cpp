@@ -45,6 +45,22 @@ template <typename C_, typename R_, typename... Args_>
 struct FunctionTraits<R_(C_::*)(Args_...) const>
     : public detail::FunctionTraitsBase<false, true, C_, R_, Args_...> {};
 
+template <typename C_, typename R_, typename... Args_>
+struct FunctionTraits<R_(C_::*)(Args_...) &>
+    : public detail::FunctionTraitsBase<false, false, C_, R_, Args_...> {};
+
+template <typename C_, typename R_, typename... Args_>
+struct FunctionTraits<R_(C_::*)(Args_...) const &>
+    : public detail::FunctionTraitsBase<false, true, C_, R_, Args_...> {};
+
+template <typename C_, typename R_, typename... Args_>
+struct FunctionTraits<R_(C_::*)(Args_...) &&>
+    : public detail::FunctionTraitsBase<false, false, C_, R_, Args_...> {};
+
+template <typename C_, typename R_, typename... Args_>
+struct FunctionTraits<R_(C_::*)(Args_...) const &&>
+    : public detail::FunctionTraitsBase<false, true, C_, R_, Args_...> {};
+
 template <typename T_>
 struct FunctionTraits
     : public FunctionTraits<decltype(&T_::operator())> {};

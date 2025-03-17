@@ -52,7 +52,10 @@ target_include_directories(refl-cpp_llvm INTERFACE
 )
 # --- LLVM --- #
 
-add_executable(refl-cpp_generator src/main.cpp)
+add_executable(refl-cpp_generator src/main.cpp
+        src/generate_reflect_data.hpp
+        src/generate_reflect_data.cpp
+        src/reflect_data.hpp)
 target_link_libraries(refl-cpp_generator PUBLIC
         refl-cpp_llvm
 )
