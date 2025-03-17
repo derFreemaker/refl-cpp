@@ -142,6 +142,8 @@ public:
 };
 
 int main(int argc, const char** argv) {
+    G_ReflectData.reserve(50);
+    
     static llvm::cl::opt<std::string> OutputDir("o",
                                                 llvm::cl::desc("Output directory for generated reflection data"),
                                                 llvm::cl::value_desc("directory"),

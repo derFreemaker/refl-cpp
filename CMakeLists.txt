@@ -12,17 +12,17 @@ CPMAddPackage(
         VERSION 1.16.0
         GITHUB_REPOSITORY google/googletest
         OPTIONS
-           "INSTALL_GTEST OFF"
-            "BUILD_GMOCK ON"
+        "INSTALL_GTEST OFF"
+        "BUILD_GMOCK ON"
 )
 
 if (NOT DISABLE_REFLCPP_GENERATOR)
     add_subdirectory(generator)
-endif()
+endif ()
 
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
-        
+
         include/refl-cpp/type_id.hpp
         include/refl-cpp/type.hpp
         include/refl-cpp/type_data.hpp
@@ -47,7 +47,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/meta/builtin.hpp
         include/refl-cpp/meta/common.hpp
         include/refl-cpp/meta/std.hpp
- 
+
         include/refl-cpp/impl/method.hpp
         include/refl-cpp/impl/impl.hpp
         include/refl-cpp/impl/variant.hpp
@@ -67,3 +67,4 @@ target_link_libraries(refl-cpp_tests PRIVATE
 )
 
 add_subdirectory(test-project)
+

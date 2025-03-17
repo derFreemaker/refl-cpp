@@ -12,6 +12,9 @@ struct TestStruct {
     static int static_constant;
 };
 
+int TestStruct::static_normal = -567;
+int TestStruct::static_constant = 278;
+
 template <>
 struct ReflectData<TestStruct> {
     static TypeData Create() {
@@ -24,7 +27,7 @@ struct ReflectData<TestStruct> {
                 },
                 FieldData {
                     .ptr = &TestStruct::constant,
-                    .name = "normal"
+                    .name = "constant"
                 },
                 FieldData {
                     .ptr = &TestStruct::static_normal,
@@ -45,14 +48,24 @@ TEST(Fields, GetValue) {
         .constant = 42,
     };
 
-    const auto& type = Reflect<void>();
+    const auto& type = Reflect<TestStruct>();
+    
     const auto& field_normal = type.GetField("normal")->get();
     const auto& field_constant = type.GetField("constant")->get();
+    const auto& field_static_normal = type.GetField("static_normal")->get();
+    const auto& field_static_constant = type.GetField("static_constant")->get();
     
     ASSERT_EQ(field_normal.GetValue<int>(test), 123);
     ASSERT_EQ(field_normal.GetRef<int>(test), 123);
     
     ASSERT_EQ(field_constant.GetValue<const int>(test), 42);
+    ASSERT_THROW((void)field_constant.GetRef<const int>(test), std::logic_error);
+
+    ASSERT_EQ(field_static_normal.GetValue<int>(test), -567);
+    ASSERT_EQ(field_static_normal.GetRef<int>(test), -567);
+    
+    ASSERT_EQ(field_static_constant.GetValue<const int>(test), 278);
+    ASSERT_THROW((void)field_constant.GetRef<const int>(test), std::logic_error);
 }
 
 }

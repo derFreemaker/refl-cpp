@@ -87,7 +87,8 @@ public:
     [[nodiscard]]
     Variant GetRef(const Variant& instance = Variant::Void()) const override {
         if constexpr (Traits::IsConst) {
-            throw std::logic_error("cannot get reference value on a const type. 'GetValue()' will use a const reference if the field is const.");
+            // Use 'GetValue', since it will use a const reference when it can.
+            throw std::logic_error("cannot get reference to a const type.");
         }
         else if constexpr (Traits::IsStatic) {
             return static_cast<typename Traits::Type&>(*m_Field);
