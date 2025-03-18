@@ -7,7 +7,7 @@ template <typename T_>
 struct FunctionTraits;
 
 namespace detail {
-template <bool IsStatic_, bool IsConst_, typename C_, typename R_, typename... Args_>
+template <bool IsStatic_, bool IsConst_, bool HasLReferenceObject_, bool HasRReferenceObject_, typename C_, typename R_, typename... Args_>
 struct FunctionTraitsBase {
 private:
     static constexpr size_t m_ArgCount = sizeof...(Args_);
@@ -18,6 +18,10 @@ private:
 public:
     static constexpr bool IsStatic = IsStatic_;
     static constexpr bool IsConst = IsConst_;
+    
+    static constexpr bool HasReferenceObject = HasLReferenceObject_ || HasRReferenceObject_;
+    static constexpr bool HasLReferenceObject = HasLReferenceObject_;
+    static constexpr bool HasRReferenceObject = HasRReferenceObject_;
 
     using ClassType = C_;
     using ReturnType = R_;
@@ -35,31 +39,31 @@ public:
 
 template <typename R_, typename... Args_>
 struct FunctionTraits<R_(*)(Args_...)>
-    : public detail::FunctionTraitsBase<true, false, void, R_, Args_...> {};
+    : public detail::FunctionTraitsBase<true, false, false, false, void, R_, Args_...> {};
 
 template <typename C_, typename R_, typename... Args_>
 struct FunctionTraits<R_(C_::*)(Args_...)>
-    : public detail::FunctionTraitsBase<false, false, C_, R_, Args_...> {};
+    : public detail::FunctionTraitsBase<false, false, false, false, C_, R_, Args_...> {};
 
 template <typename C_, typename R_, typename... Args_>
 struct FunctionTraits<R_(C_::*)(Args_...) const>
-    : public detail::FunctionTraitsBase<false, true, C_, R_, Args_...> {};
+    : public detail::FunctionTraitsBase<false, true, false, false, C_, R_, Args_...> {};
 
 template <typename C_, typename R_, typename... Args_>
 struct FunctionTraits<R_(C_::*)(Args_...) &>
-    : public detail::FunctionTraitsBase<false, false, C_, R_, Args_...> {};
+    : public detail::FunctionTraitsBase<false, false, true, false, C_, R_, Args_...> {};
 
 template <typename C_, typename R_, typename... Args_>
 struct FunctionTraits<R_(C_::*)(Args_...) const &>
-    : public detail::FunctionTraitsBase<false, true, C_, R_, Args_...> {};
+    : public detail::FunctionTraitsBase<false, true, true, false, C_, R_, Args_...> {};
 
 template <typename C_, typename R_, typename... Args_>
 struct FunctionTraits<R_(C_::*)(Args_...) &&>
-    : public detail::FunctionTraitsBase<false, false, C_, R_, Args_...> {};
+    : public detail::FunctionTraitsBase<false, false, false, true, C_, R_, Args_...> {};
 
 template <typename C_, typename R_, typename... Args_>
 struct FunctionTraits<R_(C_::*)(Args_...) const &&>
-    : public detail::FunctionTraitsBase<false, true, C_, R_, Args_...> {};
+    : public detail::FunctionTraitsBase<false, true, false, true, C_, R_, Args_...> {};
 
 template <typename T_>
 struct FunctionTraits

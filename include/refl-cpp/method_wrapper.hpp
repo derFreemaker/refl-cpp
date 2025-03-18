@@ -5,6 +5,7 @@
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/type_id.hpp"
 #include "refl-cpp/function_traits.hpp"
+#include "refl-cpp/function_wrapper.hpp"
 #include "refl-cpp/argument.hpp"
 #include "refl-cpp/declare_reflect.hpp"
 
@@ -18,6 +19,12 @@ struct MethodBase {
     [[nodiscard]]
     virtual bool IsConst() const = 0;
 
+    [[nodiscard]]
+    virtual bool HasLReferenceObject() const = 0;
+    
+    [[nodiscard]]
+    virtual bool HasRReferenceObject() const = 0;
+    
     [[nodiscard]]
     virtual TypeID GetReturnType() const = 0;
 
@@ -34,66 +41,10 @@ struct MethodBase {
     virtual Variant Invoke(const Variant& instance, const ArgumentList& arguments) const = 0;
 };
 
-namespace detail {
-template <typename Func_, size_t... Indices>
-Variant InvokeFunctionImpl(Func_ func, const ArgumentList& args, std::index_sequence<Indices...>) {
-    if (args.size() != FunctionTraits<Func_>::ArgCount) {
-        throw std::invalid_argument("incorrect number of arguments");
-    }
-
-    if constexpr (std::is_void_v<typename FunctionTraits<Func_>::ReturnType>) {
-        func(
-            args[Indices].GetRef < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
-        );
-
-        return Variant::Void();
-    }
-    else {
-        return Variant(
-            func(
-                args[Indices].GetRef < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
-            )
-        );
-    }
-}
-
-template <typename Func_>
-Variant InvokeFunction(Func_ func, const ArgumentList& arguments) {
-    return InvokeFunctionImpl(func, arguments, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
-}
-
-template <typename Class_, typename Func_, size_t... Indices>
-Variant InvokeMemberFunctionImpl(Class_& obj, Func_ func, const ArgumentList& args, std::index_sequence<Indices...>) {
-    if (args.size() != FunctionTraits<Func_>::ArgCount) {
-        throw std::invalid_argument("incorrect number of arguments");
-    }
-
-    if constexpr (std::is_void_v<typename FunctionTraits<Func_>::ReturnType>) {
-        (obj.*func)(
-            args[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
-        );
-
-        return Variant::Void();
-    }
-    else {
-        return Variant(
-            (obj.*func)(
-                args[Indices].GetValue < typename FunctionTraits<Func_>::template Arg<Indices>::Type > ()...
-            )
-        );
-    }
-}
-
-template <typename Class_, typename Func_>
-Variant InvokeMemberFunction(Class_& obj, Func_ func, const ArgumentList& arguments) {
-    return InvokeMemberFunctionImpl(obj, func, arguments, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
-}
-}
-
 template <typename Func_>
 struct MethodWrapper final : public MethodBase {
 private:
-    Func_ m_Func;
+    FunctionWrapper<Func_> m_Func;
 
 public:
     using Traits = FunctionTraits<Func_>;
@@ -103,12 +54,22 @@ public:
 
     [[nodiscard]]
     constexpr bool IsStatic() const override {
-        return Traits::IsStatic;
+        return m_Func.IsStatic();
     }
 
     [[nodiscard]]
     constexpr bool IsConst() const override {
-        return Traits::IsConst;
+        return m_Func.IsConst();
+    }
+
+    [[nodiscard]]
+    constexpr bool HasLReferenceObject() const override {
+        return m_Func.HasLReferenceObject();
+    }
+
+    [[nodiscard]]
+    constexpr bool HasRReferenceObject() const override {
+        return m_Func.HasRReferenceObject();
     }
 
     [[nodiscard]]
@@ -132,18 +93,17 @@ public:
             throw std::invalid_argument("not a static method");
         }
         else {
-            return detail::InvokeFunction(m_Func, arguments);
+            return m_Func.Invoke(arguments);
         }
     }
 
     [[nodiscard]]
     Variant Invoke(const Variant& instance, const ArgumentList& arguments) const override {
         if constexpr (Traits::IsStatic) {
-            return detail::InvokeFunction(m_Func, arguments);
+            return m_Func.Invoke(arguments);
         }
         else {
-            auto& obj = instance.GetRef<typename Traits::ClassType>();
-            return detail::InvokeMemberFunction(obj, m_Func, arguments);
+            return m_Func.Invoke(arguments, instance);
         }
     }
 };

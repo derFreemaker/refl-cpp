@@ -7,6 +7,7 @@ include_directories(include)
 
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
+        include/refl-cpp/common/flags.hpp
 
         include/refl-cpp/type_id.hpp
         include/refl-cpp/type.hpp
@@ -27,6 +28,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/field.hpp
         include/refl-cpp/field_wrapper.hpp
         include/refl-cpp/type_flags.hpp
+        include/refl-cpp/function_wrapper.hpp
 
         include/refl-cpp/meta/meta.hpp
         include/refl-cpp/meta/builtin.hpp
@@ -36,7 +38,6 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/impl/method.hpp
         include/refl-cpp/impl/impl.hpp
         include/refl-cpp/impl/variant.hpp
-        include/refl-cpp/common/flags.hpp
 )
 
 # small test project
