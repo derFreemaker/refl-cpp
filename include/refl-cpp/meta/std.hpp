@@ -87,3 +87,72 @@ struct ReflCpp::ReflectPrinter<std::nullptr_t> {
         stream << "nullptr";
     }
 };
+
+template <typename T_>
+struct ReflCpp::ReflectData<std::unique_ptr<T_>> {
+    static TypeData Create() {
+        return {
+            .name = "Unique Pointer",
+            ._namespace = "std",
+            .inners = {
+                ReflectID<T_>(),
+            },
+            .flags = TypeFlags::IsPointer
+        };
+    }
+};
+
+template <typename T_>
+struct ReflCpp::ReflectPrinter<std::unique_ptr<T_>> {
+    static void Print(std::ostream& stream, const Type& type) {
+        stream << "std::unique_ptr<";
+        type.GetInner(0).Print(stream);
+        stream << ">";
+    }
+};
+
+template <typename T_>
+struct ReflCpp::ReflectData<std::shared_ptr<T_>> {
+    static TypeData Create() {
+        return {
+            .name = "Shared Pointer",
+            ._namespace = "std",
+            .inners = {
+                ReflectID<T_>(),
+            },
+            .flags = TypeFlags::IsPointer
+        };
+    }
+};
+
+template <typename T_>
+struct ReflCpp::ReflectPrinter<std::shared_ptr<T_>> {
+    static void Print(std::ostream& stream, const Type& type) {
+        stream << "std::shared_ptr<";
+        type.GetInner(0).Print(stream);
+        stream << ">";
+    }
+};
+
+template <typename T_>
+struct ReflCpp::ReflectData<std::weak_ptr<T_>> {
+    static TypeData Create() {
+        return {
+            .name = "Weak Pointer",
+            ._namespace = "std",
+            .inners = {
+                ReflectID<T_>(),
+            },
+            .flags = TypeFlags::IsPointer
+        };
+    }
+};
+
+template <typename T_>
+struct ReflCpp::ReflectPrinter<std::weak_ptr<T_>> {
+    static void Print(std::ostream& stream, const Type& type) {
+        stream << "std::weak_ptr<";
+        type.GetInner(0).Print(stream);
+        stream << ">";
+    }
+};

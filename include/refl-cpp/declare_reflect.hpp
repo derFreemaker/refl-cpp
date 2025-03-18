@@ -14,8 +14,10 @@ template <typename T>
 [[nodiscard]]
 TypeID ReflectID();
 
+namespace detail {
 [[nodiscard]]
 const Type& Reflect(TypeID id);
+}
 
 namespace detail {
 template <typename Tuple_, std::size_t... I_>

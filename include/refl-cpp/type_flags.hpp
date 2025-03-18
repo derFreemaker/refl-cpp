@@ -9,9 +9,9 @@ DEFINE_FLAGS(TypeFlags, uint8_t,
     IsArray = 1 << 0,
     IsPointer = 1 << 1,
     IsLValueReference = 1 << 2,
-    IsRValueReference = 1 << 2,
-    IsConst = 1 << 3,
-    IsVolatile = 1 << 4,
+    IsRValueReference = 1 << 3,
+    IsConst = 1 << 4,
+    IsVolatile = 1 << 5,
 )
 
 }

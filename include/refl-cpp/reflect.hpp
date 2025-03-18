@@ -6,7 +6,6 @@
 #include "refl-cpp/type_instance.hpp"
 
 namespace ReflCpp {
-
 template <typename T>
 [[nodiscard]]
 const Type& Reflect() {
@@ -19,9 +18,11 @@ TypeID ReflectID() {
     return TypeInstance<T>::ID();
 }
 
+namespace detail {
 [[nodiscard]]
 inline const Type& Reflect(const TypeID id) {
     return ReflectionDatabase::Instance().GetType(id);
+}
 }
 }
 

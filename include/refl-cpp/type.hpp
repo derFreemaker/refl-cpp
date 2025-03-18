@@ -103,6 +103,13 @@ public:
     }
 
     [[nodiscard]]
+    bool HasInner(const TypeID id) const {
+        return std::ranges::any_of(m_Inners, [id](const TypeID t) {
+            return t == id;
+        });
+    }
+
+    [[nodiscard]]
     const TypeFlags& GetFlags() const {
         return m_Flags;
     }

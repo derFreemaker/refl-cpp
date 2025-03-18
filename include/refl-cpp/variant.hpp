@@ -11,6 +11,7 @@ concept LimitVariant = !std::is_same_v<T_, Variant>
     && !std::is_same_v<T_, std::nullptr_t>;
 }
 
+//TODO: decide if we want variant to be copy able
 struct Variant {
 private:
     std::shared_ptr<VariantBase> m_Base;
@@ -22,6 +23,14 @@ private:
         : m_Base(std::make_shared<VoidVariantWrapper>()),
           m_Type(ReflectID<void>()) {}
 
+    void CheckVoid() const {
+        if (IsVoid()) {
+            throw std::logic_error("cannot get reference to void variant");
+        }
+    }
+
+    friend struct VariantTestHelper;
+
 public:
     static Variant Void() {
         static Variant instance(nullptr);
@@ -29,18 +38,25 @@ public:
     }
 
     template <typename T_>
+        requires (detail::LimitVariant<T_> && std::copy_constructible<T_>)
+    Variant(const T_& data)
+        : m_Base(std::make_shared<ValueVariantWrapper<T_>>(data)),
+          m_Type(ReflectID<const T_>()),
+          m_IsConst(true) {}
+    
+    template <typename T_>
         requires detail::LimitVariant<T_>
     Variant(T_& data)
         : m_Base(std::make_shared<RefVariantWrapper<T_>>(data)),
           m_Type(ReflectID<T_>()) {}
 
     template <typename T_>
-        requires detail::LimitVariant<T_>
+        requires (detail::LimitVariant<T_> && !std::copy_constructible<T_>)
     Variant(const T_& data)
-        : m_Base(std::make_shared<ValueVariantWrapper<T_>>(data)),
+        : m_Base(std::make_shared<ConstRefVariantWrapper<T_>>(data)),
           m_Type(ReflectID<const T_>()),
           m_IsConst(true) {}
-    
+
     template <typename T_>
         requires detail::LimitVariant<T_>
     Variant(T_* data)
@@ -58,35 +74,27 @@ public:
     bool IsVoid() const {
         return m_Type == ReflectID<void>();
     }
-    
+
     [[nodiscard]]
     TypeID GetType() const {
         return m_Type;
     }
 
+    //TODO: add get const reference or something
+    
     template <typename T_>
         requires detail::LimitVariant<T_>
     [[nodiscard]]
-    T_& GetRef() const {
-        if (m_Type == ReflectID<void>()) {
-            throw std::logic_error("cannot get reference to void variant");
-        }
-
-        auto passed_id = ReflectID<T_>();
-        if (m_Type != passed_id) {
-            throw std::invalid_argument("passed type is not the same as the stored type");
-        }
-
-        if (m_IsConst) {
-            throw std::logic_error("cannot get reference to constant");
-        }
-
-        return static_cast<VariantWrapper<T_&>*>(m_Base.get())->GetValue();
-    }
+    T_& GetRef() const;
 
     template <typename T_>
-        requires detail::LimitVariant<T_>
+        requires (detail::LimitVariant<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
     const T_& GetValue() const;
+
+    template <typename T_>
+        requires (detail::LimitVariant<T_> && std::is_pointer_v<T_>)
+    [[nodiscard]]
+    const std::remove_pointer_t<T_>*& GetValue() const;
 };
 }

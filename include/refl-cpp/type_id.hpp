@@ -43,7 +43,7 @@ public:
             throw std::invalid_argument("invalid type");
         }
         
-        return Reflect(m_ID);
+        return detail::Reflect(m_ID);
     }
 
     operator const Type& () const {

@@ -17,6 +17,8 @@ CPMAddPackage(
 add_executable(refl-cpp_tests
         reflect.cpp
         fields.cpp
+        function_wrapper.cpp
+        variant.cpp
 )
 target_link_libraries(refl-cpp_tests PRIVATE
         gtest
