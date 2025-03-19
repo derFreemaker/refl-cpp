@@ -4,6 +4,8 @@
 #include <optional>
 #include <ostream>
 #include <sstream>
+#include <ranges>
+#include <algorithm>
 
 #include "refl-cpp/declare_reflect.hpp"
 #include "refl-cpp/type_data.hpp"
