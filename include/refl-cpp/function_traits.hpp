@@ -1,6 +1,8 @@
 #pragma once
 
-#include <tuple>
+#include <vector>
+
+#include "refl-cpp/declare_reflect.hpp"
 
 namespace ReflCpp {
 template <typename T_>
@@ -15,6 +17,11 @@ private:
     // If this gets triggered, then something is wrong with YOUR code.
     static_assert(m_ArgCount < 256, "only support up to 255 arguments");
 
+    template <size_t... Indices>
+    static std::vector<Result<TypeID>> GetArgsImpl(std::index_sequence<Indices...>) {
+        return { ReflectID<Arg<Indices>>()... };
+    }
+    
 public:
     static constexpr bool IsStatic = IsStatic_;
     static constexpr bool IsConst = IsConst_;
@@ -28,12 +35,14 @@ public:
     static constexpr bool HasReturn = !std::is_same_v<R_, void>;
 
     static constexpr uint8_t ArgCount = m_ArgCount;
-    using Args = std::tuple<Args_...>;
-
     template <uint8_t I>
     struct Arg {
         using Type = std::tuple_element_t<I, std::tuple<Args_...>>;
     };
+
+    static Result<std::vector<TypeID>> GetArgs() {
+        return GetArgsImpl(std::make_index_sequence<ArgCount>());
+    }
 };
 }
 

@@ -27,43 +27,28 @@ public:
     const char* GetName() const {
         return m_Name;
     }
+    
+    // [[nodiscard]]
+    // std::vector<ArgumentInfo> GetArguments() const {
+    //     std::vector<ArgumentInfo> arguments;
+    //     arguments.reserve(m_ArgumentNames.size());
+    //
+    //     const auto& arg_types = m_Func->GetArgumentsTypes();
+    //     for (int i = 0; i < m_ArgumentNames.size(); ++i) {
+    //         arguments.emplace_back(m_ArgumentNames[i], arg_types[i]);
+    //     }
+    //
+    //     return arguments;
+    // }
 
-    [[nodiscard]]
-    bool IsStatic() const {
-        return m_Func->IsStatic();
-    }
-
-    [[nodiscard]]
-    bool IsConst() const {
-        return m_Func->IsConst();
-    }
-
-    [[nodiscard]]
-    TypeID GetReturnType() const {
-        return m_Func->GetReturnType();
-    }
-
-    [[nodiscard]]
-    std::vector<ArgumentInfo> GetArguments() const {
-        std::vector<ArgumentInfo> arguments;
-        arguments.reserve(m_ArgumentNames.size());
-
-        const auto& arg_types = m_Func->GetArgumentsTypes();
-        for (int i = 0; i < m_ArgumentNames.size(); ++i) {
-            arguments.emplace_back(m_ArgumentNames[i], arg_types[i]);
-        }
-
-        return arguments;
-    }
-
-    [[nodiscard]]
-    ArgumentInfo GetArgument(const size_t index) const {
-        if (index >= m_ArgumentNames.size()) {
-            throw std::invalid_argument("index out of range");
-        }
-        
-        return {m_ArgumentNames[index], m_Func->GetArgumentsTypes()[index]};
-    }
+    // [[nodiscard]]
+    // ArgumentInfo GetArgument(const size_t index) const {
+    //     if (index >= m_ArgumentNames.size()) {
+    //         throw std::invalid_argument("index out of range");
+    //     }
+    //     
+    //     return {m_ArgumentNames[index], m_Func->GetArgumentsTypes()[index]};
+    // }
     
     [[nodiscard]]
     Variant InvokeStatic(const ArgumentList& args) const {
@@ -85,10 +70,5 @@ public:
     Variant Invoke(const Variant& instance, Args&&... args) const {
         return m_Func->Invoke(instance, { std::forward<Args>(args)... });
     }
-
-    void Print(std::ostream& stream) const;
-
-    [[nodiscard]]
-    std::string Dump() const;
 };
 }

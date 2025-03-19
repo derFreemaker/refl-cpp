@@ -8,18 +8,20 @@ namespace ReflCpp {
 struct TypeID {
 private:
     static constexpr auto m_Invalid = 0;
-    
+
     uint32_t m_ID = m_Invalid;
 
 public:
     static constexpr auto Invalid() {
         return TypeID(m_Invalid);
     }
-    
+
     operator uint32_t() const {
         return m_ID;
     }
-
+    
+    TypeID() = delete;
+    
     constexpr TypeID(const uint32_t id)
         : m_ID(id) {}
 
@@ -38,15 +40,15 @@ public:
     }
 
     [[nodiscard]]
-    const Type& GetType() const {
+    Result<const Type&> GetType() const {
         if (IsInvalid()) {
-            throw std::invalid_argument("invalid type");
+            return { Error, "invalid type id" };
         }
-        
+
         return detail::Reflect(m_ID);
     }
 
-    operator const Type& () const {
+    operator const Type&() const {
         return GetType();
     }
 };

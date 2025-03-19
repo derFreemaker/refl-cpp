@@ -34,14 +34,14 @@ const T_& Variant::GetValue() const {
     }
 
     if (m_IsConst
-        && m_Type.GetType().GetFlags().Has(TypeFlags::IsConst)
-        && m_Type.GetType().HasInner(ReflectID<T_>())) {
+        && m_Type.GetType().Value().GetFlags().Has(TypeFlags::IsConst)
+        && m_Type.GetType().Value().HasInner(ReflectID<T_>())) {
         return static_cast<VariantWrapper<const T_&>*>(m_Base.get())->GetValue();
     }
 
     throw std::invalid_argument(fmt::format(
         "passed type '{0}' is not the same as the stored type '{1}'",
-        Reflect<T_>().Dump(), m_Type.GetType().Dump()
+        Reflect<T_>().Value().Dump(), m_Type.GetType().Value().Dump()
     ));
 }
 
@@ -58,16 +58,16 @@ const std::remove_pointer_t<T_>*& Variant::GetValue() const {
     }
 
     if (m_IsConst
-        && m_Type.GetType().GetFlags().Has(TypeFlags::IsPointer)
-        && m_Type.GetType().HasInner(ReflectID<const std::remove_pointer_t<T_>>())) {
+        && m_Type.GetType().Value().GetFlags().Has(TypeFlags::IsPointer)
+        && m_Type.GetType().Value().HasInner(ReflectID<const std::remove_pointer_t<T_>>())) {
         return static_cast<VariantWrapper<return_type&>*>(m_Base.get())->GetValue();
     }
 
     throw std::invalid_argument(
         std::string("passed type: '")
-        + std::string(Reflect<T_>().Dump())
+        + std::string(TRY(Reflect<T_>()).Dump())
         + std::string("' is not the same as the stored type '")
-        + std::string(m_Type.GetType().Dump())
+        + std::string(TRY(m_Type.GetType()).Dump())
         + std::string("'")
     );
 }

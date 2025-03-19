@@ -6,15 +6,22 @@
 namespace ReflCpp {
 template <typename T>
 struct TypeInstance {
-    static TypeID ID() {
+    static Result<TypeID> ID() {
+        static TypeID id = TypeID::Invalid();
+        if (id.IsValid()) {
+            return { Ok, id };
+        }
+        
         auto& database = ReflectionDatabase::Instance();
-        static auto id = database.RegisterType<T>();
-        return id;
+        id = TRY(database.RegisterType<T>());
+
+        return { Ok, id };
     }
 
-    static const Type& Type() {
+    static Result<const Type&> Type() {
+        const TypeID id = TRY(ID());
         const auto& database = ReflectionDatabase::Instance();
-        return database.GetType(ID());
+        return database.GetType(id);
     }
 };
 }

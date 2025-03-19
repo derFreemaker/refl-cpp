@@ -8,19 +8,19 @@
 namespace ReflCpp {
 template <typename T>
 [[nodiscard]]
-const Type& Reflect() {
+Result<const Type&> Reflect() {
     return TypeInstance<T>::Type();
 }
 
 template <typename T>
 [[nodiscard]]
-TypeID ReflectID() {
+Result<TypeID> ReflectID() {
     return TypeInstance<T>::ID();
 }
 
 namespace detail {
 [[nodiscard]]
-inline const Type& Reflect(const TypeID id) {
+inline Result<const Type&> Reflect(const TypeID id) {
     return ReflectionDatabase::Instance().GetType(id);
 }
 }

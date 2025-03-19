@@ -21,7 +21,7 @@ private:
 
     Variant(std::nullptr_t)
         : m_Base(std::make_shared<VoidVariantWrapper>()),
-          m_Type(ReflectID<void>()) {}
+          m_Type(*ReflectID<void>()) {}
 
     void CheckVoid() const {
         if (IsVoid()) {
@@ -72,7 +72,7 @@ public:
 
     [[nodiscard]]
     bool IsVoid() const {
-        return m_Type == ReflectID<void>();
+        return m_Type == *ReflectID<void>();
     }
 
     [[nodiscard]]

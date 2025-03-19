@@ -6,9 +6,7 @@
 
 #include "test.hpp"
 
-jmp_buf jump_buffer;
-
-ReflCpp::Result<std::string> foo() {
+ReflCpp::Result<> foo() {
     return { ReflCpp::Error, "lol: {0}", 123 };
 }
 
