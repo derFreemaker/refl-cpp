@@ -26,7 +26,7 @@ private:
         requires (_TEMPLATE && !Traits::HasReturn) \
     void InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...> __VA_OPT__(, ) __VA_ARGS__) const { \
         (_INVOKE)( \
-            args[Indices].GetRef < typename Traits::template Arg<Indices>::Type > ()... \
+            args[Indices].GetRef < typename Traits::template Arg<Indices>::Type > ().Value()... \
         ); \
     }
 
@@ -34,9 +34,9 @@ private:
 
     //NOTE: This works even if it says 'expected expression' in Clion for example
     INVOKE_IMPL(Traits::IsStatic, m_Ptr)
-    INVOKE_IMPL(!Traits::IsStatic && !Traits::HasReferenceObject, obj.GetRef<typename Traits::ClassType>().*m_Ptr, const Variant& obj)
-    INVOKE_IMPL(!Traits::IsStatic && Traits::HasReferenceObject && !Traits::HasRReferenceObject, obj.GetRef<typename Traits::ClassType>().*m_Ptr, const Variant& obj)
-    INVOKE_IMPL(!Traits::IsStatic && Traits::HasReferenceObject && !Traits::HasLReferenceObject, std::move(obj.GetRef<typename Traits::ClassType>()).*m_Ptr, const Variant& obj)
+    INVOKE_IMPL(!Traits::IsStatic && !Traits::HasReferenceObject, obj.GetRef<typename Traits::ClassType>().Value().*m_Ptr, const Variant& obj)
+    INVOKE_IMPL(!Traits::IsStatic && Traits::HasReferenceObject && !Traits::HasRReferenceObject, obj.GetRef<typename Traits::ClassType>().Value().*m_Ptr, const Variant& obj)
+    INVOKE_IMPL(!Traits::IsStatic && Traits::HasReferenceObject && !Traits::HasLReferenceObject, std::move(obj.GetRef<typename Traits::ClassType>().Value()).*m_Ptr, const Variant& obj)
 
 public:
     FunctionWrapper(Func_ ptr)

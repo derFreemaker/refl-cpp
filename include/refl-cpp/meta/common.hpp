@@ -16,7 +16,7 @@ struct ReflCpp::ReflectData<T_[]> {
 template <typename T_>
 struct ReflCpp::ReflectPrinter<T_[]> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << "[]";
     }
 };
@@ -37,7 +37,7 @@ struct ReflCpp::ReflectData<T_*> {
 template <typename T_>
 struct ReflCpp::ReflectPrinter<T_*> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << "*";
     }
 };
@@ -58,7 +58,7 @@ struct ReflCpp::ReflectData<T_* const> {
 template <typename T_>
 struct ReflCpp::ReflectPrinter<T_* const> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << "* const";
     }
 };
@@ -79,7 +79,7 @@ struct ReflCpp::ReflectData<T_&> {
 template <typename T_>
 struct ReflCpp::ReflectPrinter<T_&> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << "&";
     }
 };
@@ -100,7 +100,7 @@ struct ReflCpp::ReflectData<T_&&> {
 template <typename T_>
 struct ReflCpp::ReflectPrinter<T_&&> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << "&&";
     }
 };
@@ -122,7 +122,7 @@ template <typename T_>
 struct ReflCpp::ReflectPrinter<const T_> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "const ";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
     }
 };
 
@@ -143,6 +143,6 @@ template <typename T_>
 struct ReflCpp::ReflectPrinter<volatile T_> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "volatile ";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
     }
 };

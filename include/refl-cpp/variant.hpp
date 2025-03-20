@@ -20,24 +20,28 @@ private:
     TypeID m_Type;
     bool m_IsConst = false;
 
-    Variant(std::nullptr_t)
-        : m_Base(std::make_shared<VoidVariantWrapper>()),
-          m_Type(ReflectID<void>().Value()) {}
-
     void CheckVoid() const {
         if (IsVoid()) {
             throw std::logic_error("cannot get reference to void variant");
         }
     }
 
+    Variant()
+        : m_Base(std::make_shared<VoidVariantWrapper>()),
+          m_Type(ReflectID<void>().Value()) {}
+    
     friend struct VariantTestHelper;
 
 public:
     static Variant Void() {
-        static Variant instance(nullptr);
+        static auto instance = Variant();
         return instance;
     }
 
+    Variant(std::nullptr_t)
+        : m_Base(std::make_shared<PointerVariantWrapper<std::nullptr_t>>(nullptr)),
+          m_Type(ReflectID<std::nullptr_t>().Value()) {}
+    
     template <typename T_>
         requires (detail::LimitVariant<T_> && std::copy_constructible<T_>)
     Variant(const T_& data)

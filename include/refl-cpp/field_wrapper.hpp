@@ -64,7 +64,7 @@ public:
                 return { Error, "instance is needed for non-static member fields" };
             }
             
-            auto& obj = Try(instance.GetRef<typename Traits::ClassType>());
+            typename Traits::Type& obj = TRY(instance.GetRef<typename Traits::ClassType>());
             return { Ok, static_cast<typename Traits::Type>(obj.*m_Field) };
         }
     }
@@ -82,7 +82,7 @@ public:
                 return { Error, "instance is needed for non-static member fields" };
             }
             
-            auto& obj = TRY(instance.GetRef<typename Traits::ClassType>());
+            typename Traits::ClassType& obj = TRY(instance.GetRef<typename Traits::ClassType>());
             obj.*m_Field = value.GetValue<typename Traits::Type>();
 
             return { Ok };

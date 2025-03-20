@@ -44,7 +44,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::optional<T>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::optional<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << ">";
     }
 };
@@ -66,7 +66,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::vector<T>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::vector<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << ">";
     }
 };
@@ -106,7 +106,7 @@ template <typename T_>
 struct ReflCpp::ReflectPrinter<std::unique_ptr<T_>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::unique_ptr<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << ">";
     }
 };
@@ -129,7 +129,7 @@ template <typename T_>
 struct ReflCpp::ReflectPrinter<std::shared_ptr<T_>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::shared_ptr<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << ">";
     }
 };
@@ -152,7 +152,7 @@ template <typename T_>
 struct ReflCpp::ReflectPrinter<std::weak_ptr<T_>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::weak_ptr<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).Value().get().Print(stream);
         stream << ">";
     }
 };

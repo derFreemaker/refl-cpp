@@ -83,7 +83,7 @@ public:
     }
 
     [[nodiscard]]
-    const Type& GetBase(const size_t index) const {
+    Result<const Type&> GetBase(const size_t index) const {
         return m_Bases[index].GetType();
     }
     
@@ -98,7 +98,7 @@ public:
     }
 
     [[nodiscard]]
-    const Type& GetInner(const size_t index) const {
+    Result<const Type&> GetInner(const size_t index) const {
         return m_Inners[index].GetType();
     }
 

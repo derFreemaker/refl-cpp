@@ -48,7 +48,7 @@ public:
         return detail::Reflect(m_ID);
     }
 
-    operator const Type&() const {
+    operator Result<const Type&>() const {
         return GetType();
     }
 };

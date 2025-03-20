@@ -74,38 +74,40 @@ public:
         return !m_IsSuccess;
     }
 
-    const T_& Value() const & {
+    T_& Value() & {
         if (IsError()) {
             throw std::runtime_error("Attempted to access value of an error Result.");
         }
         return std::get<T_>(m_Data);
     }
 
-    // T_&& Value() && {
-    //     if (IsError()) {
-    //         throw std::runtime_error("Attempted to access value of an error Result.");
-    //     }
-    //     return std::move(std::get<T_>(m_Data));
-    // }
-
-    operator T_&() & {
-        return Value();
+    const T_& Value() const & {
+        if (IsError()) {
+            throw std::runtime_error("Attempted to access value of an error Result.");
+        }
+        return std::get<T_>(m_Data);
+    }
+    
+    T_&& Value() && {
+        if (IsError()) {
+            throw std::runtime_error("Attempted to access value of an error Result.");
+        }
+        return std::move(std::get<T_>(m_Data));
     }
 
-    // operator T_&&() && {
-    //     return Value();
-    // }
-
+    const T_&& Value() const && {
+        if (IsError()) {
+            throw std::runtime_error("Attempted to access value of an error Result.");
+        }
+        return std::move(std::get<T_>(m_Data));
+    }
+    
     [[nodiscard]]
     const FormattedError& Error() const & {
         if (IsSuccess()) {
             throw std::runtime_error("Attempted to access error of a success Result");
         }
-        return m_Data.Error;
-    }
-
-    operator const FormattedError&() const & {
-        return Error();
+        return std::get<const FormattedError>(m_Data);
     }
 };
 
@@ -119,7 +121,7 @@ public:
 
     template <typename... Args>
     Result(detail::ErrorTag, fmt::format_string<Args...> fmt_str, Args&&... args)
-        : m_Error(FormattedError(fmt_str, args...)) {}
+        : m_Error(FormattedError(fmt_str, std::forward<Args>(args)...)) {}
 
     template <typename OtherT_>
     Result(detail::ErrorTag, const Result<OtherT_>& result)
@@ -141,10 +143,6 @@ public:
             throw std::runtime_error("Attempted to access value of an error Result.");
         }
         return *m_Error;
-    }
-
-    operator const FormattedError&() const & {
-        return Error();
     }
 };
 
@@ -181,27 +179,33 @@ public:
         return !m_IsSuccess;
     }
 
-    const T_& Value() const & {
+    std::reference_wrapper<T_>& Value() & {
+        if (IsError()) {
+            throw std::runtime_error("Attempted to access value of an error Result.");
+        }
+        return std::get<std::reference_wrapper<T_>>(m_Data);
+    }
+    
+    const std::reference_wrapper<T_>& Value() const & {
         if (IsError()) {
             throw std::runtime_error("Attempted to access value of an error Result.");
         }
         return std::get<std::reference_wrapper<T_>>(m_Data);
     }
 
-    // T_&& Value() && {
-    //     if (IsError()) {
-    //         throw std::runtime_error("Attempted to access value of an error Result.");
-    //     }
-    //     return std::move(std::get<std::reference_wrapper<T_>>(m_Data));
-    // }
-
-    operator const T_&() const & {
-        return Value();
+    std::reference_wrapper<T_>&& Value() && {
+        if (IsError()) {
+            throw std::runtime_error("Attempted to access value of an error Result.");
+        }
+        return std::move(std::get<std::reference_wrapper<T_>>(m_Data));
     }
 
-    // operator T_&&() && {
-    //     return Value();
-    // }
+    const std::reference_wrapper<T_>&& Value() const && {
+        if (IsError()) {
+            throw std::runtime_error("Attempted to access value of an error Result.");
+        }
+        return std::move(std::get<std::reference_wrapper<T_>>(m_Data));
+    }
 
     [[nodiscard]]
     const FormattedError& Error() const & {
@@ -209,10 +213,6 @@ public:
             throw std::runtime_error("Attempted to access error of a success Result");
         }
         return std::get<const FormattedError>(m_Data);
-    }
-
-    operator const FormattedError&() const & {
-        return Error();
     }
 };
 
