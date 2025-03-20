@@ -1,5 +1,6 @@
 #pragma once
 
+#include "refl-cpp/common/result.hpp"
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/declare_reflect.hpp"
 #include "refl-cpp/field_traits.hpp"
@@ -15,15 +16,16 @@ struct FieldBase {
     virtual bool IsConst() const = 0;
 
     [[nodiscard]]
-    virtual TypeID GetType() const = 0;
+    virtual Result<TypeID> GetType() const = 0;
 
     [[nodiscard]]
-    virtual Variant GetValue(const Variant& instance = Variant::Void()) const = 0;
-
-    virtual void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const = 0;
+    virtual Result<Variant> GetValue(const Variant& instance) const = 0;
 
     [[nodiscard]]
-    virtual Variant GetRef(const Variant& instance = Variant::Void()) const = 0;
+    virtual Result<void> SetValue(const Variant& value, const Variant& instance) const = 0;
+
+    [[nodiscard]]
+    virtual Result<Variant> GetRef(const Variant& instance) const = 0;
 };
 
 template <typename Field_>
@@ -48,58 +50,63 @@ public:
     }
 
     [[nodiscard]]
-    TypeID GetType() const override {
+    Result<TypeID> GetType() const override {
         return ReflectID<typename Traits::Type>();
     }
     
     [[nodiscard]]
-    Variant GetValue(const Variant& instance = Variant::Void()) const override {
+    Result<Variant> GetValue(const Variant& instance) const override {
         if constexpr (Traits::IsStatic) {
-            return static_cast<typename Traits::Type>(*m_Field);
+            return { Ok, static_cast<typename Traits::Type>(*m_Field) };
         }
         else {
             if (instance.IsVoid()) {
-                throw std::invalid_argument("instance is needed for non-static member fields");
+                return { Error, "instance is needed for non-static member fields" };
             }
             
-            auto& obj = instance.GetRef<typename Traits::ClassType>();
-            return static_cast<typename Traits::Type>(obj.*m_Field);
+            auto& obj = Try(instance.GetRef<typename Traits::ClassType>());
+            return { Ok, static_cast<typename Traits::Type>(obj.*m_Field) };
         }
     }
 
-    void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const override {
+    [[nodiscard]]
+    Result<void> SetValue(const Variant& value, const Variant& instance) const override {
         if constexpr (Traits::IsConst) {
-            throw std::logic_error("cannot set value on a const type.");
+            return { Error, "cannot set value on a const type: {0}", TRY(Reflect<typename Traits::Type>()).Dump() };
         }
         else if constexpr (Traits::IsStatic) {
             *m_Field = value.GetValue<typename Traits::Type>();
         }
         else {
             if (instance.IsVoid()) {
-                throw std::invalid_argument("instance is needed for non-static member fields");
+                return { Error, "instance is needed for non-static member fields" };
             }
             
-            auto& obj = instance.GetRef<typename Traits::ClassType>();
+            auto& obj = TRY(instance.GetRef<typename Traits::ClassType>());
             obj.*m_Field = value.GetValue<typename Traits::Type>();
+
+            return { Ok };
         }
+
+        return { Error, "unreachable" };
     }
 
     [[nodiscard]]
-    Variant GetRef(const Variant& instance = Variant::Void()) const override {
+    Result<Variant> GetRef(const Variant& instance) const override {
         if constexpr (Traits::IsConst) {
             // Use 'GetValue', since it will use a const reference when it can.
-            throw std::logic_error("cannot get reference to a const type.");
+            return { Error, "cannot get reference to a const type" };
         }
         else if constexpr (Traits::IsStatic) {
-            return static_cast<typename Traits::Type&>(*m_Field);
+            return { Ok, static_cast<typename Traits::Type&>(*m_Field) };
         }
         else {
             if (instance.IsVoid()) {
-                throw std::invalid_argument("instance is needed for non-static member fields");
+                return { Error, "instance is needed for a non-static member field" };
             }
             
-            auto& obj = instance.GetRef<typename Traits::ClassType>();
-            return static_cast<typename Traits::Type&>(obj.*m_Field);
+            auto& obj = TRY(instance.GetRef<typename Traits::ClassType>());
+            return { Ok, static_cast<typename Traits::Type&>(obj.*m_Field) };
         }
     }
 };

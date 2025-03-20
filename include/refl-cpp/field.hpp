@@ -24,34 +24,35 @@ public:
     }
 
     [[nodiscard]]
-    TypeID GetType() const {
+    Result<TypeID> GetType() const {
         return m_Base->GetType();
     }
 
-    void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
+    [[nodiscard]]
+    Result<void> SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
         return m_Base->SetValue(value, instance);
     }
 
     [[nodiscard]]
-    Variant GetValue(const Variant& instance = Variant::Void()) const {
+    Result<Variant> GetValue(const Variant& instance = Variant::Void()) const {
         return m_Base->GetValue(instance);
     }
 
     template <typename T_>
     [[nodiscard]]
-    T_ GetValue(const Variant& instance = Variant::Void()) const {
-        return m_Base->GetValue(instance).GetValue<T_>();
+    Result<T_> GetValue(const Variant& instance = Variant::Void()) const {
+        return { Ok, TRY(m_Base->GetValue(instance)).GetValue<T_>() };
     }
     
     [[nodiscard]]
-    Variant GetRef(const Variant& instance = Variant::Void()) const {
+    Result<Variant> GetRef(const Variant& instance = Variant::Void()) const {
         return m_Base->GetRef(instance);
     }
     
     template <typename T_>
     [[nodiscard]]
-    T_& GetRef(const Variant& instance = Variant::Void()) const {
-        return m_Base->GetRef(instance).GetRef<T_>();
+    Result<T_>& GetRef(const Variant& instance = Variant::Void()) const {
+        return { Ok, TRY(m_Base->GetRef(instance)).GetRef<T_>() };
     }
 };
 }

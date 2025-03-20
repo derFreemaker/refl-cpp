@@ -1,5 +1,6 @@
 #pragma once
 
+#include "refl-cpp/common/result.hpp"
 #include "refl-cpp/variant_wrapper.hpp"
 
 namespace ReflCpp {
@@ -21,7 +22,7 @@ private:
 
     Variant(std::nullptr_t)
         : m_Base(std::make_shared<VoidVariantWrapper>()),
-          m_Type(*ReflectID<void>()) {}
+          m_Type(ReflectID<void>().Value()) {}
 
     void CheckVoid() const {
         if (IsVoid()) {
@@ -41,38 +42,38 @@ public:
         requires (detail::LimitVariant<T_> && std::copy_constructible<T_>)
     Variant(const T_& data)
         : m_Base(std::make_shared<ValueVariantWrapper<T_>>(data)),
-          m_Type(ReflectID<const T_>()),
+          m_Type(ReflectID<const T_>().Value()),
           m_IsConst(true) {}
     
     template <typename T_>
         requires detail::LimitVariant<T_>
     Variant(T_& data)
         : m_Base(std::make_shared<RefVariantWrapper<T_>>(data)),
-          m_Type(ReflectID<T_>()) {}
+          m_Type(ReflectID<T_>().Value()) {}
 
     template <typename T_>
         requires (detail::LimitVariant<T_> && !std::copy_constructible<T_>)
     Variant(const T_& data)
         : m_Base(std::make_shared<ConstRefVariantWrapper<T_>>(data)),
-          m_Type(ReflectID<const T_>()),
+          m_Type(ReflectID<const T_>().Value()),
           m_IsConst(true) {}
 
     template <typename T_>
         requires detail::LimitVariant<T_>
     Variant(T_* data)
         : m_Base(std::make_shared<PointerVariantWrapper<T_>>(data)),
-          m_Type(ReflectID<T_*>()) {}
+          m_Type(ReflectID<T_*>().Value()) {}
 
     template <typename T_>
         requires detail::LimitVariant<T_>
     Variant(const T_* data)
         : m_Base(std::make_shared<ConstPointerVariantWrapper<T_>>(data)),
-          m_Type(ReflectID<const T_*>()),
+          m_Type(ReflectID<const T_*>().Value()),
           m_IsConst(true) {}
 
     [[nodiscard]]
     bool IsVoid() const {
-        return m_Type == *ReflectID<void>();
+        return m_Type == ReflectID<void>().Value();
     }
 
     [[nodiscard]]
@@ -85,16 +86,16 @@ public:
     template <typename T_>
         requires detail::LimitVariant<T_>
     [[nodiscard]]
-    T_& GetRef() const;
+    Result<T_&> GetRef() const;
 
     template <typename T_>
         requires (detail::LimitVariant<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
-    const T_& GetValue() const;
+    Result<const T_&> GetValue() const;
 
     template <typename T_>
         requires (detail::LimitVariant<T_> && std::is_pointer_v<T_>)
     [[nodiscard]]
-    const std::remove_pointer_t<T_>*& GetValue() const;
+    Result<const std::remove_pointer_t<T_>*&> GetValue() const;
 };
 }

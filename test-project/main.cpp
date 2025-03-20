@@ -6,7 +6,7 @@
 
 #include "test.hpp"
 
-ReflCpp::Result<> foo() {
+ReflCpp::Result<void> foo() {
     return { ReflCpp::Error, "lol: {0}", 123 };
 }
 

@@ -33,7 +33,6 @@ private:
 public:
     Type() = delete;
     Type(Type&) = delete;
-    Type(Type&&) = delete;
 
     Type(const TypeID id, const TypeData& data, const TypeOptions& options)
         : m_ID(id),

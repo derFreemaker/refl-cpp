@@ -23,28 +23,25 @@ private:
     FunctionWrapper<Func_> m_Func;
 
 public:
-    
     MethodWrapper(const Func_& func)
         : m_Func(func) {}
 
     [[nodiscard]]
     Variant InvokeStatic(const ArgumentList& arguments) const override {
-        if constexpr (!m_Func.IsStatic()) {
+        if (!m_Func.IsStatic()) {
             throw std::invalid_argument("not a static method");
         }
-        else {
-            return m_Func.Invoke(arguments);
-        }
+        
+        return m_Func.Invoke(arguments, Variant::Void());
     }
 
     [[nodiscard]]
     Variant Invoke(const Variant& instance, const ArgumentList& arguments) const override {
-        if constexpr (m_Func.IsStatic()) {
-            return m_Func.Invoke(arguments);
+        if (m_Func.IsStatic()) {
+            return InvokeStatic(arguments);
         }
-        else {
-            return m_Func.Invoke(arguments, instance);
-        }
+        
+        return m_Func.Invoke(arguments, instance);
     }
 };
 }

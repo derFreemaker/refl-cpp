@@ -46,7 +46,6 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/meta/common.hpp
         include/refl-cpp/meta/std.hpp
 
-        include/refl-cpp/impl/method.hpp
         include/refl-cpp/impl/impl.hpp
         include/refl-cpp/impl/variant.hpp
 )

@@ -63,7 +63,7 @@ public:
     }
     
     [[nodiscard]]
-    Variant Invoke(const ArgumentList& args, std::enable_if_t<!Traits::IsStatic, const Variant&> obj) const {
+    Variant Invoke(const ArgumentList& args, const Variant& obj) const {
         if (args.size() != Traits::ArgCount) {
             throw std::invalid_argument("incorrect number of arguments");
         }
