@@ -3,8 +3,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(refl-cpp_generator)
 
-include(../cmake/CPM.cmake)
-
 CPMAddPackage(
         NAME Ccache.cmake
         GITHUB_REPOSITORY TheLartians/Ccache.cmake

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/function_wrapper.hpp"
 #include "refl-cpp/argument.hpp"

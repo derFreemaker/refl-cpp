@@ -28,7 +28,7 @@ public:
             };
         }
 
-        const TypeData& type_data = ReflectData<T_>::Create();
+        TypeData type_data = TRY(ReflectData<T_>::Create());
         const auto type_id = TypeID(m_types_data.size() + 1);
 
         TypeOptions type_options {};
@@ -37,8 +37,8 @@ public:
             type_options.print_func = ReflectPrinter<T_>::Print;
         }
 
-        const auto type = new Type(type_id, type_data, type_options);
-        return { Ok, m_types_data.emplace_back(type)->GetID() };
+        const auto& type = m_types_data.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
+        return { Ok, type->GetID() };
     }
 
     [[nodiscard]]

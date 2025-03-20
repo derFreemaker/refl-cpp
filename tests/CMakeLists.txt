@@ -3,8 +3,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(refl-cpp_tests)
 
-include(../cmake/CPM.cmake)
-
 CPMAddPackage(
         NAME GoogleTest
         VERSION 1.16.0
@@ -15,10 +13,11 @@ CPMAddPackage(
 )
 
 add_executable(refl-cpp_tests
-        reflect.cpp
-        fields.cpp
-        function_wrapper.cpp
+        common/result.cpp
+        
         variant.cpp
+        helper/result_helper.hpp
+        helper/variant_helper.hpp
 )
 target_link_libraries(refl-cpp_tests PRIVATE
         gtest

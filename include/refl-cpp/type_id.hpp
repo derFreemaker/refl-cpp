@@ -20,8 +20,6 @@ public:
         return m_ID;
     }
     
-    TypeID() = delete;
-    
     constexpr TypeID(const uint32_t id)
         : m_ID(id) {}
 

@@ -8,5 +8,5 @@ struct Test;
 
 template <>
 struct ReflCpp::ReflectData<kpop::Test> {
-    static TypeData Create();
+    static Result<TypeData> Create();
 };

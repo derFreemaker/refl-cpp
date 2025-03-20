@@ -2,7 +2,6 @@
 
 #include <string>
 #include <optional>
-#include <variant>
 
 #include "fmt/base.h"
 #include "fmt/format.h"
@@ -16,8 +15,8 @@ public:
     explicit FormattedError(std::string msg) : message(std::move(msg)) {}
 
     template <typename... Args>
-    FormattedError(fmt::format_string<Args...> fmt_str, Args&&... args)
-        : message(fmt::format(fmt_str, std::forward<Args>(args)...)) {}
+    FormattedError(const std::string_view fmt_str, Args&&... args)
+        : message(fmt::format(fmt::runtime(fmt_str), std::forward<Args>(args)...)) {}
 
     [[nodiscard]]
     const std::string& Str() const {
@@ -39,93 +38,22 @@ struct ErrorTag {};
 struct OkTag {};
 }
 
-inline constexpr detail::ErrorTag Error {};
-inline constexpr detail::OkTag Ok {};
+inline constexpr detail::ErrorTag Error{};
+inline constexpr detail::OkTag Ok{};
 
 template <typename T_>
-struct Result {
-private:
-    const bool m_IsSuccess;
+struct Result;
 
-    std::variant<T_, const FormattedError> m_Data;
-
-public:
-    Result(detail::OkTag, const T_& result)
-        : m_IsSuccess(true),
-          m_Data(result) {}
-
-    template <typename... Args>
-    Result(detail::ErrorTag, fmt::format_string<Args...> fmt_str, Args&&... args)
-        : m_IsSuccess(false),
-          m_Data(FormattedError(fmt_str, args...)) {}
-
-    template <typename OtherT_>
-    Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : m_IsSuccess(false),
-          m_Data(result.m_Data) {}
-
-    [[nodiscard]]
-    bool IsSuccess() const {
-        return m_IsSuccess;
-    }
-
-    [[nodiscard]]
-    bool IsError() const {
-        return !m_IsSuccess;
-    }
-
-    T_& Value() & {
-        if (IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
-        }
-        return std::get<T_>(m_Data);
-    }
-
-    const T_& Value() const & {
-        if (IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
-        }
-        return std::get<T_>(m_Data);
-    }
-    
-    T_&& Value() && {
-        if (IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
-        }
-        return std::move(std::get<T_>(m_Data));
-    }
-
-    const T_&& Value() const && {
-        if (IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
-        }
-        return std::move(std::get<T_>(m_Data));
-    }
-    
-    [[nodiscard]]
-    const FormattedError& Error() const & {
-        if (IsSuccess()) {
-            throw std::runtime_error("Attempted to access error of a success Result");
-        }
-        return std::get<const FormattedError>(m_Data);
-    }
-};
-
-template <>
-struct Result<void> {
+namespace detail {
+struct ResultBase {
 private:
     const std::optional<FormattedError> m_Error;
 
 public:
-    Result(detail::OkTag) {}
+    ResultBase() noexcept = default;
 
-    template <typename... Args>
-    Result(detail::ErrorTag, fmt::format_string<Args...> fmt_str, Args&&... args)
-        : m_Error(FormattedError(fmt_str, std::forward<Args>(args)...)) {}
-
-    template <typename OtherT_>
-    Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : m_Error(result.Error()) {}
+    ResultBase(const FormattedError& error) noexcept
+        : m_Error(error) {}
 
     [[nodiscard]]
     bool IsSuccess() const {
@@ -140,79 +68,105 @@ public:
     [[nodiscard]]
     const FormattedError& Error() const & {
         if (IsSuccess()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
+            throw std::runtime_error("Attempted to access error of a success Result");
         }
-        return *m_Error;
+        return m_Error.value();
     }
 };
 
 template <typename T_>
-struct Result<T_&> {
-private:
-    const bool m_IsSuccess;
-    std::variant<std::reference_wrapper<T_>, const FormattedError> m_Data;
+struct ValueResultBase : public ResultBase {
+protected:
+    union {
+        std::_Nontrivial_dummy_type m_Dummy;
+        std::remove_cv_t<T_> m_Value;
+    };
 
 public:
-    // Constructor for success
-    Result(detail::OkTag, T_& result)
-        : m_IsSuccess(true),
-          m_Data(result) {}
+    explicit ValueResultBase(ErrorTag, const FormattedError& error) noexcept
+        : ResultBase(error), m_Dummy{} {}
 
-    // Constructor for error
+    template <typename T2_ = T_>
+    explicit ValueResultBase(OkTag, T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
+        : m_Value(std::forward<T2_>(value)) {}
+
+    ~ValueResultBase() {}
+};
+}
+
+template <>
+struct Result<void> : detail::ResultBase {
+    Result(detail::OkTag) {}
+
     template <typename... Args>
-    Result(detail::ErrorTag, fmt::format_string<Args...> fmt_str, Args&&... args)
-        : m_IsSuccess(false),
-          m_Data(FormattedError(fmt_str, args...)) {}
+    Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
+        : ResultBase(FormattedError(fmt_str, std::forward<Args>(args)...)) {}
 
     template <typename OtherT_>
     Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : m_IsSuccess(false),
-          m_Data(result.Error()) {}
+        : ResultBase(result.Error()) {}
 
-    [[nodiscard]]
-    bool IsSuccess() const {
-        return m_IsSuccess;
+    // dummy functions for TRY macro
+    static constexpr void Value() {}
+    void operator*() const & {
+        return Value();
     }
+};
 
-    [[nodiscard]]
-    bool IsError() const {
-        return !m_IsSuccess;
-    }
+template <typename T_>
+struct Result : detail::ValueResultBase<T_> {
+    template <typename T2_ = T_>
+        requires std::is_convertible_v<T2_, T_>
+        && std::is_nothrow_constructible_v<T_, T2_> //TODO: add more limitation
+    Result(detail::OkTag, T2_&& value) noexcept
+        : detail::ValueResultBase<T_>(Ok, value) {}
 
-    std::reference_wrapper<T_>& Value() & {
-        if (IsError()) {
+    template <typename... Args>
+    Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
+        : detail::ValueResultBase<T_>(Error, FormattedError(fmt_str, args...)) {}
+
+    template <typename OtherT_>
+    Result(detail::ErrorTag, const Result<OtherT_>& result)
+        : detail::ValueResultBase<T_>(Error, result.Error()) {}
+        
+    const T_& Value() const & {
+        if (this->IsError()) {
             throw std::runtime_error("Attempted to access value of an error Result.");
         }
-        return std::get<std::reference_wrapper<T_>>(m_Data);
-    }
-    
-    const std::reference_wrapper<T_>& Value() const & {
-        if (IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
-        }
-        return std::get<std::reference_wrapper<T_>>(m_Data);
+        return this->m_Value;
     }
 
-    std::reference_wrapper<T_>&& Value() && {
-        if (IsError()) {
+    const T_& operator*() const & {
+        return Value();
+    }
+};
+
+template <typename T_>
+struct Result<T_&> : detail::ValueResultBase<T_*> {
+    Result(detail::OkTag, T_& value) noexcept
+        : detail::ValueResultBase<T_*>(Ok, &value) {}
+
+    template <typename... Args>
+    Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
+        : detail::ValueResultBase<T_*>(Error, FormattedError(fmt_str, args...)) {}
+
+    template <typename OtherT_>
+    Result(detail::ErrorTag, const Result<OtherT_>& result)
+        : detail::ValueResultBase<T_*>(Error, result.Error()) {}
+
+    const T_& Value() const & {
+        if (this->IsError()) {
             throw std::runtime_error("Attempted to access value of an error Result.");
         }
-        return std::move(std::get<std::reference_wrapper<T_>>(m_Data));
+        return *this->m_Value;
     }
 
-    const std::reference_wrapper<T_>&& Value() const && {
-        if (IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
-        }
-        return std::move(std::get<std::reference_wrapper<T_>>(m_Data));
+    operator const T_&() const & {
+        return Value();
     }
 
-    [[nodiscard]]
-    const FormattedError& Error() const & {
-        if (IsSuccess()) {
-            throw std::runtime_error("Attempted to access error of a success Result");
-        }
-        return std::get<const FormattedError>(m_Data);
+    const T_& operator*() const & {
+        return Value();
     }
 };
 
@@ -222,5 +176,5 @@ public:
         return { ::ReflCpp::Error, _result }; \
     } \
     _result.Value(); \
-})
+    })
 }
