@@ -6,7 +6,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<T_[]> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Array",
                 .inners = TRY(ReflectID<T_>()),
                 .flags = TypeFlags::IsArray,
@@ -27,7 +27,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<T_*> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Pointer",
                 .inners = {
                     TRY(ReflectID<T_>())
@@ -50,7 +50,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<T_* const> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Constant Pointer",
                 .inners = {
                     TRY(ReflectID<T_>())
@@ -73,7 +73,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<T_&> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "LValue Reference",
                 .inners = {
                     TRY(ReflectID<T_>())
@@ -96,7 +96,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<T_&&> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "RValue Reference",
                 .inners = {
                     ReflectID<T_>()
@@ -119,7 +119,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<const T_> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Constant",
                 .inners = {
                     TRY(ReflectID<T_>())
@@ -142,7 +142,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<volatile T_> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Volatile",
                 .inners = {
                     TRY(ReflectID<T_>())

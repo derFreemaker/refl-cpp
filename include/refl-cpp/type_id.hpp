@@ -40,7 +40,7 @@ public:
     [[nodiscard]]
     Result<const Type&> GetType() const {
         if (IsInvalid()) {
-            return { Error, "invalid type id" };
+            return { RESULT_ERROR(), "invalid type id" };
         }
 
         return detail::Reflect(m_ID);

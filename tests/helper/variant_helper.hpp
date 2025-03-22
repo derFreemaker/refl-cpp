@@ -1,6 +1,7 @@
 #pragma once
 
 #include "refl-cpp/variant.hpp"
+#include "refl-cpp/impl/variant.hpp"
 
 namespace ReflCpp {
 struct VariantTestHelper {

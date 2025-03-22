@@ -1,8 +1,4 @@
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-#include "refl-cpp/variant.hpp"
-#include "refl-cpp/impl/variant.hpp"
 
 #include "helper/result_helper.hpp"
 #include "helper/variant_helper.hpp"
@@ -43,8 +39,8 @@ TEST(Variant, Reference) {
 
     ASSERT_TRUE(VariantTestHelper::UsesWrapper<RefVariantWrapper<std::unique_ptr<int>>>(variant_ref));
     
-    ASSERT_EQ(variant_ref.GetValue<std::unique_ptr<int>>().Value(), int_ref);
-    ASSERT_EQ(variant_ref.GetRef<std::unique_ptr<int>>().Value(), int_ref);
+    ASSERT_EQ(variant_ref.GetValue<std::unique_ptr<int>&>().Value(), int_ref);
+    ASSERT_EQ(variant_ref.GetRef<std::unique_ptr<int>&>().Value(), int_ref);
 }
 
 TEST(Variant, ConstReference) {
@@ -53,12 +49,14 @@ TEST(Variant, ConstReference) {
 
     ASSERT_TRUE(VariantTestHelper::UsesWrapper<ConstRefVariantWrapper<std::unique_ptr<int>>>(variant_ref));
     
-    ASSERT_EQ(variant_ref.GetValue<const std::unique_ptr<int>>().Value(), int_ref);
-    ASSERT_EQ(variant_ref.GetValue<std::unique_ptr<int>>().Value(), int_ref);
-    
-    ASSERT_EQ(variant_ref.GetRef<const std::unique_ptr<int>>().Value(), int_ref);
+    ASSERT_EQ(variant_ref.GetValue<const std::unique_ptr<int>&>().Value(), int_ref);
 
-    const auto constantRefRefResult = variant_ref.GetRef<std::unique_ptr<int>>();
+    const auto constantRefValueResult = variant_ref.GetValue<std::unique_ptr<int>&>();
+    ASSERT_TRUE(ResultTestHelper::IsError(constantRefValueResult, "passed type 'std::unique_ptr<int32_t>&' is not the same as the stored type 'const std::unique_ptr<int32_t>&'"));
+    
+    ASSERT_EQ(variant_ref.GetRef<const std::unique_ptr<int>&>().Value(), int_ref);
+
+    const auto constantRefRefResult = variant_ref.GetRef<std::unique_ptr<int>&>();
     ASSERT_TRUE(ResultTestHelper::IsError(constantRefRefResult, "cannot get modifiable reference to constant"));
 }
 
@@ -81,11 +79,9 @@ TEST(Variant, ConstPointer) {
     ASSERT_EQ(variant_ref.GetValue<const int*>().Value(), &int_field);
     ASSERT_EQ(variant_ref.GetValue<int*>().Value(), &int_field);
 
-    const auto constantPointerRefResultWithConst = variant_ref.GetRef<const int*>();
-    ASSERT_TRUE(ResultTestHelper::IsError(constantPointerRefResultWithConst, "cannot get modifiable reference to constant"));
+    ASSERT_EQ(variant_ref.GetRef<const int*>().Value(), &int_field);
 
     const auto constantPointerRefResult = variant_ref.GetRef<int*>();
     ASSERT_TRUE(ResultTestHelper::IsError(constantPointerRefResult, "cannot get modifiable reference to constant"));
 }
-
 }

@@ -9,13 +9,13 @@ struct TypeInstance {
     static Result<TypeID> ID() {
         static TypeID id = TypeID::Invalid();
         if (id.IsValid()) {
-            return { Ok, id };
+            return { RESULT_OK(), id };
         }
         
         auto& database = ReflectionDatabase::Instance();
         id = TRY(database.RegisterType<T>());
-
-        return { Ok, id };
+        
+        return { RESULT_OK(), id };
     }
 
     static Result<const Type&> Type() {

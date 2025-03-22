@@ -9,7 +9,7 @@
     template <TEMPLATE> \
     struct ReflCpp::ReflectData<TYPE> { \
         static Result<TypeData> Create() { \
-            return { Ok, { .name = NAME } }; \
+            return { RESULT_OK(), { .name = NAME } }; \
         } \
     }; \
     template <TEMPLATE> \

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 project(refl-cpp)
 
@@ -48,6 +48,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
 
         include/refl-cpp/impl/impl.hpp
         include/refl-cpp/impl/variant.hpp
+        include/refl-cpp/common/type_traits.hpp
 )
 target_link_libraries(refl-cpp INTERFACE
     fmt::fmt

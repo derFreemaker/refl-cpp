@@ -14,7 +14,7 @@ struct ResultTestHelper {
             return false;
         }
         
-        if (result.Error().Str() != errMsg) {
+        if (result.Error().Message() != errMsg) {
             return false;
         }
 

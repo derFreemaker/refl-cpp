@@ -22,7 +22,7 @@ public:
     Result<TypeID> RegisterType() {
         if (m_types_data.size() == SIZE_MAX) {
             return {
-                Error,
+                RESULT_ERROR(),
                 "Reflection database size is hitting more than 'SIZE_MAX'."
                 "This is probably not normal and should be investigated."
             };
@@ -38,16 +38,16 @@ public:
         }
 
         const auto& type = m_types_data.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
-        return { Ok, type->GetID() };
+        return { RESULT_OK(), type->GetID() };
     }
 
     [[nodiscard]]
     Result<const Type&> GetType(const TypeID id) const {
         if (id.IsInvalid() || id > m_types_data.size()) {
-            return { Error, "invalid type id" };
+            return { RESULT_ERROR(), "invalid type id" };
         }
 
-        return { Ok, *m_types_data[id - 1] };
+        return { RESULT_OK(), *m_types_data[id - 1] };
     }
 };
 }

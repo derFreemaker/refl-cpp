@@ -14,3 +14,6 @@ these are getting managed through [CPM.cmake](https://github.com/cpm-cmake/CPM.c
 
 - ccache.cmake
 - LLVM / Clang
+
+## Third-Party
+- [cpp::result](https://github.com/bitwizeshift/result)

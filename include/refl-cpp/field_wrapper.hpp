@@ -53,60 +53,60 @@ public:
     Result<TypeID> GetType() const override {
         return ReflectID<typename Traits::Type>();
     }
-    
+
     [[nodiscard]]
     Result<Variant> GetValue(const Variant& instance) const override {
         if constexpr (Traits::IsStatic) {
-            return { Ok, static_cast<typename Traits::Type>(*m_Field) };
+            return { RESULT_OK(), static_cast<typename Traits::Type>(*m_Field) };
         }
         else {
             if (instance.IsVoid()) {
-                return { Error, "instance is needed for non-static member fields" };
+                return { RESULT_ERROR(), "instance is needed for non-static member fields" };
             }
-            
+
             typename Traits::Type& obj = TRY(instance.GetRef<typename Traits::ClassType>());
-            return { Ok, static_cast<typename Traits::Type>(obj.*m_Field) };
+            return { RESULT_OK(), static_cast<typename Traits::Type>(obj.*m_Field) };
         }
     }
 
     [[nodiscard]]
     Result<void> SetValue(const Variant& value, const Variant& instance) const override {
         if constexpr (Traits::IsConst) {
-            return { Error, "cannot set value on a const type: {0}", TRY(Reflect<typename Traits::Type>()).Dump() };
+            return { RESULT_ERROR(), "cannot set value on a const type: {0}", TRY(Reflect<typename Traits::Type>()).Dump() };
         }
         else if constexpr (Traits::IsStatic) {
             *m_Field = value.GetValue<typename Traits::Type>();
         }
         else {
             if (instance.IsVoid()) {
-                return { Error, "instance is needed for non-static member fields" };
+                return { RESULT_ERROR(), "instance is needed for non-static member fields" };
             }
-            
+
             typename Traits::ClassType& obj = TRY(instance.GetRef<typename Traits::ClassType>());
             obj.*m_Field = value.GetValue<typename Traits::Type>();
 
-            return { Ok };
+            return { RESULT_OK() };
         }
 
-        return { Error, "unreachable" };
+        return { RESULT_ERROR(), "unreachable" };
     }
 
     [[nodiscard]]
     Result<Variant> GetRef(const Variant& instance) const override {
         if constexpr (Traits::IsConst) {
             // Use 'GetValue', since it will use a const reference when it can.
-            return { Error, "cannot get reference to a const type" };
+            return { RESULT_ERROR(), "cannot get reference to a const type" };
         }
         else if constexpr (Traits::IsStatic) {
-            return { Ok, static_cast<typename Traits::Type&>(*m_Field) };
+            return { RESULT_OK(), static_cast<typename Traits::Type&>(*m_Field) };
         }
         else {
             if (instance.IsVoid()) {
-                return { Error, "instance is needed for a non-static member field" };
+                return { RESULT_ERROR(), "instance is needed for a non-static member field" };
             }
-            
+
             auto& obj = TRY(instance.GetRef<typename Traits::ClassType>());
-            return { Ok, static_cast<typename Traits::Type&>(obj.*m_Field) };
+            return { RESULT_OK(), static_cast<typename Traits::Type&>(obj.*m_Field) };
         }
     }
 };

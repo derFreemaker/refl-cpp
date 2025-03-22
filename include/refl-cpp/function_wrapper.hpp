@@ -17,26 +17,27 @@ private:
 #define INVOKE_IMPL(_TEMPLATE, _INVOKE, ...) \
     template <size_t... Indices> \
         requires (_TEMPLATE && Traits::HasReturn) \
-    Variant InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...> __VA_OPT__(, ) __VA_ARGS__) const { \
-        return Variant((_INVOKE)( \
-            args[Indices].GetRef < typename Traits::template Arg<Indices>::Type > ()... \
-        )); \
+    Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...> __VA_OPT__(, ) __VA_ARGS__) const { \
+        return { RESULT_OK(), Variant((_INVOKE)( \
+            args[Indices].GetRef < typename Traits::template Arg<Indices>::Type > ().Value()... \
+        )) }; \
     } \
     template <size_t... Indices> \
         requires (_TEMPLATE && !Traits::HasReturn) \
-    void InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...> __VA_OPT__(, ) __VA_ARGS__) const { \
+    Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...> __VA_OPT__(, ) __VA_ARGS__) const { \
         (_INVOKE)( \
             args[Indices].GetRef < typename Traits::template Arg<Indices>::Type > ().Value()... \
         ); \
+        return { RESULT_OK() }; \
     }
 
     // TODO: check if we have to care about Traits::IsConst
 
-    //NOTE: This works even if it says 'expected expression' in Clion for example
+    //NOTE: This works even if it says 'expected expression' from the LSP in Clion for example
+
     INVOKE_IMPL(Traits::IsStatic, m_Ptr)
-    INVOKE_IMPL(!Traits::IsStatic && !Traits::HasReferenceObject, obj.GetRef<typename Traits::ClassType>().Value().*m_Ptr, const Variant& obj)
-    INVOKE_IMPL(!Traits::IsStatic && Traits::HasReferenceObject && !Traits::HasRReferenceObject, obj.GetRef<typename Traits::ClassType>().Value().*m_Ptr, const Variant& obj)
-    INVOKE_IMPL(!Traits::IsStatic && Traits::HasReferenceObject && !Traits::HasLReferenceObject, std::move(obj.GetRef<typename Traits::ClassType>().Value()).*m_Ptr, const Variant& obj)
+    INVOKE_IMPL(!Traits::IsStatic && !Traits::HasRReferenceObject, TRY(obj.GetRef<typename Traits::ClassType>()).*m_Ptr, const Variant& obj)
+    INVOKE_IMPL(!Traits::IsStatic && Traits::HasRReferenceObject, std::move(TRY(obj.GetRef<typename Traits::ClassType>())).*m_Ptr, const Variant& obj)
 
 public:
     FunctionWrapper(Func_ ptr)
@@ -63,7 +64,7 @@ public:
     }
     
     [[nodiscard]]
-    Variant Invoke(const ArgumentList& args, const Variant& obj) const {
+    Result<Variant> Invoke(const ArgumentList& args, const Variant& obj) const {
         if (args.size() != Traits::ArgCount) {
             throw std::invalid_argument("incorrect number of arguments");
         }
@@ -73,8 +74,8 @@ public:
                 return InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
             }
             else {
-                InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
-                return Variant::Void();
+                TRY(InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>()));
+                return { RESULT_OK(), Variant::Void() };
             }
         }
         else {
@@ -82,8 +83,8 @@ public:
                 return InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>(), obj);
             }
             else {
-                InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>(), obj);
-                return Variant::Void();
+                TRY(InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>(), obj));
+                return { RESULT_OK(), Variant::Void() };
             }
         }
     }

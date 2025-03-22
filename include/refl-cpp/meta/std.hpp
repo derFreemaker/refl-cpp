@@ -10,7 +10,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<std::optional<T_>> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "optional",
                 ._namespace = "std",
                 .inners = {
@@ -55,7 +55,7 @@ template <typename T>
 struct ReflCpp::ReflectData<std::vector<T>> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "vector",
                 ._namespace = "std",
                 .inners = {
@@ -79,7 +79,7 @@ template <>
 struct ReflCpp::ReflectData<std::nullptr_t> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Null Pointer",
                 ._namespace = "std",
             }
@@ -98,7 +98,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<std::unique_ptr<T_>> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Unique Pointer",
                 ._namespace = "std",
                 .inners = {
@@ -123,7 +123,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<std::shared_ptr<T_>> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Shared Pointer",
                 ._namespace = "std",
                 .inners = {
@@ -148,7 +148,7 @@ template <typename T_>
 struct ReflCpp::ReflectData<std::weak_ptr<T_>> {
     static Result<TypeData> Create() {
         return {
-            Ok, {
+            RESULT_OK(), {
                 .name = "Weak Pointer",
                 ._namespace = "std",
                 .inners = {

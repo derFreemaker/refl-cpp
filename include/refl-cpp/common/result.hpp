@@ -2,44 +2,133 @@
 
 #include <string>
 #include <optional>
+#include <sstream>
+#include <stacktrace>
+#include <utility>
 
 #include "fmt/base.h"
 #include "fmt/format.h"
 
 namespace ReflCpp {
 struct FormattedError {
-private:
-    std::string message;
+protected:
+    std::string m_Message;
 
 public:
-    explicit FormattedError(std::string msg) : message(std::move(msg)) {}
+    explicit FormattedError(const std::string& msg) : m_Message(msg) {}
 
     template <typename... Args>
     FormattedError(const std::string_view fmt_str, Args&&... args)
-        : message(fmt::format(fmt::runtime(fmt_str), std::forward<Args>(args)...)) {}
+        : m_Message(fmt::format(fmt::runtime(fmt_str), std::forward<Args>(args)...)) {}
 
     [[nodiscard]]
-    const std::string& Str() const {
-        return message;
+    const std::string& Message() const {
+        return m_Message;
+    }
+
+    void Str(std::ostream& stream) const {
+        stream << m_Message;
+    }
+
+    [[nodiscard]]
+    std::string Str() const {
+        std::stringstream stream;
+        this->Str(stream);
+        return stream.str();
     }
 
     operator std::string() const {
-        return message;
+        return Str();
     }
 
     friend std::ostream& operator<<(std::ostream& os, const FormattedError& error) {
-        return os << error.message;
+        error.Str(os);
+        return os;
     }
 };
+
+#ifdef _DEBUG
+namespace detail {
+struct StackTraceErrorTag {};
+
+inline constexpr StackTraceErrorTag StackTraceError{};
+}
+
+struct StackTracEntry {
+    const std::string file;
+    const int line;
+};
+
+struct StackTracingError : FormattedError {
+    using FormattedError::FormattedError;
+
+private:
+    const std::stacktrace m_StackTrace;
+
+public:
+    template <typename... Args>
+    StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
+        : FormattedError(fmt_str, std::forward<Args>(args)...), m_StackTrace(stacktrace) {}
+
+    StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const StackTracingError& error)
+        : FormattedError(error.m_Message), m_StackTrace(stacktrace) {}
+
+    [[nodiscard]]
+    const std::stacktrace& StackTrace() const {
+        return m_StackTrace;
+    }
+
+    void Str(std::ostream& stream) const {
+        stream << m_Message << "\n" << m_StackTrace;
+    }
+
+    [[nodiscard]]
+    std::string Str() const {
+        std::stringstream stream;
+        this->Str(stream);
+        return stream.str();
+    }
+
+    operator std::string() const {
+        return Str();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const StackTracingError& error) {
+        error.Str(os);
+        return os;
+    }
+};
+
+using ResultError = StackTracingError;
+#else
+using ResultError = FormattedError;
+#endif
 
 namespace detail {
 struct ErrorTag {};
 
 struct OkTag {};
+
+inline constexpr ErrorTag Error{};
+inline constexpr OkTag Ok{};
 }
 
-inline constexpr detail::ErrorTag Error{};
-inline constexpr detail::OkTag Ok{};
+#ifdef _DEBUG
+
+#define RESULT_ERROR() \
+    ::ReflCpp::detail::Error, std::stacktrace::current()
+
+#define RESULT_OK() \
+    ::ReflCpp::detail::Ok
+
+#else
+#define RESULT_ERROR() \
+    ::ReflCpp::detail::Error
+
+#define RESULT_OK() \
+    ::ReflCpp::detail::Ok
+
+#endif
 
 template <typename T_>
 struct Result;
@@ -47,12 +136,20 @@ struct Result;
 namespace detail {
 struct ResultBase {
 private:
-    const std::optional<FormattedError> m_Error;
+    const std::optional<ResultError> m_Error;
+
+protected:
+    void p_ThrowBadAccessException() const {
+        throw std::runtime_error("Attempted to access value of an error Result. Error: " + this->Error().Str());
+    }
 
 public:
+    ResultBase(const ResultBase&) = delete;
+    ResultBase(const ResultBase&&) = delete;
+
     ResultBase() noexcept = default;
 
-    ResultBase(const FormattedError& error) noexcept
+    ResultBase(const ResultError& error) noexcept
         : m_Error(error) {}
 
     [[nodiscard]]
@@ -66,7 +163,7 @@ public:
     }
 
     [[nodiscard]]
-    const FormattedError& Error() const & {
+    const ResultError& Error() const & {
         if (IsSuccess()) {
             throw std::runtime_error("Attempted to access error of a success Result");
         }
@@ -83,7 +180,7 @@ protected:
     };
 
 public:
-    explicit ValueResultBase(ErrorTag, const FormattedError& error) noexcept
+    explicit ValueResultBase(ErrorTag, const ResultError& error) noexcept
         : ResultBase(error), m_Dummy{} {}
 
     template <typename T2_ = T_>
@@ -98,19 +195,22 @@ template <>
 struct Result<void> : detail::ResultBase {
     Result(detail::OkTag) {}
 
+#ifdef _DEBUG
+    template <typename... Args>
+    Result(detail::ErrorTag, std::stacktrace stacktrace, const std::string_view fmt_str, Args&&... args)
+        : ResultBase(ResultError(detail::StackTraceError, stacktrace, fmt_str, std::forward<Args>(args)...)) {}
+
+    Result(detail::ErrorTag, const ResultError& error)
+        : ResultBase(error) {}
+#else
     template <typename... Args>
     Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : ResultBase(FormattedError(fmt_str, std::forward<Args>(args)...)) {}
+        : ResultBase(ResultError(fmt_str, std::forward<Args>(args)...)) {}
 
     template <typename OtherT_>
     Result(detail::ErrorTag, const Result<OtherT_>& result)
         : ResultBase(result.Error()) {}
-
-    // dummy functions for TRY macro
-    static constexpr void Value() {}
-    void operator*() const & {
-        return Value();
-    }
+#endif
 };
 
 template <typename T_>
@@ -119,62 +219,155 @@ struct Result : detail::ValueResultBase<T_> {
         requires std::is_convertible_v<T2_, T_>
         && std::is_nothrow_constructible_v<T_, T2_> //TODO: add more limitation
     Result(detail::OkTag, T2_&& value) noexcept
-        : detail::ValueResultBase<T_>(Ok, value) {}
+        : detail::ValueResultBase<T_>(detail::Ok, value) {}
 
+#ifdef _DEBUG
+    template <typename... Args>
+    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
+        : detail::ValueResultBase<T_>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, args...)) {}
+
+    Result(detail::ErrorTag, const ResultError& error)
+        : detail::ValueResultBase<T_>(detail::Error, error) {}
+#else
     template <typename... Args>
     Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_>(Error, FormattedError(fmt_str, args...)) {}
+        : detail::ValueResultBase<T_>(detail::Error, ResultError(fmt_str, args...)) {}
 
     template <typename OtherT_>
     Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : detail::ValueResultBase<T_>(Error, result.Error()) {}
-        
-    const T_& Value() const & {
+        : detail::ValueResultBase<T_>(detail::Error, result.Error()) {}
+#endif
+
+    T_& Value() & {
         if (this->IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
+            p_ThrowBadAccessException();
         }
         return this->m_Value;
     }
 
-    const T_& operator*() const & {
-        return Value();
+    const std::remove_const_t<T_>& Value() const & {
+        if (this->IsError()) {
+            p_ThrowBadAccessException();
+        }
+        return this->m_Value;
+    }
+
+    T_& Value() && {
+        if (this->IsError()) {
+            p_ThrowBadAccessException();
+        }
+        return this->m_Value;
+    }
+
+    const std::remove_const_t<T_>& Value() const && {
+        if (this->IsError()) {
+            p_ThrowBadAccessException();
+        }
+        return this->m_Value;
     }
 };
 
 template <typename T_>
 struct Result<T_&> : detail::ValueResultBase<T_*> {
     Result(detail::OkTag, T_& value) noexcept
-        : detail::ValueResultBase<T_*>(Ok, &value) {}
+        : detail::ValueResultBase<T_*>(detail::Ok, &value) {}
 
+#ifdef _DEBUG
+    template <typename... Args>
+    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
+        : detail::ValueResultBase<T_*>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, args...)) {}
+
+    Result(detail::ErrorTag, const ResultError& error)
+        : detail::ValueResultBase<T_*>(detail::Error, error) {}
+#else
     template <typename... Args>
     Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_*>(Error, FormattedError(fmt_str, args...)) {}
-
+        : detail::ValueResultBase<T_*>(detail::Error, ResultError(fmt_str, args...)) {}
+    
     template <typename OtherT_>
     Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : detail::ValueResultBase<T_*>(Error, result.Error()) {}
+        : detail::ValueResultBase<T_*>(detail::Error, result.Error()) {}
+#endif
 
-    const T_& Value() const & {
+    T_& Value() & {
         if (this->IsError()) {
-            throw std::runtime_error("Attempted to access value of an error Result.");
+            p_ThrowBadAccessException();
         }
         return *this->m_Value;
     }
 
-    operator const T_&() const & {
-        return Value();
+    const T_& Value() const & {
+        if (this->IsError()) {
+            p_ThrowBadAccessException();
+        }
+        return *this->m_Value;
     }
 
-    const T_& operator*() const & {
-        return Value();
+    T_& Value() && {
+        if (this->IsError()) {
+            p_ThrowBadAccessException();
+        }
+        return *this->m_Value;
+    }
+
+    const std::remove_const_t<T_>& Value() const && {
+        if (this->IsError()) {
+            p_ThrowBadAccessException();
+        }
+        return *this->m_Value;
     }
 };
 
-#define TRY(expr) ({ \
-    auto _result = (expr); \
-    if (_result.IsError()) { \
-        return { ::ReflCpp::Error, _result }; \
-    } \
-    _result.Value(); \
-    })
+namespace detail {
+inline void TryHelper(const Result<void>* _) {}
+
+template <typename T_>
+T_& TryHelper(Result<T_>* result) {
+    return result->Value();
+}
+
+template <typename T_>
+T_& TryHelper(Result<T_&>* result) {
+    return result->Value();
+}
+
+template <typename T_>
+std::add_lvalue_reference_t<std::add_const_t<std::remove_const_t<T_>>> TryHelper(const Result<T_>* result) {
+    return result->Value();
+}
+
+template <typename T_>
+std::add_lvalue_reference_t<std::add_const_t<std::remove_const_t<T_>>> TryHelper(const Result<T_&>* result) {
+    return result->Value();
+}
+}
+
+// The TRY macro uses a little bit of a lifetime hack,
+// since we use '_result' after its scope through a pointer.
+// This only works because '_result' lives in the enclosing
+// function stack.
+
+#ifdef _DEBUG
+#define TRY(expr) \
+    (::ReflCpp::detail::TryHelper( \
+        ({ \
+            auto _result = (expr); \
+            if (_result.IsError()) { \
+                return { ::ReflCpp::detail::Error, ::ReflCpp::ResultError(::ReflCpp::detail::StackTraceError, ::std::stacktrace::current(), _result.Error()) }; \
+            } \
+            &_result; \
+        }) \
+    ))
+#else
+#define TRY(expr) \
+    (::ReflCpp::detail::TryHelper( \
+        ({ \
+            auto _result = (expr); \
+            if (_result.IsError()) { \
+                return { ::ReflCpp::detail::Error, _result }; \
+            } \
+            &_result; \
+        }) \
+    ))
+#endif
 }

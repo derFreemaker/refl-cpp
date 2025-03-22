@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 project(refl-cpp_tests)
 
@@ -18,6 +18,7 @@ add_executable(refl-cpp_tests
         variant.cpp
         helper/result_helper.hpp
         helper/variant_helper.hpp
+        function_wrapper.cpp
 )
 target_link_libraries(refl-cpp_tests PRIVATE
         gtest
