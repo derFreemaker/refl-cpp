@@ -57,6 +57,9 @@ struct make_const {
 template <typename T_>
 using make_const_t = typename make_const<T_>::type;
 
+template <typename T_>
+concept is_const = std::is_const_v<T_>;
+
 namespace detail {
 template <typename T_>
 struct make_lvalue_reference {

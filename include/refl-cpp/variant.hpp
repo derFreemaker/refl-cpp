@@ -30,15 +30,9 @@ private:
     TypeID m_Type;
     bool m_IsConst = false;
 
-    [[nodiscard]]
-    Result<void> CheckVoid() const {
-        if (IsVoid()) {
-            return { RESULT_ERROR(), "cannot get reference or value from void variant" };
-        }
-        return { RESULT_OK() };
-    }
-
     Variant();
+
+    static ResultError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
 
     friend struct VariantTestHelper;
 
@@ -46,6 +40,14 @@ public:
     static Variant& Void() {
         static auto instance = Variant();
         return instance;
+    }
+
+    [[nodiscard]]
+    Result<void> CheckVoid() const {
+        if (IsVoid()) {
+            return { RESULT_ERROR(), "is void variant" };
+        }
+        return { RESULT_OK() };
     }
 
     template <typename T_>
@@ -93,17 +95,22 @@ public:
     //TODO: add get const reference or something
 
     template <typename T_>
-        requires (!std::is_same_v<T_, Variant>)
+        requires (detail::BlockVariant<T_> && !is_const<T_>)
     [[nodiscard]]
     Result<make_lvalue_reference_t<T_>> GetRef() const;
 
     template <typename T_>
-        requires (!std::is_same_v<T_, Variant> && !std::is_pointer_v<T_>)
+        requires (detail::BlockVariant<T_> && is_const<T_>)
+    [[nodiscard]]
+    Result<make_lvalue_reference_t<T_>> GetConstRef() const;
+
+    template <typename T_>
+        requires (detail::BlockVariant<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
     Result<make_const_t<T_>&> GetValue() const;
 
     template <typename T_>
-        requires (!std::is_same_v<T_, Variant> && std::is_pointer_v<T_>)
+        requires (detail::BlockVariant<T_> && std::is_pointer_v<T_>)
     [[nodiscard]]
     Result<add_const_to_pointer_type_t<T_>&> GetValue() const;
 };

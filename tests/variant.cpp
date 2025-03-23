@@ -28,7 +28,7 @@ TEST(Variant, Value) {
     ASSERT_EQ(variant_constant.GetValue<const int>().Value(), int_value);
     ASSERT_EQ(variant_constant.GetValue<int>().Value(), int_value);
     
-    ASSERT_EQ(variant_constant.GetRef<const int>().Value(), int_value);
+    ASSERT_EQ(variant_constant.GetConstRef<const int>().Value(), int_value);
 
     const auto constantRefResult = variant_constant.GetRef<int>();
     ASSERT_TRUE(ResultTestHelper::IsError(constantRefResult, "cannot get modifiable reference to constant"));

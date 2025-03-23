@@ -10,6 +10,8 @@
 #include "fmt/base.h"
 #include "fmt/format.h"
 
+//TODO: rewrite result type
+
 namespace ReflCpp {
 struct FormattedError {
 protected:
@@ -70,7 +72,11 @@ public:
     template <typename... Args>
     StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
         : FormattedError(fmt_str, std::forward<Args>(args)...), m_StackTrace(stacktrace) {}
-    
+
+    template <typename... Args>
+    StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const StackTracingError& error)
+        : FormattedError(error.m_Message), m_StackTrace(stacktrace) {}
+
     [[nodiscard]]
     const std::stacktrace& StackTrace() const {
         return m_StackTrace;
@@ -105,9 +111,12 @@ using ResultError = FormattedError;
 namespace detail {
 struct ErrorTag {};
 
+struct PassErrorTag {};
+
 struct OkTag {};
 
 inline constexpr ErrorTag Error{};
+inline constexpr PassErrorTag PassError{};
 inline constexpr OkTag Ok{};
 }
 
@@ -118,11 +127,6 @@ namespace detail {
 struct ResultBase {
 private:
     const std::optional<ResultError> m_Error;
-
-protected:
-    void p_ThrowBadAccessException() const {
-        throw std::runtime_error("Attempted to access value of an error Result. Error: " + this->Error().Str());
-    }
 
 public:
     ResultBase(const ResultBase&) = delete;
@@ -154,12 +158,16 @@ public:
 
 template <typename T_>
 struct ValueResultBase : public ResultBase {
-protected:
+private:
     union {
         std::_Nontrivial_dummy_type m_Dummy;
         std::remove_cv_t<T_> m_Value;
     };
 
+    void m_ThrowBadAccessException() const {
+        throw std::runtime_error("Attempted to access value of an error Result. Error: " + this->Error().Str());
+    }
+    
 public:
     explicit ValueResultBase(ErrorTag, const ResultError& error) noexcept
         : ResultBase(error), m_Dummy{} {}
@@ -167,12 +175,61 @@ public:
     template <typename T2_ = T_>
     explicit ValueResultBase(OkTag, T2_& value) noexcept // NOLINT(*-forwarding-reference-overload)
         : m_Value(std::forward<T2_>(value)) {}
-    
+
     template <typename T2_ = T_>
     explicit ValueResultBase(OkTag, T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
         : m_Value(std::forward<T2_>(value)) {}
 
+    //NOTE: for some reason we need this
     ~ValueResultBase() {}
+    
+    T_& Value() & {
+        if (this->IsError()) {
+            m_ThrowBadAccessException();
+        }
+        if constexpr (std::is_pointer_v<T_>) {
+            return *this->m_Value;
+        }
+        else {
+            return this->m_Value;
+        }
+    }
+
+    make_const_t<T_>& Value() const & {
+        if (this->IsError()) {
+            m_ThrowBadAccessException();
+        }
+        if constexpr (std::is_pointer_v<T_>) {
+            return *this->m_Value;
+        }
+        else {
+            return this->m_Value;
+        }
+    }
+
+    T_& Value() && {
+        if (this->IsError()) {
+            m_ThrowBadAccessException();
+        }
+        if constexpr (std::is_pointer_v<T_>) {
+            return *this->m_Value;
+        }
+        else {
+            return this->m_Value;
+        }
+    }
+
+    make_const_t<T_>& Value() const && {
+        if (this->IsError()) {
+            m_ThrowBadAccessException();
+        }
+        if constexpr (std::is_pointer_v<T_>) {
+            return *this->m_Value;
+        }
+        else {
+            return this->m_Value;
+        }
+    }
 };
 }
 
@@ -182,19 +239,24 @@ struct Result<void> : detail::ResultBase {
 
 #ifdef _DEBUG
     template <typename... Args>
-    Result(detail::ErrorTag, std::stacktrace stacktrace, const std::string_view fmt_str, Args&&... args)
+    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
         : ResultBase(ResultError(detail::StackTraceError, stacktrace, fmt_str, std::forward<Args>(args)...)) {}
 
-    Result(detail::ErrorTag, const ResultError& error)
+    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const ResultError& error)
+        : ResultBase(ResultError(detail::StackTraceError, stacktrace, error)) {}
+
+    Result(detail::PassErrorTag, const ResultError& error)
         : ResultBase(error) {}
 #else
     template <typename... Args>
     Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
         : ResultBase(ResultError(fmt_str, std::forward<Args>(args)...)) {}
 
-    template <typename OtherT_>
-    Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : ResultBase(result.Error()) {}
+    Result(detail::ErrorTag, const ResultError& error)
+        : ResultBase(error) {}
+    
+    Result(detail::PassErrorTag, const ResultError& error)
+        : ResultBase(error) {}
 #endif
 };
 
@@ -209,98 +271,52 @@ struct Result : detail::ValueResultBase<T_> {
 #ifdef _DEBUG
     template <typename... Args>
     Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, args...)) {}
+        : detail::ValueResultBase<T_>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, std::forward<Args>(args)...)) {}
 
-    Result(detail::ErrorTag, const ResultError& error)
+    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const ResultError& error)
+        : detail::ValueResultBase<T_>(detail::Error, ResultError(detail::StackTraceError, stacktrace, error)) {}
+
+    Result(detail::PassErrorTag, const ResultError& error)
         : detail::ValueResultBase<T_>(detail::Error, error) {}
 #else
     template <typename... Args>
     Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_>(detail::Error, ResultError(fmt_str, args...)) {}
+        : detail::ValueResultBase<T_>(detail::Error, ResultError(fmt_str, std::forward<Args>(args)...)) {}
 
-    template <typename OtherT_>
-    Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : detail::ValueResultBase<T_>(detail::Error, result.Error()) {}
+    Result(detail::ErrorTag, const ResultError& error)
+        : detail::ValueResultBase<T_>(detail::Error, error) {}
+    
+    Result(detail::PassErrorTag, const ResultError& error)
+        : detail::ValueResultBase<T_>(detail::Error, error) {}
 #endif
-
-    T_& Value() & {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return this->m_Value;
-    }
-
-    make_const_t<T_>& Value() const & {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return this->m_Value;
-    }
-
-    T_& Value() && {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return this->m_Value;
-    }
-
-    make_const_t<T_>& Value() const && {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return this->m_Value;
-    }
 };
 
 template <typename T_>
 struct Result<T_&> : detail::ValueResultBase<T_*> {
-    Result(detail::OkTag, T_& value) noexcept
-        : detail::ValueResultBase<T_*>(detail::Ok, &value) {}
+    Result(detail::OkTag, make_const_t<T_>& value) noexcept
+        : detail::ValueResultBase<T_*>(detail::Ok, std::addressof(value)) {}
 
 #ifdef _DEBUG
     template <typename... Args>
     Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_*>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, args...)) {}
+        : detail::ValueResultBase<T_*>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, std::forward<Args>(args)...)) {}
 
-    Result(detail::ErrorTag, const ResultError& error)
+    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const ResultError& error)
+        : detail::ValueResultBase<T_*>(detail::Error, ResultError(detail::StackTraceError, stacktrace, error)) {}
+
+    Result(detail::PassErrorTag, const ResultError& error)
         : detail::ValueResultBase<T_*>(detail::Error, error) {}
 #else
     template <typename... Args>
     Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_*>(detail::Error, ResultError(fmt_str, args...)) {}
+        : detail::ValueResultBase<T_*>(detail::Error, ResultError(fmt_str, std::forward<Args>(args)...)) {}
+
+    Result(detail::ErrorTag, const ResultError& error)
+        : detail::ValueResultBase<T_*>(detail::Error, error) {}
     
-    template <typename OtherT_>
-    Result(detail::ErrorTag, const Result<OtherT_>& result)
-        : detail::ValueResultBase<T_*>(detail::Error, result.Error()) {}
+    Result(detail::PassErrorTag, const ResultError& error)
+        : detail::ValueResultBase<T_*>(detail::Error, error) {}
 #endif
-
-    T_& Value() & {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return *this->m_Value;
-    }
-
-    make_const_t<T_>& Value() const & {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return *this->m_Value;
-    }
-
-    T_& Value() && {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return *this->m_Value;
-    }
-
-    make_const_t<T_>& Value() const && {
-        if (this->IsError()) {
-            p_ThrowBadAccessException();
-        }
-        return *this->m_Value;
-    }
 };
 
 namespace detail {
@@ -337,16 +353,6 @@ make_const_t<T_>& TryHelper(const Result<T_&>* result) {
 // function stack.
 
 #ifdef _DEBUG
-#define TRY(...) \
-    (::ReflCpp::detail::TryHelper( \
-        ({ \
-            auto _result = (__VA_ARGS__); \
-            if (_result.IsError()) { \
-                return { ::ReflCpp::detail::Error, _result.Error() }; \
-            } \
-            &_result; \
-        }) \
-    ))
 
 #define RESULT_ERROR() \
     ::ReflCpp::detail::Error, std::stacktrace::current()
@@ -354,23 +360,35 @@ make_const_t<T_>& TryHelper(const Result<T_&>* result) {
 #define RESULT_OK() \
     ::ReflCpp::detail::Ok
 
-#else
 #define TRY(...) \
     (::ReflCpp::detail::TryHelper( \
         ({ \
             auto _result = (__VA_ARGS__); \
             if (_result.IsError()) { \
-                return { ::ReflCpp::detail::Error, _result }; \
+                return { ::ReflCpp::detail::PassError, _result.Error() }; \
             } \
             &_result; \
         }) \
     ))
+
+#else
 
 #define RESULT_ERROR() \
     ::ReflCpp::detail::Error
 
 #define RESULT_OK() \
     ::ReflCpp::detail::Ok
+
+#define TRY(...) \
+    (::ReflCpp::detail::TryHelper( \
+        ({ \
+            auto _result = (__VA_ARGS__); \
+            if (_result.IsError()) { \
+                return { ::ReflCpp::detail::PassError, _result.Error() }; \
+            } \
+            &_result; \
+        }) \
+    ))
 
 #endif
 }
