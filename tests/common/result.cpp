@@ -55,7 +55,7 @@ TEST(Result, Value) {
     ASSERT_EQ(resultValue.Value(), 123);
 }
 
-TEST(Result, Reference) {
+TEST(Result, LValueReference) {
     int testInt = 3456;
     auto testReference = [&testInt]() -> Result<int&> {
         return { RESULT_OK(), testInt };
@@ -66,7 +66,7 @@ TEST(Result, Reference) {
     ASSERT_EQ(resultReference.Value(), testInt);
 }
 
-TEST(Result, ConstReference) {
+TEST(Result, ConstLValueReference) {
     constexpr int testInt = 786345;
     auto testReference = [&testInt]() -> Result<const int&> {
         return { RESULT_OK(), testInt };
@@ -75,6 +75,24 @@ TEST(Result, ConstReference) {
     const auto resultReference = testReference();
 
     ASSERT_EQ(resultReference.Value(), testInt);
+}
+
+TEST(Result, RValueReference) {
+    int testInt = 3456;
+    auto testReference = [&testInt]() -> Result<int&&> {
+        return { RESULT_OK(), std::move(testInt) };
+    };
+    
+    ASSERT_EQ(testReference().Value(), testInt);
+}
+
+TEST(Result, ConstRValueReference) {
+    constexpr int testInt = 786345;
+    auto testReference = [&testInt]() -> Result<const int&&> {
+        return { RESULT_OK(), std::move(testInt) };
+    };
+    
+    ASSERT_EQ(testReference().Value(), testInt);
 }
 
 TEST(Result, Pointer) {

@@ -66,6 +66,14 @@ public:
 
     template <typename T_>
         requires (detail::BlockVariant<T_>)
+    Variant(T_&& data);
+
+    template <typename T_>
+        requires (detail::BlockVariant<T_>)
+    Variant(const T_&& data);
+
+    template <typename T_>
+        requires (detail::BlockVariant<T_>)
     Variant(T_* data);
 
     template <typename T_>
@@ -92,7 +100,7 @@ public:
     template <typename T_>
         requires (!std::is_same_v<T_, Variant> && !std::is_pointer_v<T_>)
     [[nodiscard]]
-    Result<const T_&> GetValue() const;
+    Result<make_const_t<T_>&> GetValue() const;
 
     template <typename T_>
         requires (!std::is_same_v<T_, Variant> && std::is_pointer_v<T_>)

@@ -165,6 +165,10 @@ public:
         : ResultBase(error), m_Dummy{} {}
 
     template <typename T2_ = T_>
+    explicit ValueResultBase(OkTag, T2_& value) noexcept // NOLINT(*-forwarding-reference-overload)
+        : m_Value(std::forward<T2_>(value)) {}
+    
+    template <typename T2_ = T_>
     explicit ValueResultBase(OkTag, T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
         : m_Value(std::forward<T2_>(value)) {}
 
@@ -323,8 +327,9 @@ make_const_t<T_>& TryHelper(const Result<T_&>* result) {
 }
 }
 
-//TODO: maybe add the expression as well for debug purposes
-//TODO: improve debug information without using std::stacktrace since its unnessesary long
+//TODO: maybe include the expression as well for debug purposes
+//TODO: improve debug information without using std::stacktrace since its unnecessary long
+//TODO: create TRY macro for functions that don't return a result, maybe throw exception
 
 // The TRY macro uses a little bit of a lifetime hack,
 // since we use '_result' after its scope through a pointer.

@@ -99,7 +99,7 @@ struct ReflCpp::ReflectData<T_&&> {
             RESULT_OK(), {
                 .name = "RValue Reference",
                 .inners = {
-                    ReflectID<T_>()
+                    TRY(ReflectID<T_>())
                 },
                 .flags = TypeFlags::IsRValueReference,
             }

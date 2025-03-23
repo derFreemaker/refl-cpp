@@ -57,22 +57,26 @@ public:
     [[nodiscard]]
     Result<Variant> GetValue(const Variant& instance) const override {
         if constexpr (Traits::IsStatic) {
-            return { RESULT_OK(), static_cast<typename Traits::Type>(*m_Field) };
+            return { RESULT_OK(), Variant(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*m_Field)) };
         }
         else {
             if (instance.IsVoid()) {
                 return { RESULT_ERROR(), "instance is needed for non-static member fields" };
             }
 
-            typename Traits::Type& obj = TRY(instance.GetRef<typename Traits::ClassType>());
-            return { RESULT_OK(), static_cast<typename Traits::Type>(obj.*m_Field) };
+            typename Traits::ClassType& obj = TRY(instance.GetRef<typename Traits::ClassType>());
+            return { RESULT_OK(), Variant(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field)) };
         }
     }
 
     [[nodiscard]]
     Result<void> SetValue(const Variant& value, const Variant& instance) const override {
         if constexpr (Traits::IsConst) {
-            return { RESULT_ERROR(), "cannot set value on a const type: {0}", TRY(Reflect<typename Traits::Type>()).Dump() };
+            return { RESULT_ERROR(), "cannot set value on type: {0}", TRY(Reflect<const typename Traits::Type>()).Dump() };
+        }
+        if constexpr (!std::is_copy_constructible_v<typename Traits::Type> || !std::is_copy_assignable_v<typename Traits::Type>) {
+            //TODO: make it so that it only errors if there is no possible way -> example: std::is_assignable_v<T_, T2_>
+            return { RESULT_ERROR(), "cannot set value on not copy construct or copy assignable" };
         }
         else if constexpr (Traits::IsStatic) {
             *m_Field = value.GetValue<typename Traits::Type>();
@@ -106,7 +110,7 @@ public:
             }
 
             auto& obj = TRY(instance.GetRef<typename Traits::ClassType>());
-            return { RESULT_OK(), static_cast<typename Traits::Type&>(obj.*m_Field) };
+            return { RESULT_OK(), Variant(static_cast<typename Traits::Type&>(obj.*m_Field)) };
         }
     }
 };
