@@ -88,8 +88,8 @@ public:
 inline Variant::Variant()
     : m_Base(std::make_shared<VoidVariantWrapper>()),
       m_Type(ReflectID<void>().Value()) {}
-
 template <typename T_>
+
     requires (detail::BlockVariant<T_> && std::copy_constructible<T_>)
 Variant::Variant(T_& data)
     : m_Base(std::make_shared<ValueVariantWrapper<T_>>(data)),

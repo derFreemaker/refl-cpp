@@ -69,10 +69,7 @@ public:
     template <typename... Args>
     StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
         : FormattedError(fmt_str, std::forward<Args>(args)...), m_StackTrace(stacktrace) {}
-
-    StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const StackTracingError& error)
-        : FormattedError(error.m_Message), m_StackTrace(stacktrace) {}
-
+    
     [[nodiscard]]
     const std::stacktrace& StackTrace() const {
         return m_StackTrace;
@@ -112,23 +109,6 @@ struct OkTag {};
 inline constexpr ErrorTag Error{};
 inline constexpr OkTag Ok{};
 }
-
-#ifdef _DEBUG
-
-#define RESULT_ERROR() \
-    ::ReflCpp::detail::Error, std::stacktrace::current()
-
-#define RESULT_OK() \
-    ::ReflCpp::detail::Ok
-
-#else
-#define RESULT_ERROR() \
-    ::ReflCpp::detail::Error
-
-#define RESULT_OK() \
-    ::ReflCpp::detail::Ok
-
-#endif
 
 template <typename T_>
 struct Result;
@@ -347,27 +327,43 @@ std::add_lvalue_reference_t<std::add_const_t<std::remove_const_t<T_>>> TryHelper
 // This only works because '_result' lives in the enclosing
 // function stack.
 
+//TODO: maybe add the expression as well for debug purposes
+
 #ifdef _DEBUG
-#define TRY(expr) \
+#define TRY(...) \
     (::ReflCpp::detail::TryHelper( \
         ({ \
-            auto _result = (expr); \
+            auto _result = (__VA_ARGS__); \
             if (_result.IsError()) { \
-                return { ::ReflCpp::detail::Error, ::ReflCpp::ResultError(::ReflCpp::detail::StackTraceError, ::std::stacktrace::current(), _result.Error()) }; \
+                return { ::ReflCpp::detail::Error, _result.Error() }; \
             } \
             &_result; \
         }) \
     ))
+
+#define RESULT_ERROR() \
+    ::ReflCpp::detail::Error, std::stacktrace::current()
+
+#define RESULT_OK() \
+    ::ReflCpp::detail::Ok
+
 #else
-#define TRY(expr) \
+#define TRY(...) \
     (::ReflCpp::detail::TryHelper( \
         ({ \
-            auto _result = (expr); \
+            auto _result = (__VA_ARGS__); \
             if (_result.IsError()) { \
                 return { ::ReflCpp::detail::Error, _result }; \
             } \
             &_result; \
         }) \
     ))
+
+#define RESULT_ERROR() \
+    ::ReflCpp::detail::Error
+
+#define RESULT_OK() \
+    ::ReflCpp::detail::Ok
+
 #endif
 }

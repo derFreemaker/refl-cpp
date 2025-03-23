@@ -41,9 +41,9 @@ struct TestStruct {
     CREATE_TEST_METHODS_IMPL(, NAME, AFTER) \
     CREATE_TEST_METHODS_IMPL(, NAME##Const, const AFTER)
 
-    CREATE_TEST_METHODS_IMPL(static, Static, )
+    CREATE_TEST_METHODS_IMPL(static, Static,)
 
-    CREATE_TEST_METHODS(Normal, )
+    CREATE_TEST_METHODS(Normal,)
     CREATE_TEST_METHODS(LValueReference, &)
     CREATE_TEST_METHODS(RValueReference, &&)
 };
@@ -57,22 +57,28 @@ struct ReflectData<TestStruct> {
     }
 };
 
-#define CREATE_METHOD_TEST(NAME, INSTANCE, RETURN) \
+#define CREATE_METHOD_TEST_IMPL(NAME, INSTANCE, INSTANCE_TYPE, RETURN, ARG) \
     TEST(FunctionWrapper, NAME) { \
         const FunctionWrapper funcWrapper(&TestStruct::NAME); \
-        NoCopyOrMoveStruct test(nullptr); \
-        const auto result = funcWrapper.Invoke({ test }, INSTANCE).Value(); \
+        ARG NoCopyOrMoveStruct test(nullptr); \
+        INSTANCE_TYPE instance = INSTANCE; \
+        const auto result = funcWrapper.Invoke({ test }, instance).Value(); \
         const auto result_value = result.GetValue<RETURN NoCopyOrMoveStruct&>(); \
         ASSERT_EQ(result_value.Value().foo, 893745); \
     }
 
-#define CREATE_METHOD_TESTS(NAME, INSTANCE) \
-    CREATE_METHOD_TEST(NAME, INSTANCE, ) \
-    CREATE_METHOD_TEST(NAME##_Const, INSTANCE, ) \
-    CREATE_METHOD_TEST(Const_##NAME, INSTANCE, const) \
-    CREATE_METHOD_TEST(Const_##NAME##_Const, INSTANCE, const) \
+#define CREATE_METHOD_TEST(NAME, INSTANCE, INSTANCE_TYPE) \
+    CREATE_METHOD_TEST_IMPL(NAME, INSTANCE, INSTANCE_TYPE, , ) \
+    CREATE_METHOD_TEST_IMPL(NAME##_Const, INSTANCE, INSTANCE_TYPE, , const) \
+    CREATE_METHOD_TEST_IMPL(Const_##NAME, INSTANCE, INSTANCE_TYPE, const, ) \
+    CREATE_METHOD_TEST_IMPL(Const_##NAME##_Const, INSTANCE, INSTANCE_TYPE, const, const)
 
-CREATE_METHOD_TESTS(Static, Variant::Void())
+#define CREATE_METHOD_TESTS(NAME, INSTANCE) \
+    CREATE_METHOD_TEST(NAME, INSTANCE, auto) \
+    CREATE_METHOD_TEST(NAME##Const, INSTANCE, const auto&)
+
+CREATE_METHOD_TEST(Static, Variant::Void(), auto)
+
 CREATE_METHOD_TESTS(Normal, TestStruct())
 CREATE_METHOD_TESTS(LValueReference, TestStruct())
 CREATE_METHOD_TESTS(RValueReference, TestStruct())
