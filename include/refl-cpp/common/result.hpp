@@ -4,7 +4,8 @@
 #include <optional>
 #include <sstream>
 #include <stacktrace>
-#include <utility>
+
+#include "refl-cpp/common/type_traits.hpp"
 
 #include "fmt/base.h"
 #include "fmt/format.h"
@@ -225,7 +226,7 @@ struct Result : detail::ValueResultBase<T_> {
         return this->m_Value;
     }
 
-    const std::remove_const_t<T_>& Value() const & {
+    make_const_t<T_>& Value() const & {
         if (this->IsError()) {
             p_ThrowBadAccessException();
         }
@@ -239,7 +240,7 @@ struct Result : detail::ValueResultBase<T_> {
         return this->m_Value;
     }
 
-    const std::remove_const_t<T_>& Value() const && {
+    make_const_t<T_>& Value() const && {
         if (this->IsError()) {
             p_ThrowBadAccessException();
         }
@@ -276,7 +277,7 @@ struct Result<T_&> : detail::ValueResultBase<T_*> {
         return *this->m_Value;
     }
 
-    const T_& Value() const & {
+    make_const_t<T_>& Value() const & {
         if (this->IsError()) {
             p_ThrowBadAccessException();
         }
@@ -290,7 +291,7 @@ struct Result<T_&> : detail::ValueResultBase<T_*> {
         return *this->m_Value;
     }
 
-    const std::remove_const_t<T_>& Value() const && {
+    make_const_t<T_>& Value() const && {
         if (this->IsError()) {
             p_ThrowBadAccessException();
         }
@@ -312,22 +313,23 @@ T_& TryHelper(Result<T_&>* result) {
 }
 
 template <typename T_>
-std::add_lvalue_reference_t<std::add_const_t<std::remove_const_t<T_>>> TryHelper(const Result<T_>* result) {
+make_const<T_>& TryHelper(const Result<T_>* result) {
     return result->Value();
 }
 
 template <typename T_>
-std::add_lvalue_reference_t<std::add_const_t<std::remove_const_t<T_>>> TryHelper(const Result<T_&>* result) {
+make_const_t<T_>& TryHelper(const Result<T_&>* result) {
     return result->Value();
 }
 }
+
+//TODO: maybe add the expression as well for debug purposes
+//TODO: improve debug information without using std::stacktrace since its unnessesary long
 
 // The TRY macro uses a little bit of a lifetime hack,
 // since we use '_result' after its scope through a pointer.
 // This only works because '_result' lives in the enclosing
 // function stack.
-
-//TODO: maybe add the expression as well for debug purposes
 
 #ifdef _DEBUG
 #define TRY(...) \

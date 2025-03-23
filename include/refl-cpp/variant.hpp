@@ -2,6 +2,7 @@
 
 #include "refl-cpp/common/result.hpp"
 #include "refl-cpp/type_id.hpp"
+#include "refl-cpp/common/type_traits.hpp"
 
 namespace ReflCpp {
 struct Variant;
@@ -86,7 +87,7 @@ public:
     template <typename T_>
         requires (!std::is_same_v<T_, Variant>)
     [[nodiscard]]
-    Result<std::remove_reference_t<T_>&> GetRef() const;
+    Result<make_lvalue_reference_t<T_>> GetRef() const;
 
     template <typename T_>
         requires (!std::is_same_v<T_, Variant> && !std::is_pointer_v<T_>)
@@ -96,6 +97,6 @@ public:
     template <typename T_>
         requires (!std::is_same_v<T_, Variant> && std::is_pointer_v<T_>)
     [[nodiscard]]
-    Result<const std::remove_pointer_t<T_>*&> GetValue() const;
+    Result<add_const_to_pointer_type_t<T_>&> GetValue() const;
 };
 }

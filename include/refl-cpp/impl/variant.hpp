@@ -130,7 +130,7 @@ Variant::Variant(const T_* data)
 
 template <typename T_>
     requires (!std::is_same_v<T_, Variant>)
-Result<std::remove_reference_t<T_>&> Variant::GetRef() const {
+Result<make_lvalue_reference_t<T_>> Variant::GetRef() const {
     TRY(CheckVoid());
 
     if (m_IsConst && !std::is_const_v<std::remove_pointer_t<std::remove_reference_t<T_>>>) {
@@ -173,18 +173,18 @@ Result<const T_&> Variant::GetValue() const {
 
 template <typename T_>
     requires (!std::is_same_v<T_, Variant> && std::is_pointer_v<T_>)
-Result<const std::remove_pointer_t<T_>*&> Variant::GetValue() const {
+Result<add_const_to_pointer_type_t<T_>&> Variant::GetValue() const {
     TRY(CheckVoid());
 
     if (m_Type == TRY(ReflectID<T_>())) {
-        return { RESULT_OK(), const_cast<const std::remove_pointer_t<T_>*&>(static_cast<detail::VariantWrapper<T_&>*>(m_Base.get())->GetValue()) };
+        return { RESULT_OK(), const_cast<add_const_to_pointer_type_t<T_>&>(static_cast<detail::VariantWrapper<T_&>*>(m_Base.get())->GetValue()) };
     }
 
     const Type& type = TRY(m_Type.GetType());
     if (m_IsConst
         && type.GetFlags().Has(TypeFlags::IsPointer)
         && type.HasInner(TRY(ReflectID<const std::remove_pointer_t<T_>>()))) {
-        return { RESULT_OK(), static_cast<detail::VariantWrapper<const std::remove_pointer_t<T_>*&>*>(m_Base.get())->GetValue() };
+        return { RESULT_OK(), static_cast<detail::VariantWrapper<add_const_to_pointer_type_t<T_>&>*>(m_Base.get())->GetValue() };
     }
 
     const Type& passed_type = TRY(Reflect<T_>());
