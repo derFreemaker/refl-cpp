@@ -32,7 +32,7 @@ private:
 
     Variant();
 
-    static ResultError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+    static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
 
     friend struct VariantTestHelper;
 
@@ -100,7 +100,7 @@ public:
     Result<make_lvalue_reference_t<T_>> GetRef() const;
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && !std::is_const_v<T_>)
+        requires (detail::BlockVariant<T_> && std::is_const_v<T_>)
     [[nodiscard]]
     Result<make_lvalue_reference_t<T_>> GetConstRef() const;
 

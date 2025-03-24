@@ -9,7 +9,7 @@ TEST(Result, Error) {
     auto testError = []() -> Result<void> {
         return { RESULT_ERROR(), "some error: {0}", 2345 };
     };
-    
+
     const auto resultTestError = testError();
 
     ASSERT_TRUE(resultTestError.IsError());
@@ -47,7 +47,7 @@ TEST(Result, Value) {
     auto testValue = []() -> Result<int> {
         // also testing convertion
         // from type T2_ (aka 'float') to type T_ (aka 'int') 
-        return { RESULT_OK(), 123.5f };
+        return { RESULT_OK(), static_cast<int>(123.5f) };
     };
 
     const auto resultValue = testValue();
@@ -82,7 +82,7 @@ TEST(Result, RValueReference) {
     auto testReference = [&testInt]() -> Result<int&&> {
         return { RESULT_OK(), std::move(testInt) };
     };
-    
+
     ASSERT_EQ(testReference().Value(), testInt);
 }
 
@@ -91,7 +91,7 @@ TEST(Result, ConstRValueReference) {
     auto testReference = [&testInt]() -> Result<const int&&> {
         return { RESULT_OK(), std::move(testInt) };
     };
-    
+
     ASSERT_EQ(testReference().Value(), testInt);
 }
 
@@ -133,5 +133,4 @@ TEST(Result, TRY) {
 
     ASSERT_TRUE(ResultTestHelper::IsError(resultTestErrorPropagation, "different error: 893745"));
 }
-
 }

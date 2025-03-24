@@ -120,8 +120,8 @@ inline Variant::Variant()
     : m_Base(std::make_shared<VoidVariantWrapper>()),
       m_Type(ReflectID<void>().Value()) {}
 
-inline ResultError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) {
-    return {
+inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) {
+    return FormattedError {
         "cannot get from Variant<{0}> with passed type: {1}",
         type.Dump(),
         passed_type.Dump()
@@ -157,13 +157,13 @@ Variant::Variant(const T_& data)
 template <typename T_>
     requires (detail::BlockVariant<T_>)
 Variant::Variant(T_&& data)
-    : m_Base(std::make_shared<RValueRefVariantWrapper<T_>>(std::move(data))),
+    : m_Base(std::make_shared<RValueRefVariantWrapper<T_>>(std::forward<T_>(data))),
       m_Type(ReflectID<T_&&>().Value()) {}
 
 template <typename T_>
     requires (detail::BlockVariant<T_>)
 Variant::Variant(const T_&& data)
-    : m_Base(std::make_shared<ConstRValueRefVariantWrapper<T_>>(std::move(data))),
+    : m_Base(std::make_shared<ConstRValueRefVariantWrapper<T_>>(std::forward<T_>(data))),
       m_Type(ReflectID<const T_&&>().Value()),
       m_IsConst(true) {}
 
@@ -181,7 +181,7 @@ Variant::Variant(const T_* data)
       m_IsConst(true) {}
 
 template <typename T_>
-    requires (detail::BlockVariant<T_> && !is_const<T_>)
+    requires (detail::BlockVariant<T_> && !std::is_const_v<T_>)
 Result<make_lvalue_reference_t<T_>> Variant::GetRef() const {
     TRY(CheckVoid());
 
@@ -199,7 +199,7 @@ Result<make_lvalue_reference_t<T_>> Variant::GetRef() const {
 }
 
 template <typename T_>
-    requires (detail::BlockVariant<T_> && is_const<T_>)
+    requires (detail::BlockVariant<T_> && std::is_const_v<T_>)
 Result<make_lvalue_reference_t<T_>> Variant::GetConstRef() const {
     TRY(CheckVoid());
 
@@ -215,7 +215,7 @@ Result<make_lvalue_reference_t<T_>> Variant::GetConstRef() const {
 
 template <typename T_>
     requires (detail::BlockVariant<T_> && !std::is_pointer_v<T_>)
-Result<make_const_t<T_>&> Variant::GetValue() const {
+Result<make_const<T_>&> Variant::GetValue() const {
     TRY(CheckVoid());
 
     const TypeID passed_type_id = TRY(ReflectID<T_>());
