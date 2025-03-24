@@ -1,16 +1,13 @@
 #pragma once
 
-#include <string>
 #include <optional>
 #include <sstream>
 #include <stacktrace>
+#include <string>
+
+#include <fmt/format.h>
 
 #include "refl-cpp/common/type_traits.hpp"
-
-#include "fmt/base.h"
-#include "fmt/format.h"
-
-//TODO: rewrite result type
 
 namespace ReflCpp {
 struct FormattedError {
@@ -18,10 +15,11 @@ protected:
     std::string m_Message;
 
 public:
-    explicit FormattedError(const std::string& msg) : m_Message(msg) {}
+    explicit FormattedError(const std::string& message)
+        : m_Message(message) {}
 
     template <typename... Args>
-    FormattedError(const std::string_view fmt_str, Args&&... args)
+    FormattedError(const std::string_view& fmt_str, Args&&... args)
         : m_Message(fmt::format(fmt::runtime(fmt_str), std::forward<Args>(args)...)) {}
 
     [[nodiscard]]
@@ -51,31 +49,14 @@ public:
 };
 
 #ifdef _DEBUG
-namespace detail {
-struct StackTraceErrorTag {};
-
-inline constexpr StackTraceErrorTag StackTraceError{};
-}
-
-struct StackTracEntry {
-    const std::string file;
-    const int line;
-};
-
 struct StackTracingError : FormattedError {
-    using FormattedError::FormattedError;
-
 private:
     const std::stacktrace m_StackTrace;
 
 public:
     template <typename... Args>
-    StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
+    StackTracingError(const std::stacktrace& stacktrace, const std::string_view& fmt_str, Args&&... args)
         : FormattedError(fmt_str, std::forward<Args>(args)...), m_StackTrace(stacktrace) {}
-
-    template <typename... Args>
-    StackTracingError(detail::StackTraceErrorTag, const std::stacktrace& stacktrace, const StackTracingError& error)
-        : FormattedError(error.m_Message), m_StackTrace(stacktrace) {}
 
     [[nodiscard]]
     const std::stacktrace& StackTrace() const {
@@ -102,7 +83,9 @@ public:
         return os;
     }
 };
+#endif
 
+#ifdef _DEBUG
 using ResultError = StackTracingError;
 #else
 using ResultError = FormattedError;
@@ -111,19 +94,11 @@ using ResultError = FormattedError;
 namespace detail {
 struct ErrorTag {};
 
-struct PassErrorTag {};
-
 struct OkTag {};
 
-inline constexpr ErrorTag Error{};
-inline constexpr PassErrorTag PassError{};
-inline constexpr OkTag Ok{};
-}
+inline constexpr ErrorTag Error {};
+inline constexpr OkTag Ok {};
 
-template <typename T_>
-struct Result;
-
-namespace detail {
 struct ResultBase {
 private:
     const std::optional<ResultError> m_Error;
@@ -157,7 +132,7 @@ public:
 };
 
 template <typename T_>
-struct ValueResultBase : public ResultBase {
+struct ValueResultBase : ResultBase {
 private:
     union {
         std::_Nontrivial_dummy_type m_Dummy;
@@ -167,157 +142,120 @@ private:
     void m_ThrowBadAccessException() const {
         throw std::runtime_error("Attempted to access value of an error Result. Error: " + this->Error().Str());
     }
-    
+
 public:
     explicit ValueResultBase(ErrorTag, const ResultError& error) noexcept
-        : ResultBase(error), m_Dummy{} {}
-
+    // ReSharper disable once CppRedundantMemberInitializer
+        : ResultBase(error), m_Dummy {} {}
+    
     template <typename T2_ = T_>
-    explicit ValueResultBase(OkTag, T2_& value) noexcept // NOLINT(*-forwarding-reference-overload)
-        : m_Value(std::forward<T2_>(value)) {}
-
-    template <typename T2_ = T_>
-    explicit ValueResultBase(OkTag, T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
+        requires std::is_nothrow_convertible_v<T2_, T_>
+        && std::is_nothrow_assignable_v<T_, T2_> //TODO: check over
+    explicit ValueResultBase(OkTag, T2_&& value) noexcept
         : m_Value(std::forward<T2_>(value)) {}
 
     //NOTE: for some reason we need this
+    // and '... = default' won't do
     ~ValueResultBase() {}
-    
+
     T_& Value() & {
-        if (this->IsError()) {
+        if (IsError()) {
             m_ThrowBadAccessException();
         }
         if constexpr (std::is_pointer_v<T_>) {
-            return *this->m_Value;
+            return *m_Value;
         }
         else {
-            return this->m_Value;
+            return m_Value;
         }
     }
 
-    make_const_t<T_>& Value() const & {
-        if (this->IsError()) {
+    make_const<T_>& Value() const & {
+        if (IsError()) {
             m_ThrowBadAccessException();
         }
         if constexpr (std::is_pointer_v<T_>) {
-            return *this->m_Value;
+            return *m_Value;
         }
         else {
-            return this->m_Value;
+            return m_Value;
         }
     }
 
-    T_& Value() && {
-        if (this->IsError()) {
+    T_&& Value() && {
+        if (IsError()) {
             m_ThrowBadAccessException();
         }
         if constexpr (std::is_pointer_v<T_>) {
-            return *this->m_Value;
+            return std::move(*m_Value);
         }
         else {
-            return this->m_Value;
+            return std::move(m_Value);
         }
     }
 
-    make_const_t<T_>& Value() const && {
-        if (this->IsError()) {
+    make_const<T_>&& Value() const && {
+        if (IsError()) {
             m_ThrowBadAccessException();
         }
         if constexpr (std::is_pointer_v<T_>) {
-            return *this->m_Value;
+            return std::move(*m_Value);
         }
         else {
-            return this->m_Value;
+            return std::move(m_Value);
         }
     }
 };
 }
 
+template <typename T_>
+struct Result;
+
 template <>
 struct Result<void> : detail::ResultBase {
     Result(detail::OkTag) {}
 
+    template <typename... Args>
+    Result(detail::ErrorTag,
 #ifdef _DEBUG
-    template <typename... Args>
-    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
-        : ResultBase(ResultError(detail::StackTraceError, stacktrace, fmt_str, std::forward<Args>(args)...)) {}
-
-    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const ResultError& error)
-        : ResultBase(ResultError(detail::StackTraceError, stacktrace, error)) {}
-
-    Result(detail::PassErrorTag, const ResultError& error)
-        : ResultBase(error) {}
-#else
-    template <typename... Args>
-    Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : ResultBase(ResultError(fmt_str, std::forward<Args>(args)...)) {}
+           const std::stacktrace& stacktrace,
+#endif
+           const std::string_view& fmt_str, Args&&... args)
+        : ResultBase(ResultError(
+#ifdef _DEBUG
+            stacktrace,
+#endif
+            fmt_str, std::forward<Args>(args)...)) {}
 
     Result(detail::ErrorTag, const ResultError& error)
         : ResultBase(error) {}
-    
-    Result(detail::PassErrorTag, const ResultError& error)
-        : ResultBase(error) {}
-#endif
 };
 
 template <typename T_>
 struct Result : detail::ValueResultBase<T_> {
     template <typename T2_ = T_>
         requires std::is_convertible_v<T2_, T_>
-        && std::is_nothrow_constructible_v<T_, T2_> //TODO: add more limitation
+        && std::is_nothrow_assignable_v<T_, T2_> //TODO: check over
     Result(detail::OkTag, T2_&& value) noexcept
         : detail::ValueResultBase<T_>(detail::Ok, value) {}
 
+    template <typename... Args>
+    Result(detail::ErrorTag,
 #ifdef _DEBUG
-    template <typename... Args>
-    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, std::forward<Args>(args)...)) {}
-
-    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const ResultError& error)
-        : detail::ValueResultBase<T_>(detail::Error, ResultError(detail::StackTraceError, stacktrace, error)) {}
-
-    Result(detail::PassErrorTag, const ResultError& error)
-        : detail::ValueResultBase<T_>(detail::Error, error) {}
-#else
-    template <typename... Args>
-    Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_>(detail::Error, ResultError(fmt_str, std::forward<Args>(args)...)) {}
+           const std::stacktrace& stacktrace,
+#endif
+           const std::string_view& fmt_str, Args&&... args)
+        : detail::ValueResultBase<T_>(detail::Error, ResultError(
+#ifdef _DEBUG
+                                          stacktrace,
+#endif
+                                          fmt_str, std::forward<Args>(args)...)) {}
 
     Result(detail::ErrorTag, const ResultError& error)
         : detail::ValueResultBase<T_>(detail::Error, error) {}
-    
-    Result(detail::PassErrorTag, const ResultError& error)
-        : detail::ValueResultBase<T_>(detail::Error, error) {}
-#endif
 };
 
-template <typename T_>
-struct Result<T_&> : detail::ValueResultBase<T_*> {
-    Result(detail::OkTag, make_const_t<T_>& value) noexcept
-        : detail::ValueResultBase<T_*>(detail::Ok, std::addressof(value)) {}
-
-#ifdef _DEBUG
-    template <typename... Args>
-    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_*>(detail::Error, ResultError(detail::StackTraceError, stacktrace, fmt_str, std::forward<Args>(args)...)) {}
-
-    Result(detail::ErrorTag, const std::stacktrace& stacktrace, const ResultError& error)
-        : detail::ValueResultBase<T_*>(detail::Error, ResultError(detail::StackTraceError, stacktrace, error)) {}
-
-    Result(detail::PassErrorTag, const ResultError& error)
-        : detail::ValueResultBase<T_*>(detail::Error, error) {}
-#else
-    template <typename... Args>
-    Result(detail::ErrorTag, const std::string_view fmt_str, Args&&... args)
-        : detail::ValueResultBase<T_*>(detail::Error, ResultError(fmt_str, std::forward<Args>(args)...)) {}
-
-    Result(detail::ErrorTag, const ResultError& error)
-        : detail::ValueResultBase<T_*>(detail::Error, error) {}
-    
-    Result(detail::PassErrorTag, const ResultError& error)
-        : detail::ValueResultBase<T_*>(detail::Error, error) {}
-#endif
-};
+//TODO: add custom result for references
 
 namespace detail {
 inline void TryHelper(const Result<void>* _) {}
@@ -328,24 +266,14 @@ T_& TryHelper(Result<T_>* result) {
 }
 
 template <typename T_>
-T_& TryHelper(Result<T_&>* result) {
-    return result->Value();
-}
-
-template <typename T_>
 make_const<T_>& TryHelper(const Result<T_>* result) {
-    return result->Value();
-}
-
-template <typename T_>
-make_const_t<T_>& TryHelper(const Result<T_&>* result) {
     return result->Value();
 }
 }
 
 //TODO: maybe include the expression as well for debug purposes
-//TODO: improve debug information without using std::stacktrace since its unnecessary long
-//TODO: create TRY macro for functions that don't return a result, maybe throw exception
+//TODO: improve debug information using std::stacktrace its unnecessary long
+//TODO: create TRY macro for functions that don't return a result on error, maybe throw exception
 
 // The TRY macro uses a little bit of a lifetime hack,
 // since we use '_result' after its scope through a pointer.
@@ -365,7 +293,7 @@ make_const_t<T_>& TryHelper(const Result<T_&>* result) {
         ({ \
             auto _result = (__VA_ARGS__); \
             if (_result.IsError()) { \
-                return { ::ReflCpp::detail::PassError, _result.Error() }; \
+                return { ::ReflCpp::detail::Error, _result.Error() }; \
             } \
             &_result; \
         }) \
@@ -384,7 +312,7 @@ make_const_t<T_>& TryHelper(const Result<T_&>* result) {
         ({ \
             auto _result = (__VA_ARGS__); \
             if (_result.IsError()) { \
-                return { ::ReflCpp::detail::PassError, _result.Error() }; \
+                return { ::ReflCpp::detail::Error, _result.Error() }; \
             } \
             &_result; \
         }) \

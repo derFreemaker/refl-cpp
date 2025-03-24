@@ -19,6 +19,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
         include/refl-cpp/common/flags.hpp
         include/refl-cpp/common/result.hpp
+        include/refl-cpp/common/type_traits.hpp
 
         include/refl-cpp/type_id.hpp
         include/refl-cpp/type.hpp
@@ -48,8 +49,6 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
 
         include/refl-cpp/impl/impl.hpp
         include/refl-cpp/impl/variant.hpp
-        include/refl-cpp/common/type_traits.hpp
-        include/refl-cpp/common/utils.hpp
 )
 target_link_libraries(refl-cpp INTERFACE
     fmt::fmt

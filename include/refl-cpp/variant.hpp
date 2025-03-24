@@ -95,19 +95,19 @@ public:
     //TODO: add get const reference or something
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && !is_const<T_>)
+        requires (detail::BlockVariant<T_> && !std::is_const_v<T_>)
     [[nodiscard]]
     Result<make_lvalue_reference_t<T_>> GetRef() const;
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && is_const<T_>)
+        requires (detail::BlockVariant<T_> && !std::is_const_v<T_>)
     [[nodiscard]]
     Result<make_lvalue_reference_t<T_>> GetConstRef() const;
 
     template <typename T_>
         requires (detail::BlockVariant<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
-    Result<make_const_t<T_>&> GetValue() const;
+    Result<make_const<T_>&> GetValue() const;
 
     template <typename T_>
         requires (detail::BlockVariant<T_> && std::is_pointer_v<T_>)

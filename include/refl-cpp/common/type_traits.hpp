@@ -3,6 +3,9 @@
 #include <type_traits>
 
 namespace ReflCpp {
+template <typename T_>
+using make_const = std::add_const_t<std::remove_const_t<T_>>;
+
 namespace detail {
 template <typename T_>
 struct add_const_to_pointer_type;
@@ -36,29 +39,6 @@ struct add_const_to_pointer_type {
 
 template <typename T_>
 using add_const_to_pointer_type_t = typename add_const_to_pointer_type<T_>::type;
-
-namespace detail {
-template <typename T_>
-struct make_const {
-    using type = const T_;
-};
-
-template <typename T_>
-struct make_const<const T_> {
-    using type = const T_;
-};
-}
-
-template <typename T_>
-struct make_const {
-    using type = typename detail::make_const<T_>::type;
-};
-
-template <typename T_>
-using make_const_t = typename make_const<T_>::type;
-
-template <typename T_>
-concept is_const = std::is_const_v<T_>;
 
 namespace detail {
 template <typename T_>
