@@ -2,7 +2,7 @@
 
 #include "refl-cpp/common/formatted_error.hpp"
 
-#ifndef _DEBUG
+#ifdef NDEBUG
 namespace ReflCpp {
 using ResultError = FormattedError;
 }
@@ -49,5 +49,5 @@ public:
 };
 
 using ResultError = StackTracingError;
-#endif
 }
+#endif

@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "refl-cpp/common/result.hpp"
-
 #include "../helper/result_helper.hpp"
 
 namespace ReflCpp {
@@ -34,7 +32,7 @@ TEST(Result, ErrorPropagation) {
 
 TEST(Result, Void) {
     auto testSuccess = []() -> Result<void> {
-        return { RESULT_OK() };
+        return {};
     };
 
     const auto resultTestSuccess = testSuccess();
@@ -47,7 +45,7 @@ TEST(Result, Value) {
     auto testValue = []() -> Result<int> {
         // also testing convertion
         // from type T2_ (aka 'float') to type T_ (aka 'int') 
-        return { RESULT_OK(), static_cast<int>(123.5f) };
+        return static_cast<int>(123.5f);
     };
 
     const auto resultValue = testValue();
@@ -58,7 +56,7 @@ TEST(Result, Value) {
 TEST(Result, LValueReference) {
     int testInt = 3456;
     auto testReference = [&testInt]() -> Result<int&> {
-        return { RESULT_OK(), testInt };
+        return testInt;
     };
 
     const auto resultReference = testReference();
@@ -69,7 +67,7 @@ TEST(Result, LValueReference) {
 TEST(Result, ConstLValueReference) {
     constexpr int testInt = 786345;
     auto testReference = [&testInt]() -> Result<const int&> {
-        return { RESULT_OK(), testInt };
+        return testInt;
     };
 
     const auto resultReference = testReference();
@@ -80,7 +78,7 @@ TEST(Result, ConstLValueReference) {
 TEST(Result, RValueReference) {
     int testInt = 3456;
     auto testReference = [&testInt]() -> Result<int&&> {
-        return { RESULT_OK(), std::move(testInt) };
+        return testInt;
     };
 
     ASSERT_EQ(testReference().Value(), testInt);
@@ -89,7 +87,7 @@ TEST(Result, RValueReference) {
 TEST(Result, ConstRValueReference) {
     constexpr int testInt = 786345;
     auto testReference = [&testInt]() -> Result<const int&&> {
-        return { RESULT_OK(), std::move(testInt) };
+        return testInt;
     };
 
     ASSERT_EQ(testReference().Value(), testInt);
@@ -99,7 +97,7 @@ TEST(Result, Pointer) {
     int testInt = 87345;
 
     auto testReference = [&testInt]() -> Result<int*> {
-        return { RESULT_OK(), &testInt };
+        return &testInt;
     };
 
     const auto resultReference = testReference();
@@ -111,7 +109,7 @@ TEST(Result, ConstPointer) {
     constexpr int testInt = 12893;
 
     auto testReference = [&testInt]() -> Result<const int*> {
-        return { RESULT_OK(), &testInt };
+        return &testInt;
     };
 
     const auto resultReference = testReference();
@@ -121,7 +119,7 @@ TEST(Result, ConstPointer) {
 
 TEST(Result, TRY) {
     auto testError = []() -> Result<int> {
-        return { RESULT_OK(), 893745 };
+        return 893745;
     };
 
     auto testErrorPropagation = [&testError]() -> Result<void> {
