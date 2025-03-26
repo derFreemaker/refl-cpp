@@ -10,7 +10,7 @@ namespace ReflCpp {
 namespace detail {
 struct ErrorTag {};
 
-inline constexpr ErrorTag Error{};
+inline constexpr ErrorTag Error {};
 
 template <typename T_>
 struct ResultBase {

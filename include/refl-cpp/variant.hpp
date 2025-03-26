@@ -84,5 +84,9 @@ public:
         requires (std::is_pointer_v<T_>)
     [[nodiscard]]
     Result<add_const_to_pointer_type_t<T_>&> GetValue() const;
+
+    template <typename T_>
+    [[nodiscard]]
+    Result<auto> Get() const;
 };
 }

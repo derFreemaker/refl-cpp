@@ -89,4 +89,68 @@ struct remove_all_pointers<T_* const volatile> {
 
 template <typename T_>
 using remove_all_pointers_t = typename detail::remove_all_pointers<T_>::type;
+
+namespace detail {
+template <typename T_, bool IsConst_, bool IsVolatile_, bool IsLValueReference_, bool IsRValueReference_, bool IsPointer_>
+struct TypeTraitsBase {
+    using Type = T_;
+    
+    static constexpr bool IsConst = IsConst_;
+    static constexpr bool IsVolatile = IsVolatile_;
+    
+    static constexpr bool IsLValueReference = IsLValueReference_;
+    static constexpr bool IsRValueReference = IsRValueReference_;
+    static constexpr bool IsReference = IsLValueReference_ || IsRValueReference_;
+
+    static constexpr bool IsPointer = IsPointer_;
+};
+}
+
+template <typename T_>
+struct TypeTraits : detail::TypeTraitsBase<T_, false, false, false, false, false> {};
+
+template <typename T_>
+struct TypeTraits<const T_> : detail::TypeTraitsBase<T_, true, false, false, false, false> {};
+
+template <typename T_>
+struct TypeTraits<volatile T_> : detail::TypeTraitsBase<T_, false, true, false, false, false> {};
+
+template <typename T_>
+struct TypeTraits<const volatile T_> : detail::TypeTraitsBase<T_, true, true, false, false, false> {};
+
+template <typename T_>
+struct TypeTraits<T_&> : detail::TypeTraitsBase<T_, false, false, true, false, false> {};
+
+template <typename T_>
+struct TypeTraits<const T_&> : detail::TypeTraitsBase<T_, true, false, true, false, false> {};
+
+template <typename T_>
+struct TypeTraits<volatile T_&> : detail::TypeTraitsBase<T_, false, true, true, false, false> {};
+
+template <typename T_>
+struct TypeTraits<const volatile T_&> : detail::TypeTraitsBase<T_, true, true, true, false, false> {};
+
+template <typename T_>
+struct TypeTraits<T_&&> : detail::TypeTraitsBase<T_, false, false, false, true, false> {};
+
+template <typename T_>
+struct TypeTraits<const T_&&> : detail::TypeTraitsBase<T_, true, false, false, true, false> {};
+
+template <typename T_>
+struct TypeTraits<volatile T_&&> : detail::TypeTraitsBase<T_, false, true, false, true, false> {};
+
+template <typename T_>
+struct TypeTraits<const volatile T_&&> : detail::TypeTraitsBase<T_, true, true, false, true, false> {};
+
+template <typename T_>
+struct TypeTraits<T_*> : detail::TypeTraitsBase<T_, false, false, false, false, true> {};
+
+template <typename T_>
+struct TypeTraits<T_* const> : detail::TypeTraitsBase<T_, true, false, false, false, true> {};
+
+template <typename T_>
+struct TypeTraits<T_* volatile> : detail::TypeTraitsBase<T_, false, true, false, false, true> {};
+
+template <typename T_>
+struct TypeTraits<T_* const volatile> : detail::TypeTraitsBase<T_, true, true, false, false, true> {};
 }

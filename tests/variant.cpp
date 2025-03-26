@@ -20,15 +20,14 @@ TEST(Variant, Void) {
 }
 
 TEST(Variant, Value) {
-    constexpr int int_value = 123;
-    const auto variant_constant = Variant::Create(int_value);
+    const auto variant_constant = Variant::Create(123);
 
     ASSERT_TRUE(VariantTestHelper::UsesWrapper<ValueVariantWrapper<int>>(variant_constant));
 
-    ASSERT_EQ(variant_constant.GetValue<const int>().Value(), int_value);
-    ASSERT_EQ(variant_constant.GetValue<int>().Value(), int_value);
+    ASSERT_EQ(variant_constant.GetValue<const int>().Value(), 123);
+    ASSERT_EQ(variant_constant.GetValue<int>().Value(), 123);
 
-    ASSERT_EQ(variant_constant.GetConstRef<const int>().Value(), int_value);
+    ASSERT_EQ(variant_constant.GetConstRef<const int>().Value(), 123);
 
     const auto constantRefResult = variant_constant.GetRef<int>();
     ASSERT_EQ(constantRefResult.Error().Message(), "cannot get modifiable reference to constant");

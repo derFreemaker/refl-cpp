@@ -206,11 +206,13 @@ template <typename T_>
 Result<make_lvalue_reference_t<T_>> Variant::GetRef() const {
     TRY(CheckVoid());
 
+    using Traits = TypeTraits<T_>;
+    
     if (m_IsConst) {
         return { RESULT_ERROR(), "cannot get modifiable reference to constant: {0} (use 'GetConstRef' for a constant reference)", TRY(m_Type.GetType()).Dump() };
     }
 
-    if (m_Type == TRY(ReflectID<T_>())) {
+    if (m_Type == TRY(ReflectID<typename Traits::Type>())) {
         return static_cast<detail::VariantWrapper<make_lvalue_reference_t<T_>>*>(m_Base.get())->GetValue();
     }
 
@@ -224,7 +226,9 @@ template <typename T_>
 Result<make_lvalue_reference_t<T_>> Variant::GetConstRef() const {
     TRY(CheckVoid());
 
-    if (m_Type == TRY(ReflectID<T_>())) {
+    using Traits = TypeTraits<T_>;
+    
+    if (m_Type == TRY(ReflectID<typename Traits::Type>())) {
         return static_cast<detail::VariantWrapper<make_lvalue_reference_t<T_>>*>(m_Base.get())->GetValue();
     }
 
@@ -239,7 +243,9 @@ template <typename T_>
 Result<make_const<std::remove_reference_t<T_>>&> Variant::GetValue() const {
     TRY(CheckVoid());
 
-    const TypeID passed_type_id = TRY(ReflectID<T_>());
+    using Traits = TypeTraits<T_>;
+    
+    const TypeID passed_type_id = TRY(ReflectID<typename Traits::Type>());
     if (m_Type == passed_type_id) {
         return static_cast<detail::VariantWrapper<make_lvalue_reference_t<T_>>*>(m_Base.get())->GetValue();
     }
@@ -281,5 +287,10 @@ Result<add_const_to_pointer_type_t<T_>&> Variant::GetValue() const {
 
     const Type& passed_type = TRY(Reflect<T_>());
     return { RESULT_ERROR(), CanNotGetFromVariantWithType("value", type, passed_type) };
+}
+
+template <typename T_>
+Result<T_> Variant::Get() const {
+    
 }
 }

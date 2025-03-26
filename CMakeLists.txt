@@ -18,6 +18,8 @@ CPMAddPackage(
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
         include/refl-cpp/common/flags.hpp
+        include/refl-cpp/common/formatted_error.hpp
+        include/refl-cpp/common/stack_tracing_error.hpp
         include/refl-cpp/common/result.hpp
         include/refl-cpp/common/type_traits.hpp
 
@@ -49,9 +51,6 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
 
         include/refl-cpp/impl/impl.hpp
         include/refl-cpp/impl/variant.hpp
-        include/refl-cpp/common/new_result.hpp
-        include/refl-cpp/common/formatted_error.hpp
-        include/refl-cpp/common/stack_tracing_error.hpp
 )
 target_link_libraries(refl-cpp INTERFACE
     fmt::fmt

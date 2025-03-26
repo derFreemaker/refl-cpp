@@ -6,14 +6,13 @@
 #include <fmt/format.h>
 
 namespace ReflCpp {
-
 struct FormattedError {
-protected:
-    std::string m_Message;
+private:
+    const std::string m_Message;
 
 public:
-    explicit FormattedError(const std::string& message)
-        : m_Message(message) {}
+    explicit FormattedError(const std::string& msg)
+        : m_Message(msg) {}
 
     template <typename... Args>
     FormattedError(const std::string_view& format, Args&&... args)
@@ -25,7 +24,7 @@ public:
     }
 
     void Str(std::ostream& stream) const {
-        stream << m_Message;
+        stream << Message();
     }
 
     [[nodiscard]]
@@ -44,5 +43,4 @@ public:
         return os;
     }
 };
-
 }

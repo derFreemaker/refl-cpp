@@ -12,23 +12,23 @@ using ResultError = FormattedError;
 namespace ReflCpp {
 struct StackTracingError : FormattedError {
 private:
-    const std::stacktrace m_StackTrace;
+    const std::stacktrace* m_StackTrace;
 
 public:
     template <typename... Args>
     StackTracingError(const std::stacktrace& stacktrace, const std::string_view& format, Args&&... args)
-        : FormattedError(format, std::forward<Args>(args)...), m_StackTrace(stacktrace) {}
+        : FormattedError(format, std::forward<Args>(args)...), m_StackTrace(new std::stacktrace(stacktrace)) {}
 
     StackTracingError(const std::stacktrace& stacktrace, const FormattedError& error)
-        : FormattedError(error), m_StackTrace(stacktrace) {}
-
+        : FormattedError(error), m_StackTrace(new std::stacktrace(stacktrace)) {}
+    
     [[nodiscard]]
     const std::stacktrace& StackTrace() const {
-        return m_StackTrace;
+        return *m_StackTrace;
     }
 
     void Str(std::ostream& stream) const {
-        stream << m_Message << "\n" << m_StackTrace;
+        stream << Message() << "\n" << m_StackTrace;
     }
 
     [[nodiscard]]

@@ -13,11 +13,11 @@ CPMAddPackage(
 )
 
 add_executable(refl-cpp_tests
+        helper/variant_helper.hpp
+
         common/result.cpp
         
         variant.cpp
-        helper/result_helper.hpp
-        helper/variant_helper.hpp
         function_wrapper.cpp
         fields.cpp
 )
