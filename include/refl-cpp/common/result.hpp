@@ -15,11 +15,11 @@ inline constexpr ErrorTag Error{};
 template <typename T_>
 struct ResultBase {
 private:
-    using StoredType_m = T_;
+    using StoredT = T_;
 
     union {
         const ResultError m_Error;
-        StoredType_m m_Value;
+        StoredT m_Value;
     };
 
     bool m_IsSuccess;
@@ -63,28 +63,28 @@ public:
         return m_Error;
     }
 
-    StoredType_m& Value() & {
+    StoredT& Value() & {
         if (this->IsError()) {
             this->m_ThrowBadAccessException();
         }
         return this->m_Value;
     }
 
-    make_const<StoredType_m>& Value() const & {
+    make_const<StoredT>& Value() const & {
         if (this->IsError()) {
             this->m_ThrowBadAccessException();
         }
         return this->m_Value;
     }
 
-    StoredType_m& Value() && {
+    StoredT& Value() && {
         if (this->IsError()) {
             this->m_ThrowBadAccessException();
         }
         return this->m_Value;
     }
 
-    make_const<StoredType_m>& Value() const && {
+    make_const<StoredT>& Value() const && {
         if (this->IsError()) {
             this->m_ThrowBadAccessException();
         }

@@ -59,4 +59,34 @@ struct make_lvalue_reference {
 
 template <typename T_>
 using make_lvalue_reference_t = typename make_lvalue_reference<T_>::type;
+
+namespace detail {
+template <typename T_>
+struct remove_all_pointers {
+    using type = T_;
+};
+
+template <typename T_>
+struct remove_all_pointers<T_* > {
+    using type = typename remove_all_pointers<T_>::type;
+};
+
+template <typename T_>
+struct remove_all_pointers<T_* const> {
+    using type = typename remove_all_pointers<T_>::type;
+};
+
+template <typename T_>
+struct remove_all_pointers<T_* volatile> {
+    using type = typename remove_all_pointers<T_>::type;
+};
+
+template <typename T_>
+struct remove_all_pointers<T_* const volatile> {
+    using type = typename remove_all_pointers<T_>::type;
+};
+}
+
+template <typename T_>
+using remove_all_pointers_t = typename detail::remove_all_pointers<T_>::type;
 }

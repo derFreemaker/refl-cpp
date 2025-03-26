@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../helper/result_helper.hpp"
+#include "refl-cpp/common/result.hpp"
 
 namespace ReflCpp {
 TEST(Result, Error) {
@@ -27,7 +27,7 @@ TEST(Result, TRY) {
 
     const auto resultTestErrorPropagation = testErrorPropagation();
 
-    ASSERT_TRUE(ResultTestHelper::IsError(resultTestErrorPropagation, "some error: 893745"));
+    ASSERT_EQ(resultTestErrorPropagation.Error().Message(), "some error: 893745");
 }
 
 TEST(Result, Void) {

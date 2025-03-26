@@ -17,9 +17,6 @@ struct VariantWrapper : public VariantBase {
     [[nodiscard]]
     virtual R_ GetValue() = 0;
 };
-
-template <typename T_>
-concept NotVariant = !std::is_same_v<std::decay_t<T_>, Variant>;
 }
 
 //TODO: decide if we want variant to be copy able
@@ -32,7 +29,10 @@ private:
 
     Variant();
 
-    static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+    Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
+        : m_Base(base), m_Type(type), m_IsConst(isConst) {}
+
+    static FormattedError Variant::CanNotGetFromVariantWithType(const std::string_view& desc, const Type& type, const Type& passed_type);
 
     friend struct VariantTestHelper;
 
@@ -45,43 +45,14 @@ public:
     [[nodiscard]]
     Result<void> CheckVoid() const {
         if (IsVoid()) {
-            return {RESULT_ERROR(), "is void variant"};
+            return { RESULT_ERROR(), "cannot get reference or value from void variant" };
         }
         return {};
     }
 
     template <typename T_>
-        requires (detail::NotVariant<T_> && !std::is_reference_v<T_> && !std::is_const_v<T_>)
-    Variant(T_ data);
-
-    template <typename T_>
-        requires (detail::NotVariant<T_> && !std::is_reference_v<T_> && std::is_const_v<T_>)
-    Variant(T_ data);
+    static Variant Create(T_&& data);
     
-    template <typename T_>
-        requires (detail::NotVariant<T_> && std::is_lvalue_reference_v<T_> && !std::is_const_v<T_>)
-    Variant(T_ data);
-
-    template <typename T_>
-        requires (detail::NotVariant<T_> && std::is_lvalue_reference_v<T_> && std::is_const_v<T_>)
-    Variant(T_ data);
-
-    template <typename T_>
-        requires (detail::NotVariant<T_> && std::is_rvalue_reference_v<T_> && !std::is_const_v<T_>)
-    Variant(T_ data);
-
-    template <typename T_>
-        requires (detail::NotVariant<T_> && std::is_rvalue_reference_v<T_> && std::is_const_v<T_>)
-    Variant(T_ data);
-
-    template <typename T_>
-        requires (detail::NotVariant<T_> && std::is_pointer_v<T_> && !std::is_const_v<T_>)
-    Variant(T_ data);
-
-    template <typename T_>
-        requires (detail::NotVariant<T_> && std::is_pointer_v<T_> && std::is_const_v<T_>)
-    Variant(T_ data);
-
     [[nodiscard]]
     bool IsVoid() const {
         return m_Type == ReflectID<void>().Value();
