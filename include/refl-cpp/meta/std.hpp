@@ -9,13 +9,11 @@
 template <typename T_>
 struct ReflCpp::ReflectData<std::optional<T_>> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "optional",
-                ._namespace = "std",
-                .inners = {
-                    TRY(ReflectID<T_>())
-                }
+        return TypeData{
+            .name = "optional",
+            ._namespace = "std",
+            .inners = {
+                TRY(ReflectID<T_>())
             }
 
             //TODO: take care of lvalue and rvalue references
@@ -54,14 +52,12 @@ struct ReflCpp::ReflectPrinter<std::optional<T>> {
 template <typename T>
 struct ReflCpp::ReflectData<std::vector<T>> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "vector",
-                ._namespace = "std",
-                .inners = {
-                    TRY(ReflectID<T>())
-                },
-            }
+        return TypeData{
+            .name = "vector",
+            ._namespace = "std",
+            .inners = {
+                TRY(ReflectID<T>())
+            },
         };
     }
 };
@@ -78,11 +74,9 @@ struct ReflCpp::ReflectPrinter<std::vector<T>> {
 template <>
 struct ReflCpp::ReflectData<std::nullptr_t> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Null Pointer",
-                ._namespace = "std",
-            }
+        return TypeData{
+            .name = "Null Pointer",
+            ._namespace = "std",
         };
     }
 };
@@ -97,15 +91,13 @@ struct ReflCpp::ReflectPrinter<std::nullptr_t> {
 template <typename T_>
 struct ReflCpp::ReflectData<std::unique_ptr<T_>> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Unique Pointer",
-                ._namespace = "std",
-                .inners = {
-                    TRY(ReflectID<T_>()),
-                },
-                .flags = TypeFlags::IsPointer
-            }
+        return TypeData{
+            .name = "Unique Pointer",
+            ._namespace = "std",
+            .inners = {
+                TRY(ReflectID<T_>()),
+            },
+            .flags = TypeFlags::IsPointer
         };
     }
 };
@@ -122,15 +114,13 @@ struct ReflCpp::ReflectPrinter<std::unique_ptr<T_>> {
 template <typename T_>
 struct ReflCpp::ReflectData<std::shared_ptr<T_>> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Shared Pointer",
-                ._namespace = "std",
-                .inners = {
-                    TRY(ReflectID<T_>()),
-                },
-                .flags = TypeFlags::IsPointer
-            }
+        return TypeData{
+            .name = "Shared Pointer",
+            ._namespace = "std",
+            .inners = {
+                TRY(ReflectID<T_>()),
+            },
+            .flags = TypeFlags::IsPointer
         };
     }
 };
@@ -148,14 +138,12 @@ template <typename T_>
 struct ReflCpp::ReflectData<std::weak_ptr<T_>> {
     static Result<TypeData> Create() {
         return {
-            RESULT_OK(), {
-                .name = "Weak Pointer",
-                ._namespace = "std",
-                .inners = {
-                    TRY(ReflectID<T_>()),
-                },
-                .flags = TypeFlags::IsPointer
-            }
+            .name = "Weak Pointer",
+            ._namespace = "std",
+            .inners = {
+                TRY(ReflectID<T_>()),
+            },
+            .flags = TypeFlags::IsPointer
         };
     }
 };

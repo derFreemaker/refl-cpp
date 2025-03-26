@@ -38,7 +38,7 @@ public:
         }
 
         const auto& type = m_types_data.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
-        return { RESULT_OK(), type->GetID() };
+        return type->GetID();
     }
 
     [[nodiscard]]
@@ -47,7 +47,7 @@ public:
             return { RESULT_ERROR(), "invalid type id" };
         }
 
-        return { RESULT_OK(), *m_types_data[id - 1] };
+        return *m_types_data[id - 1];
     }
 };
 }

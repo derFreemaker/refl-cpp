@@ -8,6 +8,8 @@ namespace ReflCpp {
 //TODO: check tests through maybe not exactly right
 
 TEST(Variant, Void) {
+    auto foo = Variant(Variant(123));
+    
     const auto& variant_void = Variant::Void();
 
     ASSERT_TRUE(VariantTestHelper::UsesWrapper<VoidVariantWrapper>(variant_void));

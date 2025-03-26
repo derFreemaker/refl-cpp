@@ -37,12 +37,9 @@ private:
 
     template <size_t... Indices> requires (Traits::IsStatic && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
-        return {
-            ::ReflCpp::detail::Ok,
-            Variant((m_Ptr)(
-                args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
-            ))
-        };
+        return (m_Ptr)(
+            args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
+        );
     }
 
     template <size_t... Indices> requires (Traits::IsStatic && !Traits::HasReturn)
@@ -50,17 +47,14 @@ private:
         (m_Ptr)(
             args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
         );
-        return { ::ReflCpp::detail::Ok };
+        return {};
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && !Traits::HasRReferenceObject && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        return {
-            RESULT_OK(),
-            Variant((TRY(obj.GetRef<std::conditional_t<Traits::IsConst, const typename Traits::ClassType, typename Traits::ClassType>>()).*m_Ptr)(
-                args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
-            ))
-        };
+        return (TRY(obj.GetRef<std::conditional_t<Traits::IsConst, const typename Traits::ClassType, typename Traits::ClassType>>()).*m_Ptr)(
+            args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
+        );
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && !Traits::HasRReferenceObject && !Traits::HasReturn)
@@ -68,16 +62,14 @@ private:
         (TRY(obj.GetRef<std::conditional_t<Traits::IsConst, const typename Traits::ClassType, typename Traits::ClassType>>()).*m_Ptr)(
             args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
         );
-        return { RESULT_OK() };
+        return {};
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && Traits::HasRReferenceObject && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        return {
-            RESULT_OK(), Variant((std::move(TRY(obj.GetRef<std::conditional_t<Traits::IsConst, const typename Traits::ClassType, typename Traits::ClassType>>())).*m_Ptr)(
-                args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
-            ))
-        };
+        return (std::move(TRY(obj.GetRef<std::conditional_t<Traits::IsConst, const typename Traits::ClassType, typename Traits::ClassType>>())).*m_Ptr)(
+            args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
+        );
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && Traits::HasRReferenceObject && !Traits::HasReturn)
@@ -85,7 +77,7 @@ private:
         (std::move(TRY(obj.GetRef<std::conditional_t<Traits::IsConst, const typename Traits::ClassType, typename Traits::ClassType>>())).*m_Ptr)(
             args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()...
         );
-        return { RESULT_OK() };
+        return {};
     }
 
 public:
@@ -124,7 +116,7 @@ public:
             }
             else {
                 TRY(InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>()));
-                return { RESULT_OK(), Variant::Void() };
+                return Variant::Void();
             }
         }
         else {
@@ -133,7 +125,7 @@ public:
             }
             else {
                 TRY(InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>(), obj));
-                return { RESULT_OK(), Variant::Void() };
+                return Variant::Void();
             }
         }
     }

@@ -5,12 +5,10 @@
 template <typename T_>
 struct ReflCpp::ReflectData<T_[]> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Array",
-                .inners = TRY(ReflectID<T_>()),
-                .flags = TypeFlags::IsArray,
-            }
+        return TypeData{
+            .name = "Array",
+            .inners = TRY(ReflectID<T_>()),
+            .flags = TypeFlags::IsArray,
         };
     }
 };
@@ -26,14 +24,12 @@ struct ReflCpp::ReflectPrinter<T_[]> {
 template <typename T_>
 struct ReflCpp::ReflectData<T_*> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Pointer",
-                .inners = {
-                    TRY(ReflectID<T_>())
-                },
-                .flags = TypeFlags::IsPointer,
-            }
+        return TypeData{
+            .name = "Pointer",
+            .inners = {
+                TRY(ReflectID<T_>())
+            },
+            .flags = TypeFlags::IsPointer,
         };
     }
 };
@@ -49,14 +45,12 @@ struct ReflCpp::ReflectPrinter<T_*> {
 template <typename T_>
 struct ReflCpp::ReflectData<T_* const> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Constant Pointer",
-                .inners = {
-                    TRY(ReflectID<T_>())
-                },
-                .flags = TypeFlags::IsPointer | TypeFlags::IsConst,
-            }
+        return TypeData{
+            .name = "Constant Pointer",
+            .inners = {
+                TRY(ReflectID<T_>())
+            },
+            .flags = TypeFlags::IsPointer | TypeFlags::IsConst,
         };
     }
 };
@@ -72,14 +66,12 @@ struct ReflCpp::ReflectPrinter<T_* const> {
 template <typename T_>
 struct ReflCpp::ReflectData<T_&> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "LValue Reference",
-                .inners = {
-                    TRY(ReflectID<T_>())
-                },
-                .flags = TypeFlags::IsLValueReference,
-            }
+        return TypeData{
+            .name = "LValue Reference",
+            .inners = {
+                TRY(ReflectID<T_>())
+            },
+            .flags = TypeFlags::IsLValueReference,
         };
     }
 };
@@ -95,14 +87,12 @@ struct ReflCpp::ReflectPrinter<T_&> {
 template <typename T_>
 struct ReflCpp::ReflectData<T_&&> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "RValue Reference",
-                .inners = {
-                    TRY(ReflectID<T_>())
-                },
-                .flags = TypeFlags::IsRValueReference,
-            }
+        return TypeData{
+            .name = "RValue Reference",
+            .inners = {
+                TRY(ReflectID<T_>())
+            },
+            .flags = TypeFlags::IsRValueReference,
         };
     }
 };
@@ -118,14 +108,12 @@ struct ReflCpp::ReflectPrinter<T_&&> {
 template <typename T_>
 struct ReflCpp::ReflectData<const T_> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Constant",
-                .inners = {
-                    TRY(ReflectID<T_>())
-                },
-                .flags = TypeFlags::IsConst,
-            }
+        return TypeData{
+            .name = "Constant",
+            .inners = {
+                TRY(ReflectID<T_>())
+            },
+            .flags = TypeFlags::IsConst,
         };
     }
 };
@@ -141,14 +129,12 @@ struct ReflCpp::ReflectPrinter<const T_> {
 template <typename T_>
 struct ReflCpp::ReflectData<volatile T_> {
     static Result<TypeData> Create() {
-        return {
-            RESULT_OK(), {
-                .name = "Volatile",
-                .inners = {
-                    TRY(ReflectID<T_>())
-                },
-                .flags = TypeFlags::IsVolatile,
-            }
+        return TypeData{
+            .name = "Volatile",
+            .inners = {
+                TRY(ReflectID<T_>())
+            },
+            .flags = TypeFlags::IsVolatile,
         };
     }
 };

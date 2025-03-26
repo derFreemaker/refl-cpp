@@ -15,7 +15,7 @@ TEST(Result, Error) {
     ASSERT_EQ(resultTestError.Error().Message(), "some error: 2345");
 }
 
-TEST(Result, ErrorPropagation) {
+TEST(Result, TRY) {
     auto testError = []() -> Result<int> {
         return { RESULT_ERROR(), "some error: {0}", 893745 };
     };
@@ -78,7 +78,7 @@ TEST(Result, ConstLValueReference) {
 TEST(Result, RValueReference) {
     int testInt = 3456;
     auto testReference = [&testInt]() -> Result<int&&> {
-        return testInt;
+        return std::move(testInt);
     };
 
     ASSERT_EQ(testReference().Value(), testInt);
@@ -87,7 +87,7 @@ TEST(Result, RValueReference) {
 TEST(Result, ConstRValueReference) {
     constexpr int testInt = 786345;
     auto testReference = [&testInt]() -> Result<const int&&> {
-        return testInt;
+        return std::move(testInt);
     };
 
     ASSERT_EQ(testReference().Value(), testInt);
@@ -117,18 +117,15 @@ TEST(Result, ConstPointer) {
     ASSERT_EQ(*resultReference.Value(), testInt);
 }
 
-TEST(Result, TRY) {
-    auto testError = []() -> Result<int> {
-        return 893745;
+TEST(Result, Convertion) {
+    constexpr float testFloat = 123.5f;
+
+    auto testConvertion = [&testFloat]() -> Result<int> {
+        return testFloat;
     };
 
-    auto testErrorPropagation = [&testError]() -> Result<void> {
-        int foo = TRY(testError());
-        return { RESULT_ERROR(), "different error: {0}", foo };
-    };
+    const auto resultConvertion = testConvertion();
 
-    const auto resultTestErrorPropagation = testErrorPropagation();
-
-    ASSERT_TRUE(ResultTestHelper::IsError(resultTestErrorPropagation, "different error: 893745"));
+    ASSERT_EQ(resultConvertion.Value(), static_cast<int>(testFloat));
 }
 }

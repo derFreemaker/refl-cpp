@@ -57,7 +57,7 @@ public:
     [[nodiscard]]
     Result<Variant> GetValue(const Variant& instance) const override {
         if constexpr (Traits::IsStatic) {
-            return { RESULT_OK(), Variant(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*m_Field)) };
+            return static_cast<make_lvalue_reference_t<typename Traits::Type>>(*m_Field);
         }
         else {
             if (instance.IsVoid()) {
@@ -65,7 +65,7 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.GetRef<typename Traits::ClassType>());
-            return { RESULT_OK(), Variant(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field)) };
+            return static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field);
         }
     }
 
@@ -89,7 +89,7 @@ public:
             typename Traits::ClassType& obj = TRY(instance.GetRef<typename Traits::ClassType>());
             obj.*m_Field = value.GetValue<typename Traits::Type>();
 
-            return { RESULT_OK() };
+            return {};
         }
 
         return { RESULT_ERROR(), "unreachable" };
@@ -102,7 +102,7 @@ public:
             return { RESULT_ERROR(), "cannot get reference to a const type" };
         }
         else if constexpr (Traits::IsStatic) {
-            return { RESULT_OK(), static_cast<typename Traits::Type&>(*m_Field) };
+            return static_cast<typename Traits::Type&>(*m_Field);
         }
         else {
             if (instance.IsVoid()) {
@@ -110,7 +110,7 @@ public:
             }
 
             auto& obj = TRY(instance.GetRef<typename Traits::ClassType>());
-            return { RESULT_OK(), Variant(static_cast<typename Traits::Type&>(obj.*m_Field)) };
+            return static_cast<typename Traits::Type>(obj.*m_Field);
         }
     }
 };

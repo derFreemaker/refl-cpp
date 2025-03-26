@@ -15,8 +15,7 @@ inline constexpr ErrorTag Error{};
 template <typename T_>
 struct ResultBase {
 private:
-    using StoredType_m = std::conditional_t<std::is_reference_v<T_>,
-                                          std::reference_wrapper<std::remove_reference_t<T_>>, T_>;
+    using StoredType_m = T_;
 
     union {
         const ResultError m_Error;
@@ -31,15 +30,21 @@ private:
 
 public:
     ResultBase(ErrorTag, ResultError&& error)
-        : m_Error(std::move(error)), m_IsSuccess(false) {}
+        : m_Error(std::move(error)),
+          m_IsSuccess(false) {}
 
-    template <typename T2_, typename = std::enable_if_t<std::is_convertible_v<T2_, StoredType_m>>>
-    ResultBase(T2_&& value)
-        : m_Value(static_cast<StoredType_m>(std::forward<T2_>(value))), m_IsSuccess(true) {}
+    ResultBase(ErrorTag, const ResultError& error)
+        : m_Error(error),
+          m_IsSuccess(false) {}
+
+    template <typename T2_>
+    ResultBase(T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
+        : m_Value(std::forward<T2_>(value)),
+          m_IsSuccess(true) {}
 
     //NOTE: we need this since it is not implicitly deleted
     ~ResultBase() {}
-    
+
     [[nodiscard]]
     bool IsSuccess() const {
         return m_IsSuccess;
@@ -72,18 +77,18 @@ public:
         return this->m_Value;
     }
 
-    StoredType_m&& Value() && {
+    StoredType_m& Value() && {
         if (this->IsError()) {
             this->m_ThrowBadAccessException();
         }
-        return std::move(this->m_Value);
+        return this->m_Value;
     }
 
-    make_const<StoredType_m>&& Value() const && {
+    make_const<StoredType_m>& Value() const && {
         if (this->IsError()) {
             this->m_ThrowBadAccessException();
         }
-        return std::move(this->m_Value);
+        return this->m_Value;
     }
 };
 
@@ -132,7 +137,7 @@ struct Result<void> : detail::ResultBase<void> {
     template <typename... Args>
     Result(detail::ErrorTag,
            const std::stacktrace&& stacktrace,
-           const std::string_view& format, Args&&... args)
+           const std::string_view& format, Args&&... args) noexcept
         : ResultBase(detail::Error, ResultError(
                          stacktrace,
                          format, std::forward<Args>(args)...)) {}
@@ -140,7 +145,7 @@ struct Result<void> : detail::ResultBase<void> {
 
     template <typename... Args>
     Result(detail::ErrorTag,
-           const std::string_view& format, Args&&... args)
+           const std::string_view& format, Args&&... args) noexcept
         : ResultBase(detail::Error, ResultError(
                          format,
                          std::forward<Args>(args)...)) {}
@@ -148,13 +153,13 @@ struct Result<void> : detail::ResultBase<void> {
 #ifndef NDEBUG
     Result(detail::ErrorTag,
            const std::stacktrace&& stacktrace,
-           const FormattedError& error)
+           const FormattedError& error) noexcept
         : ResultBase(detail::Error, ResultError(
                          stacktrace,
                          error)) {}
 #endif
 
-    Result(detail::ErrorTag, const ResultError& error)
+    Result(detail::ErrorTag, const ResultError& error) noexcept
         : ResultBase(detail::Error, error) {}
 };
 
@@ -164,7 +169,7 @@ struct Result : detail::ResultBase<T_> {
     template <typename... Args>
     Result(detail::ErrorTag,
            const std::stacktrace&& stacktrace,
-           const std::string_view& format, Args&&... args)
+           const std::string_view& format, Args&&... args) noexcept
         : detail::ResultBase<T_>(detail::Error, ResultError(
                                      stacktrace,
                                      format, std::forward<Args>(args)...)) {}
@@ -172,7 +177,7 @@ struct Result : detail::ResultBase<T_> {
 
     template <typename... Args>
     Result(detail::ErrorTag,
-           const std::string_view& format, Args&&... args)
+           const std::string_view& format, Args&&... args) noexcept
         : detail::ResultBase<T_>(detail::Error, ResultError(
                                      format,
                                      std::forward<Args>(args)...)) {}
@@ -186,12 +191,12 @@ struct Result : detail::ResultBase<T_> {
                                      error)) {}
 #endif
 
-    Result(detail::ErrorTag, const ResultError& error)
+    Result(detail::ErrorTag, const ResultError& error) noexcept
         : detail::ResultBase<T_>(detail::Error, error) {}
 
     template <typename T2_>
         requires (std::is_nothrow_convertible_v<T2_, T_>)
-    Result(T2_&& value)
+    Result(T2_&& value) noexcept
         : detail::ResultBase<T_>(std::forward<T2_>(value)) {}
 };
 
@@ -251,5 +256,4 @@ make_const<T_>& TryHelper(const Result<T_>* result) {
     ))
 
 #endif
-
 }

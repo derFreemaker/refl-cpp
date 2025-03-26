@@ -19,7 +19,7 @@ struct VariantWrapper : public VariantBase {
 };
 
 template <typename T_>
-concept BlockVariant = !std::is_same_v<std::remove_cv_t<std::remove_pointer_t<std::remove_reference_t<T_>>>, Variant>;
+concept NotVariant = !std::is_same_v<std::decay_t<T_>, Variant>;
 }
 
 //TODO: decide if we want variant to be copy able
@@ -45,42 +45,42 @@ public:
     [[nodiscard]]
     Result<void> CheckVoid() const {
         if (IsVoid()) {
-            return { RESULT_ERROR(), "is void variant" };
+            return {RESULT_ERROR(), "is void variant"};
         }
-        return { RESULT_OK() };
+        return {};
     }
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && std::copy_constructible<T_>)
-    Variant(T_& data);
+        requires (detail::NotVariant<T_> && !std::is_reference_v<T_> && !std::is_const_v<T_>)
+    Variant(T_ data);
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && std::copy_constructible<T_>)
-    Variant(const T_& data);
+        requires (detail::NotVariant<T_> && !std::is_reference_v<T_> && std::is_const_v<T_>)
+    Variant(T_ data);
+    
+    template <typename T_>
+        requires (detail::NotVariant<T_> && std::is_lvalue_reference_v<T_> && !std::is_const_v<T_>)
+    Variant(T_ data);
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && !std::copy_constructible<T_>)
-    Variant(T_& data);
+        requires (detail::NotVariant<T_> && std::is_lvalue_reference_v<T_> && std::is_const_v<T_>)
+    Variant(T_ data);
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && !std::copy_constructible<T_>)
-    Variant(const T_& data);
+        requires (detail::NotVariant<T_> && std::is_rvalue_reference_v<T_> && !std::is_const_v<T_>)
+    Variant(T_ data);
 
     template <typename T_>
-        requires (detail::BlockVariant<T_>)
-    Variant(T_&& data);
+        requires (detail::NotVariant<T_> && std::is_rvalue_reference_v<T_> && std::is_const_v<T_>)
+    Variant(T_ data);
 
     template <typename T_>
-        requires (detail::BlockVariant<T_>)
-    Variant(const T_&& data);
+        requires (detail::NotVariant<T_> && std::is_pointer_v<T_> && !std::is_const_v<T_>)
+    Variant(T_ data);
 
     template <typename T_>
-        requires (detail::BlockVariant<T_>)
-    Variant(T_* data);
-
-    template <typename T_>
-        requires (detail::BlockVariant<T_>)
-    Variant(const T_* data);
+        requires (detail::NotVariant<T_> && std::is_pointer_v<T_> && std::is_const_v<T_>)
+    Variant(T_ data);
 
     [[nodiscard]]
     bool IsVoid() const {
@@ -95,22 +95,22 @@ public:
     //TODO: add get const reference or something
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && !std::is_const_v<T_>)
+        requires (!std::is_const_v<T_>)
     [[nodiscard]]
     Result<make_lvalue_reference_t<T_>> GetRef() const;
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && std::is_const_v<T_>)
+        requires (std::is_const_v<T_>)
     [[nodiscard]]
     Result<make_lvalue_reference_t<T_>> GetConstRef() const;
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && !std::is_pointer_v<T_>)
+        requires (!std::is_pointer_v<T_>)
     [[nodiscard]]
-    Result<make_const<T_>&> GetValue() const;
+    Result<make_const<std::remove_reference_t<T_>>&> GetValue() const;
 
     template <typename T_>
-        requires (detail::BlockVariant<T_> && std::is_pointer_v<T_>)
+        requires (std::is_pointer_v<T_>)
     [[nodiscard]]
     Result<add_const_to_pointer_type_t<T_>&> GetValue() const;
 };
