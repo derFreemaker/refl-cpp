@@ -41,7 +41,7 @@ public:
     template <typename T_>
     [[nodiscard]]
     Result<T_> GetValue(const Variant& instance = Variant::Void()) const {
-        return { RESULT_OK(), TRY(m_Base->GetValue(instance)).GetValue<T_>() };
+        return TRY(m_Base->GetValue(instance)).Get<T_>();
     }
     
     [[nodiscard]]
@@ -51,8 +51,8 @@ public:
     
     template <typename T_>
     [[nodiscard]]
-    Result<T_>& GetRef(const Variant& instance = Variant::Void()) const {
-        return { RESULT_OK(), TRY(m_Base->GetRef(instance)).GetRef<T_>() };
+    Result<T_&> GetRef(const Variant& instance = Variant::Void()) const {
+        return TRY(m_Base->GetRef(instance)).Get<T_&>();
     }
 };
 }

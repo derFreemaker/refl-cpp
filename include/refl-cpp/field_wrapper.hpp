@@ -64,7 +64,7 @@ public:
                 return { RESULT_ERROR(), "instance is needed for non-static member fields" };
             }
 
-            typename Traits::ClassType& obj = TRY(instance.GetRef<typename Traits::ClassType>());
+            typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
             return static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field);
         }
     }
@@ -79,15 +79,15 @@ public:
             return { RESULT_ERROR(), "cannot set value on not copy construct or copy assignable" };
         }
         else if constexpr (Traits::IsStatic) {
-            *m_Field = value.GetValue<typename Traits::Type>();
+            *m_Field = value.Get<const typename Traits::Type&>();
         }
         else {
             if (instance.IsVoid()) {
                 return { RESULT_ERROR(), "instance is needed for non-static member fields" };
             }
 
-            typename Traits::ClassType& obj = TRY(instance.GetRef<typename Traits::ClassType>());
-            obj.*m_Field = value.GetValue<typename Traits::Type>();
+            typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
+            obj.*m_Field = value.Get<const typename Traits::Type&>();
 
             return {};
         }
@@ -109,7 +109,7 @@ public:
                 return { RESULT_ERROR(), "instance is needed for a non-static member field" };
             }
 
-            auto& obj = TRY(instance.GetRef<typename Traits::ClassType>());
+            auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
             return static_cast<typename Traits::Type>(obj.*m_Field);
         }
     }

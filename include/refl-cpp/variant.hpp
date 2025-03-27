@@ -24,7 +24,7 @@ struct Variant {
 private:
     std::shared_ptr<detail::VariantBase> m_Base;
 
-    TypeID m_Type;
+    const TypeID m_Type;
     bool m_IsConst = false;
 
     Variant();
@@ -52,7 +52,7 @@ public:
 
     template <typename T_>
     static Variant Create(T_&& data);
-    
+
     [[nodiscard]]
     bool IsVoid() const {
         return m_Type == ReflectID<void>().Value();
@@ -63,30 +63,33 @@ public:
         return m_Type;
     }
 
-    //TODO: add get const reference or something
+    template <typename T_>
+        requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
+    [[nodiscard]]
+    Result<make_const<T_>&> Get() const;
 
     template <typename T_>
-        requires (!std::is_const_v<T_>)
-    [[nodiscard]]
-    Result<make_lvalue_reference_t<T_>> GetRef() const;
+        requires (std::is_lvalue_reference_v<T_> && std::is_const_v<std::remove_reference_t<T_>>)
+    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Get() const;
 
     template <typename T_>
-        requires (std::is_const_v<T_>)
-    [[nodiscard]]
-    Result<make_lvalue_reference_t<T_>> GetConstRef() const;
+        requires (std::is_lvalue_reference_v<T_> && !std::is_const_v<std::remove_reference_t<T_>>)
+    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Get() const;
 
     template <typename T_>
-        requires (!std::is_pointer_v<T_>)
-    [[nodiscard]]
-    Result<make_const<std::remove_reference_t<T_>>&> GetValue() const;
+        requires (std::is_rvalue_reference_v<T_> && std::is_const_v<std::remove_reference_t<T_>>)
+    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Get() const;
 
     template <typename T_>
-        requires (std::is_pointer_v<T_>)
-    [[nodiscard]]
-    Result<add_const_to_pointer_type_t<T_>&> GetValue() const;
+        requires (std::is_rvalue_reference_v<T_> && !std::is_const_v<std::remove_reference_t<T_>>)
+    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Get() const;
+    
+    template <typename T_>
+        requires (!std::is_reference_v<T_> && std::is_pointer_v<T_> && std::is_const_v<std::remove_pointer_t<T_>>)
+    Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Get() const;
 
     template <typename T_>
-    [[nodiscard]]
-    Result<auto> Get() const;
+        requires (!std::is_reference_v<T_> && std::is_pointer_v<T_> && !std::is_const_v<std::remove_pointer_t<T_>>)
+    Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Get() const;
 };
 }
