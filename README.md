@@ -12,8 +12,7 @@ Only one macro to mark the `class/struct` to be reflected.
 ## Dependencies
 these are getting managed through [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
 
-- ccache.cmake
-- LLVM / Clang
-
-## Third-Party
-- [cpp::result](https://github.com/bitwizeshift/result)
+- [ccache.cmake](https://github.com/TheLartians/Ccache.cmake)
+- [LLVM / Clang](https://github.com/llvm/llvm-project)
+- [googletest](https://github.com/google/googletest)
+- [fmt](https://github.com/fmtlib/fmt)

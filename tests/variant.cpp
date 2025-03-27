@@ -6,34 +6,43 @@
 namespace ReflCpp {
 //TODO: check tests through maybe not exactly right
 
-TEST(Variant, Void) {
-    const auto& variant_void = Variant::Void();
+#define CREATE_VARIANT_TEST(NAME, WRAPPER, TYPE, ...) \
+    TEST(Variant, NAME) { \
+        __VA_ARGS__; \
+        ASSERT_TRUE(VariantTestHelper::UsesWrapper<WRAPPER>(variant)); \
+        const auto getConstValueResult = variant.Get<const TYPE>(); \
+        const auto getValueResult = variant.Get<TYPE>(); \
+        const auto getConstLValueRefResult = variant.Get<const TYPE&>(); \
+        const auto getLValueRefResult = variant.Get<TYPE&>(); \
+        const auto getConstRValueRefResult = variant.Get<const TYPE&&>(); \
+        const auto getRValueRefResult = variant.Get<TYPE&&>(); \
+        const auto getConstPointerResult = variant.Get<const TYPE*>(); \
+        const auto getPointerResult = variant.Get<TYPE*>();
 
-    ASSERT_TRUE(VariantTestHelper::UsesWrapper<VoidVariantWrapper>(variant_void));
-    
-    const auto getConstValueResult = variant_void.Get<const int>();
+CREATE_VARIANT_TEST(Void, VoidVariantWrapper, int,
+                    const auto& variant = Variant::Void()
+)
     ASSERT_EQ(getConstValueResult.Error().Message(), "cannot get reference or value from void variant");
-    
-    const auto getValueResult = variant_void.Get<int>();
     ASSERT_EQ(getValueResult.Error().Message(), "cannot get reference or value from void variant");
-
-    const auto getConstLValueRefResult = variant_void.Get<const int&>();
     ASSERT_EQ(getConstLValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-
-    const auto getLValueRefResult = variant_void.Get<int&>();
     ASSERT_EQ(getLValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-
-    const auto getConstRValueRefResult = variant_void.Get<const int&&>();
     ASSERT_EQ(getConstRValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-
-    const auto getRValueRefResult = variant_void.Get<int&&>();
     ASSERT_EQ(getRValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-
-    const auto getConstPointerResult = variant_void.Get<const int*>();
     ASSERT_EQ(getConstPointerResult.Error().Message(), "cannot get reference or value from void variant");
-
-    const auto getPointerResult = variant_void.Get<int*>();
     ASSERT_EQ(getPointerResult.Error().Message(), "cannot get reference or value from void variant");
+}
+
+CREATE_VARIANT_TEST(Value, ValueVariantWrapper<int>, int,
+                    const auto& variant = Variant::Create<int>(123)
+)
+    ASSERT_EQ(getConstValueResult.Value(), 123);
+    ASSERT_EQ(getValueResult.Value(), 123);
+    ASSERT_EQ(getConstLValueRefResult.Value(), 123);
+    ASSERT_EQ(getLValueRefResult.Value(), 123);
+    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "some error");
+    ASSERT_EQ(getRValueRefResult.Error().Message(), "some error");
+    ASSERT_EQ(getConstPointerResult.Error().Message(), "some error");
+    ASSERT_EQ(getPointerResult.Error().Message(), "some error");
 }
 
 // TEST(Variant, Value) {

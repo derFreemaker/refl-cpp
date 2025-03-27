@@ -4,7 +4,7 @@
 
 namespace ReflCpp {
 
-DEFINE_FLAGS(TypeFlags, uint8_t,
+REFLCPP_FLAGS(TypeFlags, uint8_t,
     NONE = 0,
     IsArray = 1 << 0,
     IsPointer = 1 << 1,

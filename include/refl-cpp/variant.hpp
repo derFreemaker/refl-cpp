@@ -1,6 +1,7 @@
 #pragma once
 
 #include "refl-cpp/common/result.hpp"
+#include "refl-cpp/common/flags.hpp"
 #include "refl-cpp/type_id.hpp"
 #include "refl-cpp/common/type_traits.hpp"
 
@@ -12,10 +13,24 @@ struct VariantBase {
     virtual ~VariantBase() = default;
 };
 
+enum class VariantWrapperType {
+    VOID = 0 << 0,
+    VALUE = 1 << 0,
+    LVALUE_REF = 1 << 2,
+    CONST_LVALUE_REF = 1 << 1,
+    RVALUE_REF = 1 << 4,
+    CONST_RVALUE_REF = 1 << 3,
+    POINTER = 1 << 6,
+    CONST_POINTER = 1 << 5,
+};
+
 template <typename R_>
 struct VariantWrapper : public VariantBase {
     [[nodiscard]]
     virtual R_ GetValue() = 0;
+
+    [[nodiscard]]
+    virtual VariantWrapperType GetType() const = 0;
 };
 }
 
@@ -32,7 +47,10 @@ private:
     Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
         : m_Base(base), m_Type(type), m_IsConst(isConst) {}
 
-    static FormattedError Variant::CanNotGetFromVariantWithType(const std::string_view& desc, const Type& type, const Type& passed_type);
+    static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+
+    template <typename T_, typename R_>
+    Result<R_> Variant::GetFromWrapper();
 
     friend struct VariantTestHelper;
 
@@ -83,7 +101,7 @@ public:
     template <typename T_>
         requires (std::is_rvalue_reference_v<T_> && !std::is_const_v<std::remove_reference_t<T_>>)
     Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Get() const;
-    
+
     template <typename T_>
         requires (!std::is_reference_v<T_> && std::is_pointer_v<T_> && std::is_const_v<std::remove_pointer_t<T_>>)
     Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Get() const;

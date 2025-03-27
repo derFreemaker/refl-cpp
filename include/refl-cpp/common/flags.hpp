@@ -1,16 +1,12 @@
 #pragma once
 
-#include <type_traits>
-
-namespace ReflCpp::Common {
+namespace ReflCpp {
 template <typename Derived, typename ValueT = uint32_t>
 struct Flags {
 protected:
     ValueT value_;
 
 public:
-    using ValueType = ValueT;
-
     constexpr Flags() noexcept : value_(0) {}
     explicit constexpr Flags(ValueT value) noexcept : value_(value) {}
 
@@ -23,24 +19,28 @@ public:
         return value_ == 0;
     }
 
-    constexpr bool Has(ValueT flag) const noexcept {
-        return (value_ & flag) == flag;
+    constexpr bool Has(Derived flag) const noexcept {
+        return (value_ & flag.value_) == flag.value_;
     }
 
-    constexpr void Set(ValueT flag) noexcept {
-        value_ |= flag;
+    constexpr bool Is(Derived flag) const noexcept {
+        return value_ == flag.value_;
+    }
+    
+    constexpr void Set(Derived flag) noexcept {
+        value_ |= flag.value_;
     }
 
-    constexpr void Clear(ValueT flag) noexcept {
-        value_ &= ~flag;
+    constexpr void Clear(Derived flag) noexcept {
+        value_ &= ~flag.value_;
     }
 
-    constexpr void Toggle(ValueT flag) noexcept {
-        value_ ^= flag;
+    constexpr void Toggle(Derived flag) noexcept {
+        value_ ^= flag.value_;
     }
 
-    constexpr Derived operator|(ValueT flag) const noexcept {
-        return Derived(value_ | flag);
+    constexpr Derived operator|(Derived flag) const noexcept {
+        return Derived(value_ | flag.value_);
     }
 
     constexpr Derived operator|(const Flags& other) const noexcept {
@@ -52,8 +52,8 @@ public:
     }
 };
 
-#define DEFINE_FLAGS(NAME, UNDERLYING_TYPE, ...) \
-    struct NAME : public ::ReflCpp::Common::Flags<NAME, UNDERLYING_TYPE> { \
+#define REFLCPP_FLAGS(NAME, UNDERLYING_TYPE, ...) \
+    struct NAME : public ::ReflCpp::Flags<NAME, UNDERLYING_TYPE> { \
         enum : UNDERLYING_TYPE { __VA_ARGS__ }; \
         constexpr NAME() noexcept = default; \
         constexpr NAME(const UNDERLYING_TYPE& value) noexcept : Flags(value) {} \
