@@ -42,7 +42,6 @@ private:
     const TypeID m_Type;
     bool m_IsConst = false;
 
-    Variant();
 
     Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
         : m_Base(base), m_Type(type), m_IsConst(isConst) {}
@@ -50,15 +49,12 @@ private:
     static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
 
     template <typename T_, typename R_>
-    Result<R_> Variant::GetFromWrapper();
+    Result<R_> Variant::GetFromWrapper() const;
 
     friend struct VariantTestHelper;
 
 public:
-    static Variant& Void() {
-        static auto instance = Variant();
-        return instance;
-    }
+    static Variant& Void();
 
     [[nodiscard]]
     Result<void> CheckVoid() const {
@@ -67,6 +63,8 @@ public:
         }
         return {};
     }
+
+    Variant() = delete;
 
     template <typename T_>
     static Variant Create(T_&& data);
@@ -87,27 +85,15 @@ public:
     Result<make_const<T_>&> Get() const;
 
     template <typename T_>
-        requires (std::is_lvalue_reference_v<T_> && std::is_const_v<std::remove_reference_t<T_>>)
+        requires (std::is_lvalue_reference_v<T_>)
     Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Get() const;
 
     template <typename T_>
-        requires (std::is_lvalue_reference_v<T_> && !std::is_const_v<std::remove_reference_t<T_>>)
-    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Get() const;
-
-    template <typename T_>
-        requires (std::is_rvalue_reference_v<T_> && std::is_const_v<std::remove_reference_t<T_>>)
+        requires (std::is_rvalue_reference_v<T_>)
     Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Get() const;
 
     template <typename T_>
-        requires (std::is_rvalue_reference_v<T_> && !std::is_const_v<std::remove_reference_t<T_>>)
-    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Get() const;
-
-    template <typename T_>
-        requires (!std::is_reference_v<T_> && std::is_pointer_v<T_> && std::is_const_v<std::remove_pointer_t<T_>>)
-    Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Get() const;
-
-    template <typename T_>
-        requires (!std::is_reference_v<T_> && std::is_pointer_v<T_> && !std::is_const_v<std::remove_pointer_t<T_>>)
+        requires (std::is_pointer_v<T_>)
     Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Get() const;
 };
 }
