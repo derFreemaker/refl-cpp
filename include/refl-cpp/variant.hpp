@@ -1,9 +1,7 @@
 #pragma once
 
 #include "refl-cpp/common/result.hpp"
-#include "refl-cpp/common/flags.hpp"
 #include "refl-cpp/type_id.hpp"
-#include "refl-cpp/common/type_traits.hpp"
 
 namespace ReflCpp {
 struct Variant;
@@ -16,12 +14,13 @@ struct VariantBase {
 enum class VariantWrapperType {
     VOID = 0 << 0,
     VALUE = 1 << 0,
+    CONST_VALUE = 1 << 1,
     LVALUE_REF = 1 << 2,
-    CONST_LVALUE_REF = 1 << 1,
+    CONST_LVALUE_REF = 1 << 3,
     RVALUE_REF = 1 << 4,
-    CONST_RVALUE_REF = 1 << 3,
+    CONST_RVALUE_REF = 1 << 5,
     POINTER = 1 << 6,
-    CONST_POINTER = 1 << 5,
+    CONST_POINTER = 1 << 7,
 };
 
 template <typename R_>
@@ -47,10 +46,7 @@ private:
         : m_Base(base), m_Type(type), m_IsConst(isConst) {}
 
     static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
-
-    template <typename T_, typename R_>
-    Result<R_> Variant::GetFromWrapper() const;
-
+    
     friend struct VariantTestHelper;
 
 public:
@@ -82,7 +78,7 @@ public:
     template <typename T_>
         requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
-    Result<make_const<T_>&> Get() const;
+    Result<std::remove_volatile_t<T_>> Get() const;
 
     template <typename T_>
         requires (std::is_lvalue_reference_v<T_>)

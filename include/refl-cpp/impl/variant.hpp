@@ -5,22 +5,43 @@
 #include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
-struct VoidVariantWrapper final : public detail::VariantWrapper<void> {
+namespace detail {
+struct VoidVariantWrapper final : public VariantWrapper<void> {
     void GetValue() override {}
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::VOID;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::VOID;
     }
 };
 
 template <typename T_>
-struct ValueVariantWrapper final : public detail::VariantWrapper<const T_&> {
+struct ValueVariantWrapper final : public VariantWrapper<T_&> {
 private:
     T_ m_Value;
 
 public:
-    ValueVariantWrapper(const T_& value)
+    ValueVariantWrapper(T_& value)
+        : m_Value(value) {}
+
+    [[nodiscard]]
+    T_& GetValue() override {
+        return m_Value;
+    }
+
+    [[nodiscard]]
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::VALUE;
+    }
+};
+
+template <typename T_>
+struct ConstValueVariantWrapper final : public VariantWrapper<const T_&> {
+private:
+    const T_ m_Value;
+
+public:
+    ConstValueVariantWrapper(const T_& value)
         : m_Value(value) {}
 
     [[nodiscard]]
@@ -29,13 +50,13 @@ public:
     }
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::VALUE;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::CONST_VALUE;
     }
 };
 
 template <typename T_>
-struct LValueRefVariantWrapper final : public detail::VariantWrapper<T_&> {
+struct LValueRefVariantWrapper final : public VariantWrapper<T_&> {
 private:
     T_& m_Value;
 
@@ -49,13 +70,13 @@ public:
     }
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::LVALUE_REF;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::LVALUE_REF;
     }
 };
 
 template <typename T_>
-struct ConstLValueRefVariantWrapper final : public detail::VariantWrapper<const T_&> {
+struct ConstLValueRefVariantWrapper final : public VariantWrapper<const T_&> {
 private:
     const T_& m_Value;
 
@@ -70,13 +91,13 @@ public:
     }
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::CONST_LVALUE_REF;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::CONST_LVALUE_REF;
     }
 };
 
 template <typename T_>
-struct RValueRefVariantWrapper final : public detail::VariantWrapper<T_&&> {
+struct RValueRefVariantWrapper final : public VariantWrapper<T_&&> {
 private:
     T_&& m_Value;
 
@@ -90,13 +111,13 @@ public:
     }
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::RVALUE_REF;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::RVALUE_REF;
     }
 };
 
 template <typename T_>
-struct ConstRValueRefVariantWrapper final : public detail::VariantWrapper<const T_&&> {
+struct ConstRValueRefVariantWrapper final : public VariantWrapper<const T_&&> {
 private:
     const T_&& m_Value;
 
@@ -111,13 +132,13 @@ public:
     }
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::CONST_RVALUE_REF;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::CONST_RVALUE_REF;
     }
 };
 
 template <typename T_>
-struct PointerVariantWrapper final : public detail::VariantWrapper<T_*&> {
+struct PointerVariantWrapper final : public VariantWrapper<T_*&> {
 private:
     T_* m_Value;
 
@@ -131,13 +152,13 @@ public:
     }
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::POINTER;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::POINTER;
     }
 };
 
 template <typename T_>
-struct ConstPointerVariantWrapper final : public detail::VariantWrapper<const T_*&> {
+struct ConstPointerVariantWrapper final : public VariantWrapper<const T_*&> {
 private:
     const T_* m_Value;
 
@@ -151,15 +172,20 @@ public:
     }
 
     [[nodiscard]]
-    detail::VariantWrapperType GetType() const override {
-        return detail::VariantWrapperType::CONST_POINTER;
+    VariantWrapperType GetType() const override {
+        return VariantWrapperType::CONST_POINTER;
     }
 };
 
 template <typename T_, typename CleanT>
-auto MakeValueWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeValueWrapper(T_&& data) {
     if constexpr (std::is_copy_constructible_v<T_>) {
-        return std::make_shared<ValueVariantWrapper<CleanT>>(data);
+        if constexpr (std::is_const_v<T_>) {
+            return std::make_shared<ConstValueVariantWrapper<CleanT>>(data);
+        }
+        else {
+            return std::make_shared<ValueVariantWrapper<CleanT>>(data);
+        }
     }
     else if constexpr (std::is_move_constructible_v<T_>) {
         return std::make_shared<ValueVariantWrapper<CleanT>>(std::move(data));
@@ -170,7 +196,7 @@ auto MakeValueWrapper(T_&& data) {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-auto MakeLValueRefWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeLValueRefWrapper(T_&& data) {
     if constexpr (IsConst_) {
         return std::make_shared<ConstLValueRefVariantWrapper<CleanT_>>(data);
     }
@@ -180,7 +206,7 @@ auto MakeLValueRefWrapper(T_&& data) {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-auto MakeRValueRefWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeRValueRefWrapper(T_&& data) {
     if constexpr (IsConst_) {
         return std::make_shared<ConstRValueRefVariantWrapper<CleanT_>>(std::forward<T_>(data));
     }
@@ -190,7 +216,7 @@ auto MakeRValueRefWrapper(T_&& data) {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-auto MakePointerWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakePointerWrapper(T_&& data) {
     if constexpr (IsConst_) {
         return std::make_shared<ConstPointerVariantWrapper<CleanT_>>(data);
     }
@@ -200,7 +226,7 @@ auto MakePointerWrapper(T_&& data) {
 }
 
 template <typename T_>
-std::shared_ptr<detail::VariantBase> MakeWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeWrapper(T_&& data) {
     using CleanT = std::remove_const_t<std::remove_pointer_t<std::remove_reference_t<T_>>>;
 
     if constexpr (std::is_lvalue_reference_v<T_>) {
@@ -224,11 +250,12 @@ std::shared_ptr<detail::VariantBase> MakeWrapper(T_&& data) {
 
     static_assert("should be unreachable");
 }
+}
 
 template <typename T_>
 Variant Variant::Create(T_&& data) {
     constexpr bool isConst = std::is_const_v<T_>;
-    return Variant(MakeWrapper(std::forward<T_>(data)), ReflectID<T_>().Value(), isConst);
+    return Variant(detail::MakeWrapper(std::forward<T_>(data)), ReflectID<T_>().Value(), isConst);
 }
 
 inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) {
@@ -241,25 +268,21 @@ inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, co
 
 inline Variant& Variant::Void() {
     static auto instance = Variant(
-        std::make_shared<VoidVariantWrapper>(),
+        std::make_shared<detail::VoidVariantWrapper>(),
         ReflectID<void>().Value(),
         false
     );
     return instance;
 }
 
-//TODO: create a function to get the value from the variant
-
-template <typename T_, typename Return_>
-Result<Return_> Variant::GetFromWrapper() const {
+template <typename T_>
+    requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
+Result<std::remove_volatile_t<T_>> Variant::Get() const {
     TRY(CheckVoid());
-    using Traits = TypeTraits<T_>;
 
     const TypeID passed_type_id = TRY(ReflectID<T_>());
-    if constexpr (!Traits::IsReference && !Traits::IsPointer) {
-        if (m_Type == passed_type_id) {
-            return static_cast<detail::VariantWrapper<Return_>*>(m_Base.get())->GetValue();
-        }
+    if (m_Type == passed_type_id) {
+        return static_cast<detail::VariantWrapper<T_&>*>(m_Base.get())->GetValue();
     }
 
     const Type& type = TRY(m_Type.GetType());
@@ -268,26 +291,53 @@ Result<Return_> Variant::GetFromWrapper() const {
 }
 
 template <typename T_>
-    requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-Result<make_const<T_>&> Variant::Get() const {
-    return GetFromWrapper<T_, make_const<T_>&>();
-}
-
-template <typename T_>
     requires (std::is_lvalue_reference_v<T_>)
 Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Variant::Get() const {
-    return GetFromWrapper<T_, std::remove_volatile_t<std::remove_reference_t<T_>>&>();
+    TRY(CheckVoid());
+
+    using CleanT_ = std::remove_volatile_t<std::remove_reference_t<T_>>&;
+
+    const TypeID passed_type_id = TRY(ReflectID<T_>());
+    if (m_Type == passed_type_id) {
+        return static_cast<detail::VariantWrapper<CleanT_>*>(m_Base.get())->GetValue();
+    }
+
+    const Type& type = TRY(m_Type.GetType());
+    const Type& passed_type = TRY(Reflect<T_>());
+    return { RESULT_ERROR(), CanNotGetFromVariantWithType(type, passed_type) };
 }
 
 template <typename T_>
     requires (std::is_rvalue_reference_v<T_>)
 Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Variant::Get() const {
-    return GetFromWrapper<T_, std::remove_volatile_t<std::remove_reference_t<T_>>&&>();
+    TRY(CheckVoid());
+
+    using CleanT_ = std::remove_volatile_t<std::remove_reference_t<T_>>&&;
+
+    const TypeID passed_type_id = TRY(ReflectID<T_>());
+    if (m_Type == passed_type_id) {
+        return static_cast<detail::VariantWrapper<CleanT_>*>(m_Base.get())->GetValue();
+    }
+
+    const Type& type = TRY(m_Type.GetType());
+    const Type& passed_type = TRY(Reflect<T_>());
+    return { RESULT_ERROR(), CanNotGetFromVariantWithType(type, passed_type) };
 }
 
 template <typename T_>
     requires (std::is_pointer_v<T_>)
 Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Variant::Get() const {
-    return GetFromWrapper<T_, std::remove_volatile_t<std::remove_pointer_t<T_>>*>();
+    TRY(CheckVoid());
+
+    using CleanT_ = std::remove_volatile_t<std::remove_pointer_t<T_>>*;
+
+    const TypeID passed_type_id = TRY(ReflectID<T_>());
+    if (m_Type == passed_type_id) {
+        return static_cast<detail::VariantWrapper<CleanT_>*>(m_Base.get())->GetValue();
+    }
+
+    const Type& type = TRY(m_Type.GetType());
+    const Type& passed_type = TRY(Reflect<T_>());
+    return { RESULT_ERROR(), CanNotGetFromVariantWithType(type, passed_type) };
 }
 }

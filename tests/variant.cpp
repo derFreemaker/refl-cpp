@@ -10,16 +10,16 @@ namespace ReflCpp {
     TEST(Variant, NAME) { \
         __VA_ARGS__; \
         ASSERT_TRUE(VariantTestHelper::UsesWrapper<WRAPPER>(variant)); \
-        const auto getConstValueResult = variant.Get<const TYPE>(); \
         const auto getValueResult = variant.Get<TYPE>(); \
-        const auto getConstLValueRefResult = variant.Get<const TYPE&>(); \
+        const auto getConstValueResult = variant.Get<const TYPE>(); \
         const auto getLValueRefResult = variant.Get<TYPE&>(); \
-        const auto getConstRValueRefResult = variant.Get<const TYPE&&>(); \
+        const auto getConstLValueRefResult = variant.Get<const TYPE&>(); \
         const auto getRValueRefResult = variant.Get<TYPE&&>(); \
-        const auto getConstPointerResult = variant.Get<const TYPE*>(); \
-        const auto getPointerResult = variant.Get<TYPE*>();
+        const auto getConstRValueRefResult = variant.Get<const TYPE&&>(); \
+        const auto getPointerResult = variant.Get<TYPE*>(); \
+        const auto getConstPointerResult = variant.Get<const TYPE*>();
 
-CREATE_VARIANT_TEST(Void, VoidVariantWrapper, int,
+CREATE_VARIANT_TEST(Void, detail::VoidVariantWrapper, int,
                     const auto& variant = Variant::Void()
 )
     ASSERT_EQ(getConstValueResult.Error().Message(), "cannot get reference or value from void variant");
@@ -32,17 +32,57 @@ CREATE_VARIANT_TEST(Void, VoidVariantWrapper, int,
     ASSERT_EQ(getPointerResult.Error().Message(), "cannot get reference or value from void variant");
 }
 
-CREATE_VARIANT_TEST(Value, ValueVariantWrapper<int>, int,
+CREATE_VARIANT_TEST(Value, detail::ValueVariantWrapper<int>, int,
                     const auto& variant = Variant::Create<int>(123)
 )
-    ASSERT_EQ(getConstValueResult.Value(), 123);
     ASSERT_EQ(getValueResult.Value(), 123);
-    ASSERT_EQ(getConstLValueRefResult.Value(), 123);
+    ASSERT_EQ(getConstValueResult.Error().Message(), "cannot get from Variant (int32_t) with passed type: const int32_t");
+    ASSERT_EQ(getLValueRefResult.Error().Message(), "cannot get from Variant (int32_t) with passed type: int32_t&");
+    ASSERT_EQ(getConstLValueRefResult.Error().Message(), "cannot get from Variant (int32_t) with passed type: const int32_t&");
+    ASSERT_EQ(getRValueRefResult.Error().Message(), "cannot get from Variant (int32_t) with passed type: int32_t&&");
+    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "cannot get from Variant (int32_t) with passed type: const int32_t&&");
+    ASSERT_EQ(getPointerResult.Error().Message(), "cannot get from Variant (int32_t) with passed type: int32_t*");
+    ASSERT_EQ(getConstPointerResult.Error().Message(), "cannot get from Variant (int32_t) with passed type: const int32_t*");
+}
+
+CREATE_VARIANT_TEST(Const_Value, detail::ConstValueVariantWrapper<int>, int,
+                    const auto& variant = Variant::Create<const int>(123)
+)
+    ASSERT_EQ(getValueResult.Error().Message(), "cannot get from Variant (const int32_t) with passed type: int32_t");
+    ASSERT_EQ(getConstValueResult.Value(), 123);
+    ASSERT_EQ(getLValueRefResult.Error().Message(), "cannot get from Variant (const int32_t) with passed type: int32_t&");
+    ASSERT_EQ(getConstLValueRefResult.Error().Message(), "cannot get from Variant (const int32_t) with passed type: const int32_t&");
+    ASSERT_EQ(getRValueRefResult.Error().Message(), "cannot get from Variant (const int32_t) with passed type: int32_t&&");
+    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "cannot get from Variant (const int32_t) with passed type: const int32_t&&");
+    ASSERT_EQ(getPointerResult.Error().Message(), "cannot get from Variant (const int32_t) with passed type: int32_t*");
+    ASSERT_EQ(getConstPointerResult.Error().Message(), "cannot get from Variant (const int32_t) with passed type: const int32_t*");
+}
+
+CREATE_VARIANT_TEST(LValueRef, detail::LValueRefVariantWrapper<int>, int,
+                    int value = 123;
+                    const auto& variant = Variant::Create<int&>(value)
+)
+    ASSERT_EQ(getValueResult.Error().Message(), "cannot get from Variant (int32_t&) with passed type: int32_t");
+    ASSERT_EQ(getConstValueResult.Error().Message(), "cannot get from Variant (int32_t&) with passed type: const int32_t");
     ASSERT_EQ(getLValueRefResult.Value(), 123);
-    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "some error");
-    ASSERT_EQ(getRValueRefResult.Error().Message(), "some error");
-    ASSERT_EQ(getConstPointerResult.Error().Message(), "some error");
-    ASSERT_EQ(getPointerResult.Error().Message(), "some error");
+    ASSERT_EQ(getConstLValueRefResult.Error().Message(), "cannot get from Variant (int32_t&) with passed type: const int32_t&");
+    ASSERT_EQ(getRValueRefResult.Error().Message(), "cannot get from Variant (int32_t&) with passed type: int32_t&&");
+    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "cannot get from Variant (int32_t&) with passed type: const int32_t&&");
+    ASSERT_EQ(getPointerResult.Error().Message(), "cannot get from Variant (int32_t&) with passed type: int32_t*");
+    ASSERT_EQ(getConstPointerResult.Error().Message(), "cannot get from Variant (int32_t&) with passed type: const int32_t*");
+}
+
+CREATE_VARIANT_TEST(Const_LValueRef, detail::ConstLValueRefVariantWrapper<int>, int,
+                    const auto& variant = Variant::Create<const int&>(123)
+)
+    ASSERT_EQ(getValueResult.Error().Message(), "cannot get from Variant (const int32_t&) with passed type: int32_t");
+    ASSERT_EQ(getConstValueResult.Error().Message(), "cannot get from Variant (const int32_t&) with passed type: const int32_t");
+    ASSERT_EQ(getLValueRefResult.Error().Message(), "cannot get from Variant (const int32_t&) with passed type: int32_t&");
+    ASSERT_EQ(getConstLValueRefResult.Value(), 123);
+    ASSERT_EQ(getRValueRefResult.Error().Message(), "cannot get from Variant (const int32_t&) with passed type: int32_t&&");
+    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "cannot get from Variant (const int32_t&) with passed type: const int32_t&&");
+    ASSERT_EQ(getPointerResult.Error().Message(), "cannot get from Variant (const int32_t&) with passed type: int32_t*");
+    ASSERT_EQ(getConstPointerResult.Error().Message(), "cannot get from Variant (const int32_t&) with passed type: const int32_t*");
 }
 
 // TEST(Variant, Value) {
