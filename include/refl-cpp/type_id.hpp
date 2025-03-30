@@ -45,9 +45,16 @@ public:
 
         return detail::Reflect(m_ID);
     }
-
+    
     operator Result<const Type&>() const {
         return GetType();
+    }
+
+    template <typename T_>
+    [[nodiscard]]
+    bool Equals() const {
+        const auto result = ReflectID<T_>();
+        return result.IsSuccess() && *this == result.Value();
     }
 };
 }

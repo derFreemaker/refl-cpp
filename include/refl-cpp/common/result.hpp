@@ -53,7 +53,7 @@ public:
     }
 
     [[nodiscard]]
-    bool IsError() const {
+    bool HasError() const {
         return !m_IsSuccess;
     }
 
@@ -66,28 +66,28 @@ public:
     }
 
     StoredT& Value() & {
-        if (this->IsError()) {
+        if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
         return this->m_Value;
     }
 
     make_const<StoredT>& Value() const & {
-        if (this->IsError()) {
+        if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
         return this->m_Value;
     }
 
     StoredT& Value() && {
-        if (this->IsError()) {
+        if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
         return this->m_Value;
     }
 
     make_const<StoredT>& Value() const && {
-        if (this->IsError()) {
+        if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
         return this->m_Value;
@@ -114,7 +114,7 @@ public:
     }
 
     [[nodiscard]]
-    bool IsError() const {
+    bool HasError() const {
         return m_Error.has_value();
     }
 
@@ -248,7 +248,7 @@ make_const<T_>& TryHelper(const Result<T_>* result) {
     (::ReflCpp::detail::TryHelper( \
         ({ \
             auto _result = (__VA_ARGS__); \
-            if (_result.IsError()) { \
+            if (_result.HasError()) { \
                 return { ::ReflCpp::detail::Error, _result.Error() }; \
             } \
             &_result; \
@@ -264,7 +264,7 @@ make_const<T_>& TryHelper(const Result<T_>* result) {
     (::ReflCpp::detail::TryHelper( \
         ({ \
             auto _result = (__VA_ARGS__); \
-            if (_result.IsError()) { \
+            if (_result.HasError()) { \
                 return { ::ReflCpp::detail::Error, _result.Error() }; \
             } \
             &_result; \

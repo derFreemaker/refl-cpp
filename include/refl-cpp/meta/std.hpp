@@ -6,15 +6,47 @@
 #include "refl-cpp/declare_reflect.hpp"
 #include "refl-cpp/reflect_printer.hpp"
 
+template <>
+struct ReflCpp::ReflectData<std::string> {
+    static Result<TypeData> Create() {
+        return TypeData {
+            .name = "string",
+            ._namespace = "std"
+        };
+    }
+};
+
+template <typename T_>
+struct ReflCpp::ReflectData<std::reference_wrapper<T_>> {
+    static Result<TypeData> Create() {
+        return TypeData {
+            .name = "reference_wrapper",
+            ._namespace = "std",
+            .inners = {
+                TRY(ReflectID<T_>()),
+            },
+        };
+    }
+};
+
+template <typename T>
+struct ReflCpp::ReflectPrinter<std::reference_wrapper<T>> {
+    static void Print(std::ostream& stream, const Type& type) {
+        stream << "std::reference_wrapper<";
+        type.GetInner(0).Value().Print(stream);
+        stream << ">";
+    }
+};
+
 template <typename T_>
 struct ReflCpp::ReflectData<std::optional<T_>> {
     static Result<TypeData> Create() {
-        return TypeData{
+        return TypeData {
             .name = "optional",
             ._namespace = "std",
             .inners = {
-                TRY(ReflectID<T_>())
-            }
+                TRY(ReflectID<T_>()),
+            },
 
             //TODO: take care of lvalue and rvalue references
 
@@ -52,7 +84,7 @@ struct ReflCpp::ReflectPrinter<std::optional<T>> {
 template <typename T>
 struct ReflCpp::ReflectData<std::vector<T>> {
     static Result<TypeData> Create() {
-        return TypeData{
+        return TypeData {
             .name = "vector",
             ._namespace = "std",
             .inners = {
@@ -74,7 +106,7 @@ struct ReflCpp::ReflectPrinter<std::vector<T>> {
 template <>
 struct ReflCpp::ReflectData<std::nullptr_t> {
     static Result<TypeData> Create() {
-        return TypeData{
+        return TypeData {
             .name = "Null Pointer",
             ._namespace = "std",
         };
@@ -91,7 +123,7 @@ struct ReflCpp::ReflectPrinter<std::nullptr_t> {
 template <typename T_>
 struct ReflCpp::ReflectData<std::unique_ptr<T_>> {
     static Result<TypeData> Create() {
-        return TypeData{
+        return TypeData {
             .name = "Unique Pointer",
             ._namespace = "std",
             .inners = {
@@ -114,7 +146,7 @@ struct ReflCpp::ReflectPrinter<std::unique_ptr<T_>> {
 template <typename T_>
 struct ReflCpp::ReflectData<std::shared_ptr<T_>> {
     static Result<TypeData> Create() {
-        return TypeData{
+        return TypeData {
             .name = "Shared Pointer",
             ._namespace = "std",
             .inners = {

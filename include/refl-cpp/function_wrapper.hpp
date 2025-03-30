@@ -19,11 +19,11 @@ private:
     Result<void> CheckArguments(const ArgumentList& args) const {
         constexpr size_t arg_count = sizeof...(Indices);
         std::array<Result<void>, arg_count> args_results = {
-            args[Indices].template CanGetWithError<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>()...
+            args[Indices].template CanGetWithError<typename Traits::template Arg<Indices>::Type>()...
         };
 
         auto error_it = std::find_if(args_results.begin(), args_results.end(), [](const auto& result) {
-            return result.IsError();
+            return result.HasError();
         });
 
         if (error_it != args_results.end()) {
@@ -33,13 +33,16 @@ private:
         return {};
     }
 
+#define REFLCPP_FUNCTION_WRAPPER_GET_ARGS() \
+    args[Indices].template Get<typename Traits::template Arg<Indices>::Type>().Value()...
+
     template <size_t... Indices> requires (Traits::IsStatic && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
         TRY(CheckArguments<Indices...>(args));
 
-        return Variant::Create<typename Traits::ReturnType>((m_Ptr)(
-            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
-        ));
+        return Variant::Create<typename Traits::ReturnType>(
+            (m_Ptr)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
+        );
     }
 
     template <size_t... Indices> requires (Traits::IsStatic && !Traits::HasReturn)
@@ -47,7 +50,7 @@ private:
         TRY(CheckArguments<Indices...>(args));
 
         (m_Ptr)(
-            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+            REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
 
         return {};
@@ -59,9 +62,9 @@ private:
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
 
-        return Variant::Create<typename Traits::ReturnType>((TRY(obj.Get<ClassT_>()).*m_Ptr)(
-            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
-        ));
+        return Variant::Create<typename Traits::ReturnType>(
+            (TRY(obj.Get<ClassT_>()).*m_Ptr)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
+        );
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && !Traits::HasRReferenceObject && !Traits::HasReturn)
@@ -71,7 +74,7 @@ private:
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
 
         (TRY(obj.Get<ClassT_>()).*m_Ptr)(
-            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+            REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
 
         return {};
@@ -82,10 +85,10 @@ private:
         TRY(CheckArguments<Indices...>(args));
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
-        
-        return Variant::Create<typename Traits::ReturnType>((std::move(TRY(obj.Get<ClassT_>())).*m_Ptr)(
-            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
-        ));
+
+        return Variant::Create<typename Traits::ReturnType>(
+            (std::move(TRY(obj.Get<ClassT_>())).*m_Ptr)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
+        );
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && Traits::HasRReferenceObject && !Traits::HasReturn)
@@ -95,7 +98,7 @@ private:
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
 
         (std::move(TRY(obj.Get<ClassT_>())).*m_Ptr)(
-            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+            REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
 
         return {};

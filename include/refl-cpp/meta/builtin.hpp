@@ -28,6 +28,10 @@ REFLECT_BUILTIN_TYPE(bool, "Boolean")
 
 REFLECT_BUILTIN_TYPE(char, "Character")
 
+REFLECT_BUILTIN_TYPE(float, "Float")
+
+REFLECT_BUILTIN_TYPE(double, "Double")
+
 REFLECT_BUILTIN_TYPE_IMPL(size_t Size_, char[Size_], "String", "char[" << Size_ << "]") // NOLINT(*-avoid-c-arrays)
 
 REFLECT_BUILTIN_TYPE(uint8_t, "Unsigned 8 Bit Integer")

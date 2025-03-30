@@ -81,20 +81,23 @@ public:
     template <typename T_>
     [[nodiscard]]
     Result<void> CanGetWithError() const;
-    
+
+    // template <typename T_>
+    // auto Variant::Get() const -> Result<decltype(std::declval<detail::VariantWrapper<T_>>().GetValue())>;
+        
     template <typename T_>
         requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
     Result<std::remove_volatile_t<T_>&> Get() const;
-
+    
     template <typename T_>
         requires (std::is_lvalue_reference_v<T_>)
     Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Get() const;
-
+    
     template <typename T_>
         requires (std::is_rvalue_reference_v<T_>)
     Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Get() const;
-
+    
     template <typename T_>
         requires (std::is_pointer_v<T_>)
     Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Get() const;
