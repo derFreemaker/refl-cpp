@@ -44,6 +44,10 @@ struct TestStruct {
     CREATE_TEST_METHODS(Normal,)
     CREATE_TEST_METHODS(LValueReference, &)
     CREATE_TEST_METHODS(RValueReference, &&)
+
+    NoCopyOrMoveStruct& Pointer(NoCopyOrMoveStruct* foo) {
+        return const_cast<NoCopyOrMoveStruct&>(*foo);
+    }
 };
 
 template <>
@@ -78,4 +82,13 @@ CREATE_METHOD_TEST(Static, auto, instance = Variant::Void())
 CREATE_METHOD_TESTS(Normal, instance = Variant::Create<TestStruct>(TestStruct()))
 CREATE_METHOD_TESTS(LValueReference, instance = Variant::Create<TestStruct&>(*new TestStruct()))
 CREATE_METHOD_TESTS(RValueReference, instance = Variant::Create<TestStruct&&>(TestStruct()))
+
+TEST(FunctionWrapper, Pointer) {
+    const FunctionWrapper funcWrapper(&TestStruct::Pointer);
+    NoCopyOrMoveStruct test(nullptr);
+    const auto instance = Variant::Create<TestStruct>(TestStruct());
+    const auto result = funcWrapper.Invoke({ Variant::Create<NoCopyOrMoveStruct*>(&test) }, instance).Value();
+    const auto result_value = result.Get<NoCopyOrMoveStruct&>();
+    ASSERT_EQ(result_value.Value().foo, 893745);
+}
 }

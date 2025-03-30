@@ -41,24 +41,23 @@ private:
     const TypeID m_Type;
     bool m_IsConst = false;
 
-
-    Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
-        : m_Base(base), m_Type(type), m_IsConst(isConst) {}
-
-    static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
-
-    friend struct VariantTestHelper;
-
-public:
-    static Variant& Void();
-
     [[nodiscard]]
-    Result<void> CheckVoid() const {
+            Result<void> CheckVoid() const {
         if (IsVoid()) {
             return { RESULT_ERROR(), "cannot get reference or value from void variant" };
         }
         return {};
     }
+    
+    Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
+        : m_Base(base), m_Type(type), m_IsConst(isConst) {}
+
+    static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+    
+    friend struct VariantTestHelper;
+
+public:
+    static Variant& Void();
 
     Variant() = delete;
 
@@ -67,7 +66,7 @@ public:
 
     [[nodiscard]]
     bool IsVoid() const {
-        return m_Type == ReflectID<void>().Value();
+        return m_Base->GetType() == detail::VariantWrapperType::VOID;
     }
 
     [[nodiscard]]

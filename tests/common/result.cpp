@@ -10,9 +10,9 @@ TEST(Result, Error) {
 
     const auto resultTestError = testError();
 
-    ASSERT_TRUE(resultTestError.IsError());
-    ASSERT_FALSE(resultTestError.IsSuccess());
-    ASSERT_EQ(resultTestError.Error().Message(), "some error: 2345");
+    EXPECT_TRUE(resultTestError.IsError());
+    EXPECT_FALSE(resultTestError.IsSuccess());
+    EXPECT_EQ(resultTestError.Error().Message(), "some error: 2345");
 }
 
 TEST(Result, TRY) {
@@ -27,7 +27,7 @@ TEST(Result, TRY) {
 
     const auto resultTestErrorPropagation = testErrorPropagation();
 
-    ASSERT_EQ(resultTestErrorPropagation.Error().Message(), "some error: 893745");
+    EXPECT_EQ(resultTestErrorPropagation.Error().Message(), "some error: 893745");
 }
 
 TEST(Result, Void) {
@@ -37,8 +37,8 @@ TEST(Result, Void) {
 
     const auto resultTestSuccess = testSuccess();
 
-    ASSERT_TRUE(resultTestSuccess.IsSuccess());
-    ASSERT_FALSE(resultTestSuccess.IsError());
+    EXPECT_TRUE(resultTestSuccess.IsSuccess());
+    EXPECT_FALSE(resultTestSuccess.IsError());
 }
 
 TEST(Result, Value) {
@@ -50,7 +50,7 @@ TEST(Result, Value) {
 
     const auto resultValue = testValue();
 
-    ASSERT_EQ(resultValue.Value(), 123);
+    EXPECT_EQ(resultValue.Value(), 123);
 }
 
 TEST(Result, LValueReference) {
@@ -61,7 +61,7 @@ TEST(Result, LValueReference) {
 
     const auto resultReference = testReference();
 
-    ASSERT_EQ(resultReference.Value(), testInt);
+    EXPECT_EQ(resultReference.Value(), testInt);
 }
 
 TEST(Result, ConstLValueReference) {
@@ -72,7 +72,7 @@ TEST(Result, ConstLValueReference) {
 
     const auto resultReference = testReference();
 
-    ASSERT_EQ(resultReference.Value(), testInt);
+    EXPECT_EQ(resultReference.Value(), testInt);
 }
 
 TEST(Result, RValueReference) {
@@ -81,7 +81,7 @@ TEST(Result, RValueReference) {
         return std::move(testInt);
     };
 
-    ASSERT_EQ(testReference().Value(), testInt);
+    EXPECT_EQ(testReference().Value(), testInt);
 }
 
 TEST(Result, ConstRValueReference) {
@@ -90,7 +90,7 @@ TEST(Result, ConstRValueReference) {
         return std::move(testInt);
     };
 
-    ASSERT_EQ(testReference().Value(), testInt);
+    EXPECT_EQ(testReference().Value(), testInt);
 }
 
 TEST(Result, Pointer) {
@@ -102,7 +102,7 @@ TEST(Result, Pointer) {
 
     const auto resultReference = testReference();
 
-    ASSERT_EQ(resultReference.Value(), &testInt);
+    EXPECT_EQ(resultReference.Value(), &testInt);
 }
 
 TEST(Result, ConstPointer) {
@@ -114,7 +114,7 @@ TEST(Result, ConstPointer) {
 
     const auto resultReference = testReference();
 
-    ASSERT_EQ(resultReference.Value(), &testInt);
+    EXPECT_EQ(resultReference.Value(), &testInt);
 }
 
 TEST(Result, Convertion) {
@@ -126,6 +126,6 @@ TEST(Result, Convertion) {
 
     const auto resultConvertion = testConvertion();
 
-    ASSERT_EQ(resultConvertion.Value(), static_cast<int>(testFloat));
+    EXPECT_EQ(resultConvertion.Value(), static_cast<int>(testFloat));
 }
 }
