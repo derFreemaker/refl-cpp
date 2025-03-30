@@ -55,6 +55,9 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
 target_link_libraries(refl-cpp INTERFACE
     fmt::fmt
 )
+target_precompile_headers(refl-cpp INTERFACE
+    include/refl-cpp/refl-cpp.hpp
+)
 
 # small test project
 add_subdirectory(test-project)

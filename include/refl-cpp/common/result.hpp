@@ -9,8 +9,10 @@
 namespace ReflCpp {
 namespace detail {
 struct ErrorTag {};
+struct PassErrorTag {};
 
 inline constexpr ErrorTag Error {};
+inline constexpr PassErrorTag PassError {};
 
 template <typename T_>
 struct ResultBase {
@@ -161,6 +163,10 @@ struct Result<void> : detail::ResultBase<void> {
 
     Result(detail::ErrorTag, const ResultError& error) noexcept
         : ResultBase(detail::Error, error) {}
+
+    template <typename OtherT_>
+    Result(detail::PassErrorTag, const Result<OtherT_>& result) noexcept
+        : ResultBase(detail::Error, result.Error()) {}
 };
 
 template <typename T_>
@@ -194,10 +200,17 @@ struct Result : detail::ResultBase<T_> {
     Result(detail::ErrorTag, const ResultError& error) noexcept
         : detail::ResultBase<T_>(detail::Error, error) {}
 
+    template <typename OtherT_>
+    Result(detail::PassErrorTag, const Result<OtherT_>& result) noexcept
+        : detail::ResultBase<T_>(detail::Error, result.Error()) {}
+
     template <typename T2_>
-        requires (std::is_nothrow_convertible_v<T2_, T_>)
+        requires (!std::is_same_v<T2_, T_> && std::is_nothrow_convertible_v<T2_, T_>)
     Result(T2_&& value) noexcept
         : detail::ResultBase<T_>(std::forward<T2_>(value)) {}
+
+    Result(T_&& value) noexcept
+        : detail::ResultBase<T_>(std::forward<T_>(value)) {}
 };
 
 namespace detail {
@@ -222,6 +235,9 @@ make_const<T_>& TryHelper(const Result<T_>* result) {
 // since we use '_result' after its scope through a pointer.
 // This only works because '_result' lives in the enclosing
 // function stack.
+
+#define RESULT_PASS_ERROR() \
+    ::ReflCpp::detail::PassError
 
 #ifndef NDEBUG
 

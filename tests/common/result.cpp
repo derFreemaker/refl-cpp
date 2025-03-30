@@ -102,7 +102,7 @@ TEST(Result, Pointer) {
 
     const auto resultReference = testReference();
 
-    ASSERT_EQ(*resultReference.Value(), testInt);
+    ASSERT_EQ(resultReference.Value(), &testInt);
 }
 
 TEST(Result, ConstPointer) {
@@ -114,7 +114,7 @@ TEST(Result, ConstPointer) {
 
     const auto resultReference = testReference();
 
-    ASSERT_EQ(*resultReference.Value(), testInt);
+    ASSERT_EQ(resultReference.Value(), &testInt);
 }
 
 TEST(Result, Convertion) {

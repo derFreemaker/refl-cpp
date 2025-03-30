@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdexcept>
+#include <array>
 
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/argument.hpp"
@@ -14,69 +14,90 @@ struct FunctionWrapper {
 private:
     Func_ m_Ptr;
 
-#define INVOKE_IMPL(_TEMPLATE, _INVOKE, ...) \
-    template <size_t... Indices> \
-        requires (_TEMPLATE && Traits::HasReturn) \
-    Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...> __VA_OPT__(, ) __VA_ARGS__) const { \
-        return { RESULT_OK(), Variant((_INVOKE)( \
-            args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()... \
-        )) }; \
-    } \
-    template <size_t... Indices> \
-        requires (_TEMPLATE && !Traits::HasReturn) \
-    Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...> __VA_OPT__(, ) __VA_ARGS__) const { \
-        (_INVOKE)( \
-            args[Indices].template GetRef<typename Traits::template Arg<Indices>::Type>().Value()... \
-        ); \
-        return { RESULT_OK() }; \
+    template <size_t... Indices>
+    [[nodiscard]]
+    Result<void> CheckArguments(const ArgumentList& args) const {
+        constexpr size_t arg_count = sizeof...(Indices);
+        std::array<Result<void>, arg_count> args_results = {
+            args[Indices].template CanGetWithError<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>()...
+        };
+
+        auto error_it = std::find_if(args_results.begin(), args_results.end(), [](const auto& result) {
+            return result.IsError();
+        });
+
+        if (error_it != args_results.end()) {
+            return { RESULT_PASS_ERROR(), *error_it };
+        }
+
+        return {};
     }
-
-    // TODO: check if we have to care about Traits::IsConst
-
-    //NOTE: This works even if it says 'expected expression' from the LSP in Clion for example
 
     template <size_t... Indices> requires (Traits::IsStatic && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
-        return (m_Ptr)(
-            args[Indices].template Get<make_lvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
-        );
+        TRY(CheckArguments<Indices...>(args));
+
+        return Variant::Create<typename Traits::ReturnType>((m_Ptr)(
+            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+        ));
     }
 
     template <size_t... Indices> requires (Traits::IsStatic && !Traits::HasReturn)
     Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
+        TRY(CheckArguments<Indices...>(args));
+
         (m_Ptr)(
-            args[Indices].template Get<make_lvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
         );
+
         return {};
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && !Traits::HasRReferenceObject && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        return (TRY(obj.Get<std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>>()).*m_Ptr)(
-            args[Indices].template Get<make_lvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
-        );
+        TRY(CheckArguments<Indices...>(args));
+
+        using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
+
+        return Variant::Create<typename Traits::ReturnType>((TRY(obj.Get<ClassT_>()).*m_Ptr)(
+            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+        ));
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && !Traits::HasRReferenceObject && !Traits::HasReturn)
     Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        (TRY(obj.Get<std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>>()).*m_Ptr)(
-            args[Indices].template Get<make_lvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+        TRY(CheckArguments<Indices...>(args));
+
+        using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
+
+        (TRY(obj.Get<ClassT_>()).*m_Ptr)(
+            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
         );
+
         return {};
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && Traits::HasRReferenceObject && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        return (std::move(TRY(obj.Get<std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>>())).*m_Ptr)(
-            args[Indices].template Get<make_lvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
-        );
+        TRY(CheckArguments<Indices...>(args));
+
+        using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
+        
+        return Variant::Create<typename Traits::ReturnType>((std::move(TRY(obj.Get<ClassT_>())).*m_Ptr)(
+            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+        ));
     }
 
     template <size_t... Indices> requires (!Traits::IsStatic && Traits::HasRReferenceObject && !Traits::HasReturn)
     Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        (std::move(TRY(obj.Get<std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>>())).*m_Ptr)(
-            args[Indices].template Get<make_lvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
+        TRY(CheckArguments<Indices...>(args));
+
+        using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
+
+        (std::move(TRY(obj.Get<ClassT_>())).*m_Ptr)(
+            args[Indices].template Get<make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type>>().Value()...
         );
+
         return {};
     }
 

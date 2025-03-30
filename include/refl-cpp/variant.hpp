@@ -7,11 +7,7 @@ namespace ReflCpp {
 struct Variant;
 
 namespace detail {
-struct VariantBase {
-    virtual ~VariantBase() = default;
-};
-
-enum class VariantWrapperType {
+enum class VariantWrapperType : uint8_t {
     VOID = 0 << 0,
     VALUE = 1 << 0,
     CONST_VALUE = 1 << 1,
@@ -23,13 +19,17 @@ enum class VariantWrapperType {
     CONST_POINTER = 1 << 7,
 };
 
+struct VariantBase {
+    virtual ~VariantBase() = default;
+
+    [[nodiscard]]
+    virtual VariantWrapperType GetType() const = 0;
+};
+
 template <typename R_>
 struct VariantWrapper : public VariantBase {
     [[nodiscard]]
     virtual R_ GetValue() = 0;
-
-    [[nodiscard]]
-    virtual VariantWrapperType GetType() const = 0;
 };
 }
 
@@ -46,7 +46,7 @@ private:
         : m_Base(base), m_Type(type), m_IsConst(isConst) {}
 
     static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
-    
+
     friend struct VariantTestHelper;
 
 public:
@@ -76,9 +76,17 @@ public:
     }
 
     template <typename T_>
+    [[nodiscard]]
+    bool CanGet() const;
+
+    template <typename T_>
+    [[nodiscard]]
+    Result<void> CanGetWithError() const;
+    
+    template <typename T_>
         requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
-    Result<std::remove_volatile_t<T_>> Get() const;
+    Result<std::remove_volatile_t<T_>&> Get() const;
 
     template <typename T_>
         requires (std::is_lvalue_reference_v<T_>)
