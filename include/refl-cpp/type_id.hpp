@@ -54,7 +54,7 @@ public:
     [[nodiscard]]
     bool Equals() const {
         const auto result = ReflectID<T_>();
-        return result.IsSuccess() && *this == result.Value();
+        return !result.HasError() && *this == result.Value();
     }
 };
 }

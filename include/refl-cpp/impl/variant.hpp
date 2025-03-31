@@ -5,7 +5,6 @@
 #include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
-//TODO: rewrite whole checking if type matches system
 
 namespace detail {
 struct VoidVariantWrapper final : public VariantWrapper<void> {
@@ -252,6 +251,32 @@ std::shared_ptr<VariantBase> MakeWrapper(T_&& data) {
 
     static_assert("should be unreachable");
 }
+
+template <typename R_, VariantWrapperType Type_>
+struct VariantMatcher {
+    static bool Match(const TypeID _) {
+        // no implementation
+        return false;
+    }
+};
+
+template <typename R_>
+struct VariantMatcher<R_, VariantWrapperType::VOID> {
+    static bool Match(const TypeID _) {
+        return false;
+    }
+};
+
+template <typename R_>
+    requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
+struct VariantMatcher<R_, VariantWrapperType::VALUE> {
+    static bool Match(const TypeID type) {
+        return type.Equals<std::remove_const_t<R_>>();
+    }
+    static Result<std::remove_const_t<R_>&> Get(const VariantBase* base) {
+        return static_cast<VariantWrapper<std::remove_const_t<R_>&>*>(base)->GetValue();
+    }
+};
 }
 
 template <typename T_>
@@ -349,9 +374,17 @@ bool Variant::CanGet() const {
         }
     }
     else {
-        if (wrapperType == VariantWrapperType::VALUE
-            || wrapperType == VariantWrapperType::CONST_VALUE) {
-            return true;
+        if (wrapperType == VariantWrapperType::VALUE) {
+            return m_Type.Equals<std::remove_const_t<T_>>();
+        }
+        if (wrapperType == VariantWrapperType::CONST_VALUE) {
+            return m_Type.Equals<T_>();
+        }
+        if (wrapperType == VariantWrapperType::LVALUE_REF) {
+            return m_Type.Equals<std::remove_const_t<T_>&>();
+        }
+        if (wrapperType == VariantWrapperType::CONST_LVALUE_REF) {
+            return m_Type.Equals<T_&>();
         }
     }
 
@@ -360,9 +393,11 @@ bool Variant::CanGet() const {
 
 template <typename T_>
 Result<void> Variant::CanGetWithError() const {
-    if (CanGet<T_>()) {
-        return {};
-    }
+    if (detail::VariantMatcher<T_, >)
+
+    // if (CanGet<T_>()) {
+    //     return {};
+    // }
 
     const Type& type = TRY(m_Type.GetType());
     const Type& passed_type = TRY(Reflect<T_>());
@@ -375,11 +410,19 @@ Result<std::remove_volatile_t<T_>&> Variant::Get() const {
     TRY(CheckVoid());
     TRY(CanGetWithError<T_>());
 
-    if (m_Base->GetType() == detail::VariantWrapperType::VALUE) {
-        return static_cast<detail::VariantWrapper<std::remove_const_t<T_>&>*>(m_Base.get())->GetValue();
-    }
-
-    return static_cast<detail::VariantWrapper<T_&>*>(m_Base.get())->GetValue();
+    // const detail::VariantWrapperType wrapperType = m_Base->GetType();
+    //
+    // if (wrapperType == detail::VariantWrapperType::VALUE
+    //     || wrapperType == detail::VariantWrapperType::LVALUE_REF) {
+    //     return static_cast<detail::VariantWrapper<std::remove_const_t<T_>&>*>(m_Base.get())->GetValue();
+    // }
+    //
+    // if (wrapperType == detail::VariantWrapperType::CONST_VALUE
+    //     || wrapperType == detail::VariantWrapperType::CONST_LVALUE_REF) {
+    //     return static_cast<detail::VariantWrapper<T_&>*>(m_Base.get())->GetValue();
+    // }
+    
+    return { RESULT_ERROR(), "unreachable" };
 }
 
 template <typename T_>

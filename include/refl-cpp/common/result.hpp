@@ -48,18 +48,13 @@ public:
     ~ResultBase() {}
 
     [[nodiscard]]
-    bool IsSuccess() const {
-        return m_IsSuccess;
-    }
-
-    [[nodiscard]]
     bool HasError() const {
         return !m_IsSuccess;
     }
 
     [[nodiscard]]
     const ResultError& Error() const {
-        if (IsSuccess()) {
+        if (!HasError()) {
             throw std::runtime_error("Attempted to access error of a success Result");
         }
         return m_Error;

@@ -34,7 +34,11 @@ private:
     }
 
 #define REFLCPP_FUNCTION_WRAPPER_GET_ARGS() \
-    args[Indices].template Get<typename Traits::template Arg<Indices>::Type>().Value()...
+    args[Indices].template Get<std::conditional_t< \
+        std::is_pointer_v<typename Traits::template Arg<Indices>::Type>, \
+        typename Traits::template Arg<Indices>::Type, \
+        make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type> \
+    >>().Value()...
 
     template <size_t... Indices> requires (Traits::IsStatic && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
@@ -103,6 +107,8 @@ private:
 
         return {};
     }
+
+#undef REFLCPP_FUNCTION_WRAPPER_GET_ARGS
 
 public:
     FunctionWrapper(Func_ ptr)
