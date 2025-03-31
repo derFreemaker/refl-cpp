@@ -136,15 +136,15 @@ TEST(Variant, ConstPointerGet) {
 TEST(Variant, RValueGet) {
     auto variant = CreateVariant<int&&>(42);
 
-    EXPECT_FALSE(variant.CanGet<int>());
-    EXPECT_FALSE(variant.CanGet<const int>());
-    EXPECT_FALSE(variant.CanGet<int&>());
-    EXPECT_FALSE(variant.CanGet<const int&>());
+    EXPECT_TRUE(variant.CanGet<int>());
+    EXPECT_TRUE(variant.CanGet<const int>());
+    EXPECT_TRUE(variant.CanGet<int&>());
+    EXPECT_TRUE(variant.CanGet<const int&>());
 
-    EXPECT_TRUE(variant.Get<int>().HasError());
-    EXPECT_TRUE(variant.Get<const int>().HasError());
-    EXPECT_TRUE(variant.Get<int&>().HasError());
-    EXPECT_TRUE(variant.Get<const int&>().HasError());
+    EXPECT_EQ(variant.Get<int>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int>().Value(), 42);
+    EXPECT_EQ(variant.Get<int&>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
 }
 
 // Test with custom class
