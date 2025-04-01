@@ -169,8 +169,8 @@ TEST(Variant, CustomClassGet) {
 }
 
 // Test void variant
-TEST(Variant, VoidVariant) {
-    const auto& variant = ::ReflCpp::Variant::Void();
+TEST(Variant, Void) {
+    const auto& variant = Variant::Void();
 
     EXPECT_FALSE(variant.CanGet<int>());
     EXPECT_FALSE(variant.CanGet<const int>());
@@ -189,7 +189,7 @@ TEST(Variant, VoidVariant) {
 // Test type mismatches
 TEST(Variant, TypeMismatch) {
     constexpr int value = 42;
-    auto variant = CreateVariant<int>(value);
+    const auto variant = CreateVariant<int>(value);
 
     // Test CanGet with wrong types
     EXPECT_FALSE(variant.CanGet<double>());

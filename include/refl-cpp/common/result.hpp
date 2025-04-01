@@ -24,7 +24,7 @@ private:
         StoredT m_Value;
     };
 
-    bool m_IsSuccess;
+    bool _hasError;
 
     void m_ThrowBadAccessException() const {
         throw std::runtime_error("Attempted to access value of an error Result. Error: " + this->Error().Str());
@@ -33,23 +33,23 @@ private:
 public:
     ResultBase(ErrorTag, ResultError&& error)
         : m_Error(std::move(error)),
-          m_IsSuccess(false) {}
+          _hasError(true) {}
 
     ResultBase(ErrorTag, const ResultError& error)
         : m_Error(error),
-          m_IsSuccess(false) {}
+          _hasError(true) {}
 
     template <typename T2_>
     ResultBase(T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
         : m_Value(std::forward<T2_>(value)),
-          m_IsSuccess(true) {}
+          _hasError(false) {}
 
     //NOTE: we need this since it is not implicitly deleted
     ~ResultBase() {}
 
     [[nodiscard]]
     bool HasError() const {
-        return !m_IsSuccess;
+        return _hasError;
     }
 
     [[nodiscard]]

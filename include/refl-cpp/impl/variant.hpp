@@ -2,6 +2,7 @@
 
 #include "refl-cpp/variant.hpp"
 
+#include "refl-cpp/impl/variant_matcher.hpp"
 #include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
@@ -250,76 +251,6 @@ std::shared_ptr<VariantBase> MakeWrapper(T_&& data) {
 
     static_assert("should be unreachable");
 }
-
-template <VariantWrapperType Type, typename R>
-struct VariantMatcher {
-    static bool Match(const TypeID _) {
-#ifndef NDEBUG
-        throw std::logic_error("Not implemented");
-#else
-        return false;
-#endif
-    }
-};
-
-template <typename R_>
-struct VariantMatcher<VariantWrapperType::VOID, R_> {
-    static bool Match(const TypeID _) {
-        return false;
-    }
-};
-
-template <typename R_>
-    requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
-struct VariantMatcher<VariantWrapperType::VALUE, R_> {
-    using ResultT = R_&;
-    
-    static bool Match(const TypeID type) {
-        return type.Equals<R_>();
-    }
-
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
-    }
-};
-
-template <typename R_>
-    requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
-struct VariantMatcher<VariantWrapperType::VALUE, const R_> {
-    using ResultT = R_&;
-    
-    static bool Match(const TypeID type) {
-        return type.Equals<R_>() && type.Equals<const R_>();
-    }
-    
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
-    }
-};
-
-template <typename R_>
-struct VariantMatcher<VariantWrapperType::VALUE, R_&> {
-    using ResultT = R_&;
-    
-    static bool Match(const TypeID type) {
-        return type.Equals<R_>();
-    }
-
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
-    }
-};
-
-template <typename R_>
-struct VariantMatcher<VariantWrapperType::VALUE, const R_&> {
-    static bool Match(const TypeID type) {
-        return type.Equals<R_>() && type.Equals<const R_>();
-    }
-
-    static const R_& Get(VariantBase* base) {
-        return static_cast<VariantWrapper<const R_&>*>(base)->GetValue();
-    }
-};
 }
 
 template <typename T_>
@@ -347,25 +278,28 @@ inline Variant& Variant::Void() {
 
 template <typename T_>
 bool Variant::CanGet() const {
-    using detail::VariantWrapperType;
-
-    const VariantWrapperType wrapperType = m_Base->GetType();
-
 #define REFLCPP_VARIANT_MATCH(TYPE) \
-    if (wrapperType == detail::VariantWrapperType::TYPE \
-        && detail::VariantMatcher<detail::VariantWrapperType::TYPE, T_>::Match(m_Type)) { \
-        return true; \
+    case detail::VariantWrapperType::TYPE: { \
+        if (detail::VariantMatcher<detail::VariantWrapperType::TYPE, T_>::Match(m_Type)) { \
+            return true; \
+        } \
+        break; \
     }
+    
+    switch (m_Base->GetType()) {
+        REFLCPP_VARIANT_MATCH(VOID)
+        REFLCPP_VARIANT_MATCH(VALUE)
+        REFLCPP_VARIANT_MATCH(CONST_VALUE)
+        REFLCPP_VARIANT_MATCH(LVALUE_REF)
+        REFLCPP_VARIANT_MATCH(CONST_LVALUE_REF)
+        REFLCPP_VARIANT_MATCH(RVALUE_REF)
+        REFLCPP_VARIANT_MATCH(CONST_RVALUE_REF)
+        REFLCPP_VARIANT_MATCH(POINTER)
+        REFLCPP_VARIANT_MATCH(CONST_POINTER)
 
-    REFLCPP_VARIANT_MATCH(VOID)
-    REFLCPP_VARIANT_MATCH(VALUE)
-    REFLCPP_VARIANT_MATCH(CONST_VALUE)
-    REFLCPP_VARIANT_MATCH(LVALUE_REF)
-    REFLCPP_VARIANT_MATCH(CONST_LVALUE_REF)
-    REFLCPP_VARIANT_MATCH(RVALUE_REF)
-    REFLCPP_VARIANT_MATCH(CONST_RVALUE_REF)
-    REFLCPP_VARIANT_MATCH(POINTER)
-    REFLCPP_VARIANT_MATCH(CONST_POINTER)
+        default:
+            break;
+    }
 
 #undef REFLCPP_VARIANT_MATCH
 
