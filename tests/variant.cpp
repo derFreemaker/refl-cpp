@@ -21,7 +21,25 @@ Variant CreateVariant(T value) {
     return Variant::Create<T>(std::forward<T>(value));
 }
 
-TEST(Variant, BasicValueGet) {
+// Test void variant
+TEST(Variant, Void) {
+    const auto& variant = Variant::Void();
+
+    EXPECT_FALSE(variant.CanGet<int>());
+    EXPECT_FALSE(variant.CanGet<const int>());
+    EXPECT_FALSE(variant.CanGet<int&>());
+    EXPECT_FALSE(variant.CanGet<const int&>());
+
+    EXPECT_TRUE(variant.Get<int>().HasError());
+    EXPECT_TRUE(variant.Get<const int>().HasError());
+    EXPECT_TRUE(variant.Get<int&>().HasError());
+    EXPECT_TRUE(variant.Get<const int&>().HasError());
+
+    // Check that it is actually a void variant
+    EXPECT_TRUE(variant.GetType().Equals<void>());
+}
+
+TEST(Variant, Value) {
     constexpr int value = 42;
     const auto variant = CreateVariant<int>(value);
 
@@ -41,7 +59,7 @@ TEST(Variant, BasicValueGet) {
 }
 
 // Test const value handling
-TEST(Variant, ConstValueGet) {
+TEST(Variant, ConstValue) {
     constexpr int value = 42;
     const auto variant = CreateVariant<const int>(value);
 
@@ -59,7 +77,7 @@ TEST(Variant, ConstValueGet) {
 }
 
 // Test reference handling
-TEST(Variant, ReferenceGet) {
+TEST(Variant, LValueReference) {
     int value = 42;
     const auto variant = CreateVariant<int&>(value);
 
@@ -79,8 +97,7 @@ TEST(Variant, ReferenceGet) {
     EXPECT_EQ(variant.Get<int>().Value(), 100);
 }
 
-// Test const reference handling
-TEST(Variant, ConstReferenceGet) {
+TEST(Variant, ConstLValueReference) {
     int value = 42;
     const auto variant = CreateVariant<const int&>(value);
 
@@ -99,8 +116,33 @@ TEST(Variant, ConstReferenceGet) {
     EXPECT_EQ(variant.Get<const int>().Value(), 100);
 }
 
-// Test pointer handling
-TEST(Variant, PointerGet) {
+
+TEST(Variant, RValueReference) {
+    const auto variant = CreateVariant<int&&>(42);
+
+    EXPECT_TRUE(variant.CanGet<int>());
+    EXPECT_TRUE(variant.CanGet<const int>());
+    EXPECT_TRUE(variant.CanGet<int&>());
+    EXPECT_TRUE(variant.CanGet<const int&>());
+
+    EXPECT_EQ(variant.Get<int>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int>().Value(), 42);
+    EXPECT_EQ(variant.Get<int&>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
+}
+
+TEST(Variant, ConstRValueReference) {
+    int value = 42;
+    const auto variant = CreateVariant<const int&&>(std::move(value));
+
+    // Test CanGet for rvalue reference
+    EXPECT_TRUE(variant.CanGet<int&&>());
+
+    // Test actual Get for rvalue reference
+    EXPECT_EQ(variant.Get<int&&>().Value(), 42);
+}
+
+TEST(Variant, Pointer) {
     int value = 42;
     const auto variant = CreateVariant<int*>(&value);
 
@@ -116,10 +158,9 @@ TEST(Variant, PointerGet) {
     EXPECT_EQ(*variant.Get<int*>().Value(), 100);
 }
 
-// Test const pointer handling
-TEST(Variant, ConstPointerGet) {
+TEST(Variant, ConstPointer) {
     int value = 42;
-    auto variant = CreateVariant<const int*>(&value);
+    const auto variant = CreateVariant<const int*>(&value);
 
     EXPECT_FALSE(variant.CanGet<int*>()); // Can't get non-const from const
     EXPECT_TRUE(variant.CanGet<const int*>());
@@ -130,21 +171,6 @@ TEST(Variant, ConstPointerGet) {
     // Modifying the original should be visible through the variant
     value = 100;
     EXPECT_EQ(*variant.Get<const int*>().Value(), 100);
-}
-
-// Test rvalue handling
-TEST(Variant, RValueGet) {
-    auto variant = CreateVariant<int&&>(42);
-
-    EXPECT_TRUE(variant.CanGet<int>());
-    EXPECT_TRUE(variant.CanGet<const int>());
-    EXPECT_TRUE(variant.CanGet<int&>());
-    EXPECT_TRUE(variant.CanGet<const int&>());
-
-    EXPECT_EQ(variant.Get<int>().Value(), 42);
-    EXPECT_EQ(variant.Get<const int>().Value(), 42);
-    EXPECT_EQ(variant.Get<int&>().Value(), 42);
-    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
 }
 
 // Test with custom class
@@ -168,24 +194,6 @@ TEST(Variant, CustomClassGet) {
     EXPECT_EQ(variant.Get<TestStruct>().Value().value, 100);
 }
 
-// Test void variant
-TEST(Variant, Void) {
-    const auto& variant = Variant::Void();
-
-    EXPECT_FALSE(variant.CanGet<int>());
-    EXPECT_FALSE(variant.CanGet<const int>());
-    EXPECT_FALSE(variant.CanGet<int&>());
-    EXPECT_FALSE(variant.CanGet<const int&>());
-
-    EXPECT_TRUE(variant.Get<int>().HasError());
-    EXPECT_TRUE(variant.Get<const int>().HasError());
-    EXPECT_TRUE(variant.Get<int&>().HasError());
-    EXPECT_TRUE(variant.Get<const int&>().HasError());
-
-    // Check that it is actually a void variant
-    EXPECT_TRUE(variant.GetType().Equals<void>());
-}
-
 // Test type mismatches
 TEST(Variant, TypeMismatch) {
     constexpr int value = 42;
@@ -200,18 +208,6 @@ TEST(Variant, TypeMismatch) {
     EXPECT_TRUE(variant.Get<double>().HasError());
     EXPECT_TRUE(variant.Get<std::string>().HasError());
     EXPECT_TRUE(variant.Get<TestStruct>().HasError());
-}
-
-// Test rvalue reference specifically
-TEST(Variant, RValueReference) {
-    int value = 42;
-    const auto variant = CreateVariant(std::move(value));
-
-    // Test CanGet for rvalue reference
-    EXPECT_TRUE(variant.CanGet<int&&>());
-
-    // Test actual Get for rvalue reference
-    EXPECT_EQ(variant.Get<int&&>().Value(), 42);
 }
 
 // Test complex type conversions to ensure unified implementation works

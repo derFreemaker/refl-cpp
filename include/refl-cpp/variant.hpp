@@ -31,6 +31,13 @@ struct VariantWrapper : public VariantBase {
     [[nodiscard]]
     virtual R_ GetValue() = 0;
 };
+
+template <VariantWrapperType Type, typename R_>
+struct VariantMatcher {
+    static bool Match(const TypeID) {
+        return false;
+    }
+};
 }
 
 //TODO: decide if we want variant to be copy able

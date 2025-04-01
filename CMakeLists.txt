@@ -50,8 +50,13 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/meta/std.hpp
 
         include/refl-cpp/impl/impl.hpp
+        
         include/refl-cpp/impl/variant.hpp
         include/refl-cpp/impl/variant_matcher.hpp
+        include/refl-cpp/impl/variant_matcher/value_variant_matcher.hpp
+        include/refl-cpp/impl/variant_matcher/const_value_variant_matcher.hpp
+        include/refl-cpp/impl/variant_wrapper.hpp
+        include/refl-cpp/impl/variant_matcher/lvalue_ref_variant_matcher.hpp
 )
 target_link_libraries(refl-cpp INTERFACE
     fmt::fmt
