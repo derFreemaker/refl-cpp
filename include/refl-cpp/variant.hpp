@@ -67,7 +67,7 @@ private:
     Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
         : m_Base(base), m_Type(type), m_IsConst(isConst) {}
 
-    static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+    static FormattedError CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
 
     friend struct VariantTestHelper;
 

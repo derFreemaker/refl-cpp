@@ -44,7 +44,7 @@ public:
         : m_Value(std::forward<T2_>(value)),
           _hasError(false) {}
 
-    //NOTE: we need this since it is not implicitly deleted
+    //NOTE: we need this deconstructor since it is implicitly deleted
     ~ResultBase() {}
 
     [[nodiscard]]
