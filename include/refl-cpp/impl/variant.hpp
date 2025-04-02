@@ -71,34 +71,32 @@ Result<void> Variant::CanGetWithError() const {
     return { RESULT_ERROR(), CanNotGetFromVariantWithType(type, passed_type) };
 }
 
+#define REFLCPP_MATCH_VARIANT(Type) \
+    if constexpr (detail::HasVariantMatcher<detail::VariantWrapperType::Type, T_>) { \
+        if (wrapperType == detail::VariantWrapperType::Type) { \
+            return detail::VariantMatcher<detail::VariantWrapperType::Type, T_>::Get(m_Base.get()); \
+        } \
+    }
+
+#define REFLCPP_MATCH_VARIANTS() \
+    const auto wrapperType = m_Base->GetType(); \
+    REFLCPP_MATCH_VARIANT(VALUE) \
+    REFLCPP_MATCH_VARIANT(CONST_VALUE) \
+    REFLCPP_MATCH_VARIANT(LVALUE_REF) \
+    REFLCPP_MATCH_VARIANT(CONST_LVALUE_REF) \
+    REFLCPP_MATCH_VARIANT(RVALUE_REF) \
+    REFLCPP_MATCH_VARIANT(CONST_RVALUE_REF) \
+    REFLCPP_MATCH_VARIANT(POINTER) \
+    REFLCPP_MATCH_VARIANT(CONST_POINTER) \
+    return { RESULT_ERROR(), "unreachable" };
+
 template <typename T_>
     requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
 Result<std::remove_volatile_t<T_>&> Variant::Get() const {
     TRY(CheckVoid());
     TRY(CanGetWithError<T_>());
 
-    const auto wrapperType = m_Base->GetType();
-
-    // find better way for this:
-    
-    if (wrapperType == detail::VariantWrapperType::VALUE) {
-        return detail::VariantMatcher<detail::VariantWrapperType::VALUE, T_>::Get(m_Base.get());
-    }
-
-    if (wrapperType == detail::VariantWrapperType::LVALUE_REF) {
-        return detail::VariantMatcher<detail::VariantWrapperType::LVALUE_REF, T_>::Get(m_Base.get());
-    }
-    
-    if constexpr (std::is_const_v<T_>) {
-        if (wrapperType == detail::VariantWrapperType::CONST_VALUE) {
-            return detail::VariantMatcher<detail::VariantWrapperType::CONST_VALUE, T_>::Get(m_Base.get());
-        }
-        // if (wrapperType == detail::VariantWrapperType::CONST_LVALUE_REF) {
-        //     return detail::VariantMatcher<detail::VariantWrapperType::CONST_LVALUE_REF, T_>::Get(m_Base.get());
-        // }
-    }
-    
-    return { RESULT_ERROR(), "unreachable" };
+    REFLCPP_MATCH_VARIANTS()
 }
 
 template <typename T_>
@@ -107,7 +105,7 @@ Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Variant::Get() cons
     TRY(CheckVoid());
     TRY(CanGetWithError<T_>());
 
-    return static_cast<detail::VariantWrapper<std::remove_volatile_t<std::remove_reference_t<T_>>&>*>(m_Base.get())->GetValue();
+    REFLCPP_MATCH_VARIANTS()
 }
 
 template <typename T_>
@@ -116,8 +114,7 @@ Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Variant::Get() con
     TRY(CheckVoid());
     TRY(CanGetWithError<T_>());
 
-    using ResultT = std::remove_volatile_t<std::remove_reference_t<T_>>&&;
-    return std::forward<ResultT>(static_cast<detail::VariantWrapper<ResultT>*>(m_Base.get())->GetValue());
+    REFLCPP_MATCH_VARIANTS()
 }
 
 template <typename T_>
@@ -126,6 +123,9 @@ Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Variant::Get() const 
     TRY(CheckVoid());
     TRY(CanGetWithError<T_>());
 
-    return static_cast<detail::VariantWrapper<std::remove_volatile_t<std::remove_pointer_t<T_>>*>*>(m_Base.get())->GetValue();
+    REFLCPP_MATCH_VARIANTS()
 }
+
+#undef REFLCPP_MATCH_VARIANTS
+#undef REFLCPP_MATCH_VARIANT
 }

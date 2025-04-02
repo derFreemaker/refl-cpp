@@ -21,8 +21,7 @@ template <typename R_>
     requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
 struct VariantMatcher<VariantWrapperType::LVALUE_REF, const R_> {
     static bool Match(const TypeID type) {
-        return type.Equals<R_&>()
-            || type.Equals<const R_&>();
+        return type.Equals<R_&>();
     }
 
     using ResultT = R_&;
@@ -46,8 +45,7 @@ struct VariantMatcher<VariantWrapperType::LVALUE_REF, R_&> {
 template <typename R_>
 struct VariantMatcher<VariantWrapperType::LVALUE_REF, const R_&> {
     static bool Match(const TypeID type) {
-        return type.Equals<R_&>()
-            || type.Equals<const R_&>();
+        return type.Equals<R_&>();
     }
 
     using ResultT = R_&;

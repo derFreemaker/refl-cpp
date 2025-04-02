@@ -120,15 +120,11 @@ TEST(Variant, ConstLValueReference) {
 TEST(Variant, RValueReference) {
     const auto variant = CreateVariant<int&&>(42);
 
-    EXPECT_TRUE(variant.CanGet<int>());
-    EXPECT_TRUE(variant.CanGet<const int>());
-    EXPECT_TRUE(variant.CanGet<int&>());
-    EXPECT_TRUE(variant.CanGet<const int&>());
+    EXPECT_TRUE(variant.CanGet<int&&>());
+    EXPECT_TRUE(variant.CanGet<const int&&>());
 
-    EXPECT_EQ(variant.Get<int>().Value(), 42);
-    EXPECT_EQ(variant.Get<const int>().Value(), 42);
-    EXPECT_EQ(variant.Get<int&>().Value(), 42);
-    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
+    EXPECT_EQ(variant.Get<int&&>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int&&>().Value(), 42);
 }
 
 TEST(Variant, ConstRValueReference) {
@@ -136,10 +132,10 @@ TEST(Variant, ConstRValueReference) {
     const auto variant = CreateVariant<const int&&>(std::move(value));
 
     // Test CanGet for rvalue reference
-    EXPECT_TRUE(variant.CanGet<int&&>());
+    EXPECT_TRUE(variant.CanGet<const int&&>());
 
     // Test actual Get for rvalue reference
-    EXPECT_EQ(variant.Get<int&&>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int&&>().Value(), 42);
 }
 
 TEST(Variant, Pointer) {
