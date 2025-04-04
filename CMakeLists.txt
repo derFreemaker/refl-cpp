@@ -12,7 +12,7 @@ CPMAddPackage(
         GITHUB_REPOSITORY fmtlib/fmt
         GIT_TAG 11.1.4
         OPTIONS
-            "FMT_INSTALL OFF"
+        "FMT_INSTALL OFF"
 )
 
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
@@ -50,7 +50,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/meta/std.hpp
 
         include/refl-cpp/impl/impl.hpp
-        
+
         include/refl-cpp/impl/variant.hpp
         include/refl-cpp/impl/variant_matcher.hpp
         include/refl-cpp/impl/variant_wrapper.hpp
@@ -59,12 +59,13 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/impl/variant_matcher/lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/const_lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/rvalue_ref_variant_matcher.hpp
+        include/refl-cpp/common/reference_wrapper.hpp
 )
 target_link_libraries(refl-cpp INTERFACE
-    fmt::fmt
+        fmt::fmt
 )
 target_precompile_headers(refl-cpp INTERFACE
-    include/refl-cpp/refl-cpp.hpp
+        include/refl-cpp/refl-cpp.hpp
 )
 
 # small test project

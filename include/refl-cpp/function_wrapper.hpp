@@ -37,7 +37,10 @@ private:
     args[Indices].template Get<std::conditional_t< \
         std::is_pointer_v<typename Traits::template Arg<Indices>::Type>, \
         typename Traits::template Arg<Indices>::Type, \
-        make_rvalue_reference_t<typename Traits::template Arg<Indices>::Type> \
+        std::conditional_t<std::is_reference_v<typename Traits::template Arg<Indices>::Type>, \
+            typename Traits::template Arg<Indices>::Type, \
+            typename Traits::template Arg<Indices>::Type& \
+        > \
     >>().Value()...
 
     template <size_t... Indices> requires (Traits::IsStatic && Traits::HasReturn)

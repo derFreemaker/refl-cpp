@@ -3,25 +3,32 @@
 #include <optional>
 #include <utility>
 
+#include "refl-cpp/common/reference_wrapper.hpp"
 #include "refl-cpp/common/type_traits.hpp"
 #include "refl-cpp/common/stack_tracing_error.hpp"
 
 namespace ReflCpp {
 namespace detail {
 struct ErrorTag {};
+
 struct PassErrorTag {};
 
-inline constexpr ErrorTag Error {};
-inline constexpr PassErrorTag PassError {};
+inline constexpr ErrorTag Error{};
+inline constexpr PassErrorTag PassError{};
 
 template <typename T_>
 struct ResultBase {
-private:
     using StoredT = T_;
+    using StoredReturnT = std::conditional_t<std::is_reference_v<StoredT>,
+                                             StoredT,
+                                             make_lvalue_reference_t<StoredT>>;
 
+private:
     union {
         const ResultError m_Error;
-        StoredT m_Value;
+        std::conditional_t<std::is_reference_v<StoredT>,
+                           reference_wrapper<StoredT>,
+                           StoredT> m_Value;
     };
 
     bool _hasError;
@@ -60,32 +67,65 @@ public:
         return m_Error;
     }
 
-    StoredT& Value() & {
+
+    StoredReturnT Value() & {
         if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
-        return this->m_Value;
+        if constexpr (std::is_lvalue_reference_v<StoredT>) {
+            return this->m_Value.get();
+        }
+        if constexpr (std::is_rvalue_reference_v<StoredT>) {
+            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+        }
+        else {
+            return this->m_Value;
+        }
     }
 
-    make_const<StoredT>& Value() const & {
+    make_const_t<StoredReturnT> Value() const & {
         if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
-        return this->m_Value;
+        if constexpr (std::is_lvalue_reference_v<StoredT>) {
+            return this->m_Value.get();
+        }
+        if constexpr (std::is_rvalue_reference_v<StoredT>) {
+            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+        }
+        else {
+            return this->m_Value;
+        }
     }
 
-    StoredT& Value() && {
+    StoredReturnT Value() && {
         if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
-        return this->m_Value;
+        if constexpr (std::is_lvalue_reference_v<StoredT>) {
+            return this->m_Value.get();
+        }
+        if constexpr (std::is_rvalue_reference_v<StoredT>) {
+            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+        }
+        else {
+            return this->m_Value;
+        }
     }
 
-    make_const<StoredT>& Value() const && {
+    make_const_t<StoredReturnT> Value() const && {
         if (this->HasError()) {
             this->m_ThrowBadAccessException();
         }
-        return this->m_Value;
+        if constexpr (std::is_lvalue_reference_v<StoredT>) {
+            return this->m_Value.get();
+        }
+        if constexpr (std::is_rvalue_reference_v<StoredT>) {
+            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+        }
+        else {
+            return this->m_Value;
+        }
     }
 };
 
@@ -212,12 +252,12 @@ namespace detail {
 inline void TryHelper(const Result<void>* _) {}
 
 template <typename T_>
-T_& TryHelper(Result<T_>* result) {
+typename Result<T_>::StoredReturnT TryHelper(Result<T_>* result) {
     return result->Value();
 }
 
 template <typename T_>
-make_const<T_>& TryHelper(const Result<T_>* result) {
+typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
     return result->Value();
 }
 }

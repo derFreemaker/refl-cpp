@@ -3,8 +3,25 @@
 #include <type_traits>
 
 namespace ReflCpp {
+namespace detail {
 template <typename T_>
-using make_const = std::add_const_t<std::remove_const_t<T_>>;
+struct make_const {
+    using type = std::add_const_t<std::remove_const_t<T_>>;
+};
+
+template <typename T_>
+struct make_const<T_&> {
+    using type = typename make_const<T_>::type&;
+};
+
+template <typename T_>
+struct make_const<T_&&> {
+    using type = typename make_const<T_>::type&&;
+};
+}
+
+template <typename T_>
+using make_const_t = typename detail::make_const<T_>::type;
 
 namespace detail {
 template <typename T_>
@@ -87,7 +104,7 @@ struct remove_all_pointers {
 };
 
 template <typename T_>
-struct remove_all_pointers<T_* > {
+struct remove_all_pointers<T_*> {
     using type = typename remove_all_pointers<T_>::type;
 };
 
@@ -114,10 +131,10 @@ namespace detail {
 template <typename T_, bool IsConst_, bool IsVolatile_, bool IsLValueReference_, bool IsRValueReference_, bool IsPointer_>
 struct TypeTraitsBase {
     using Type = T_;
-    
+
     static constexpr bool IsConst = IsConst_;
     static constexpr bool IsVolatile = IsVolatile_;
-    
+
     static constexpr bool IsLValueReference = IsLValueReference_;
     static constexpr bool IsRValueReference = IsRValueReference_;
     static constexpr bool IsReference = IsLValueReference_ || IsRValueReference_;
