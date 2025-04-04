@@ -3,26 +3,15 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(refl-cpp)
 
-include_directories(include)
-
 include(cmake/CPM.cmake)
 
 CPMAddPackage(
         NAME fmt
         GITHUB_REPOSITORY fmtlib/fmt
         GIT_TAG 11.1.4
+        GIT_SHALLOW ON
         OPTIONS
         "FMT_INSTALL OFF"
-)
-
-CPMAddPackage(
-        NAME gperftools
-        GITHUB_REPOSITORY gperftools/gperftools
-        GIT_TAG gperftools-2.16
-        OPTIONS
-        "WITH_STACK_TRACE ON"
-        "BUILD_TESTING OFF"
-        "BUILD_SHARED_LIBS OFF"
 )
 
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
@@ -32,6 +21,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/stack_tracing_error.hpp
         include/refl-cpp/common/result.hpp
         include/refl-cpp/common/type_traits.hpp
+        include/refl-cpp/common/reference_wrapper.hpp
 
         include/refl-cpp/type_id.hpp
         include/refl-cpp/type.hpp
@@ -69,8 +59,8 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/impl/variant_matcher/lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/const_lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/rvalue_ref_variant_matcher.hpp
-        include/refl-cpp/common/reference_wrapper.hpp
 )
+target_include_directories(refl-cpp INTERFACE include)
 target_link_libraries(refl-cpp INTERFACE
         fmt::fmt
 )
@@ -88,7 +78,3 @@ endif ()
 if (ENABLE_REFLCPP_TESTS)
     add_subdirectory(tests)
 endif ()
-
-add_executable(Test test.cpp)
-target_link_libraries(Test PRIVATE stacktrace)
-target_include_directories(Test PUBLIC ${gperftools_SOURCE_DIR}/src)
