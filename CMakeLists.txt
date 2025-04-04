@@ -6,6 +6,16 @@ project(refl-cpp)
 include(cmake/CPM.cmake)
 
 CPMAddPackage(
+        NAME Ccache.cmake
+        GITHUB_REPOSITORY TheLartians/Ccache.cmake
+        VERSION 1.2.5
+        GIT_PROGRESS ON
+        GIT_SHALLOW ON
+        PATCHES
+        patches/ccache.cmake.patch
+)
+
+CPMAddPackage(
         NAME fmt
         GITHUB_REPOSITORY fmtlib/fmt
         GIT_TAG 11.1.4
