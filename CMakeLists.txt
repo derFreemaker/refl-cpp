@@ -15,6 +15,16 @@ CPMAddPackage(
         "FMT_INSTALL OFF"
 )
 
+CPMAddPackage(
+        NAME gperftools
+        GITHUB_REPOSITORY gperftools/gperftools
+        GIT_TAG gperftools-2.16
+        OPTIONS
+        "WITH_STACK_TRACE ON"
+        "BUILD_TESTING OFF"
+        "BUILD_SHARED_LIBS OFF"
+)
+
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
         include/refl-cpp/common/flags.hpp
@@ -78,3 +88,7 @@ endif ()
 if (ENABLE_REFLCPP_TESTS)
     add_subdirectory(tests)
 endif ()
+
+add_executable(Test test.cpp)
+target_link_libraries(Test PRIVATE stacktrace)
+target_include_directories(Test PUBLIC ${gperftools_SOURCE_DIR}/src)
