@@ -7,14 +7,12 @@ namespace ReflCpp::detail {
 template <typename R_>
     requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
 struct VariantMatcher<VariantWrapperType::CONST_VALUE, const R_> {
-    using ResultT = const R_&;
-
     static bool Match(const TypeID type) {
         return type.Equals<const R_>();
     }
 
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static const R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<const R_&>*>(base)->GetValue();
     }
 };
 
@@ -24,9 +22,8 @@ struct VariantMatcher<VariantWrapperType::CONST_VALUE, const R_&> {
         return type.Equals<const R_>();
     }
 
-    using ResultT = const R_&;
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static const R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<const R_&>*>(base)->GetValue();
     }
 };
 }

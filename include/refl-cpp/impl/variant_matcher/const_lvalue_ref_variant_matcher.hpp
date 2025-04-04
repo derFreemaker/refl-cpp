@@ -11,9 +11,8 @@ struct VariantMatcher<VariantWrapperType::CONST_LVALUE_REF, const R_> {
         return type.Equals<const R_&>();
     }
 
-    using ResultT = R_&;
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static const R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<const R_&>*>(base)->GetValue();
     }
 };
 
@@ -23,9 +22,8 @@ struct VariantMatcher<VariantWrapperType::CONST_LVALUE_REF, const R_&> {
         return type.Equals<const R_&>();
     }
 
-    using ResultT = R_&;
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static const R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<const R_&>*>(base)->GetValue();
     }
 };
 

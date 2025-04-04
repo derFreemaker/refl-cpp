@@ -9,11 +9,9 @@ struct VariantMatcher<VariantWrapperType::VALUE, R_> {
     static bool Match(const TypeID type) {
         return type.Equals<R_>();
     }
-
-    using ResultT = R_&;
-
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    
+    static R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
 
@@ -24,10 +22,8 @@ struct VariantMatcher<VariantWrapperType::VALUE, const R_> {
         return type.Equals<R_>();
     }
 
-    using ResultT = R_&;
-
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static const R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
 
@@ -37,10 +33,8 @@ struct VariantMatcher<VariantWrapperType::VALUE, R_&> {
         return type.Equals<R_>();
     }
 
-    using ResultT = R_&;
-
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
 
@@ -50,10 +44,8 @@ struct VariantMatcher<VariantWrapperType::VALUE, const R_&> {
         return type.Equals<R_>();
     }
 
-    using ResultT = const R_&;
-
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static const R_& Get(VariantBase* base) {
+        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
 }
