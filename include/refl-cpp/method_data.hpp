@@ -1,14 +1,20 @@
 #pragma once
 
 #include <vector>
-#include <type_traits>
 
 namespace ReflCpp {
 template <typename Func_>
-struct MethodData {
+struct MethodFuncData {
     Func_ ptr;
+    std::vector<const char*> args{};
+};
 
+template <typename... Funcs_>
+struct MethodData {
     const char* name = "$NONE$";
-    std::vector<const char*> arguments{};
+    std::tuple<MethodFuncData<Funcs_>...> funcs;
+
+    MethodData(const char* name, MethodFuncData<Funcs_>... fs)
+        : name(name), funcs(fs...) {}
 };
 }

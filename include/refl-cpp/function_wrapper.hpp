@@ -16,7 +16,7 @@ private:
 
     template <size_t... Indices>
     [[nodiscard]]
-    Result<void> CheckArguments(const ArgumentList& args) const {
+    Result<void> CheckArgs(const ArgumentList& args) const {
         constexpr size_t arg_count = sizeof...(Indices);
         std::array<Result<void>, arg_count> args_results = {
             args[Indices].template CanGetWithError<typename Traits::template Arg<Indices>::Type>()...
@@ -27,10 +27,16 @@ private:
         });
 
         if (error_it != args_results.end()) {
-            return { RESULT_PASS_ERROR(), *error_it };
+            return *error_it;
         }
 
         return {};
+    }
+
+    template <size_t... Indices>
+    [[nodiscard]]
+    Result<void> CheckArgs(const ArgumentList& args, std::index_sequence<Indices...>) const {
+        return CheckArgs<Indices...>(args);
     }
 
 #define REFLCPP_FUNCTION_WRAPPER_GET_ARGS() \
@@ -45,7 +51,7 @@ private:
 
     template <size_t... Indices> requires (Traits::IsStatic && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
-        TRY(CheckArguments<Indices...>(args));
+        TRY(CheckArgs<Indices...>(args));
 
         return Variant::Create<typename Traits::ReturnType>(
             (m_Ptr)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
@@ -54,7 +60,7 @@ private:
 
     template <size_t... Indices> requires (Traits::IsStatic && !Traits::HasReturn)
     Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
-        TRY(CheckArguments<Indices...>(args));
+        TRY(CheckArgs<Indices...>(args));
 
         (m_Ptr)(
             REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
@@ -65,7 +71,7 @@ private:
 
     template <size_t... Indices> requires (!Traits::IsStatic && !Traits::HasRReferenceObject && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArguments<Indices...>(args));
+        TRY(CheckArgs<Indices...>(args));
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
 
@@ -76,7 +82,7 @@ private:
 
     template <size_t... Indices> requires (!Traits::IsStatic && !Traits::HasRReferenceObject && !Traits::HasReturn)
     Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArguments<Indices...>(args));
+        TRY(CheckArgs<Indices...>(args));
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
 
@@ -89,7 +95,7 @@ private:
 
     template <size_t... Indices> requires (!Traits::IsStatic && Traits::HasRReferenceObject && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArguments<Indices...>(args));
+        TRY(CheckArgs<Indices...>(args));
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
 
@@ -100,7 +106,7 @@ private:
 
     template <size_t... Indices> requires (!Traits::IsStatic && Traits::HasRReferenceObject && !Traits::HasReturn)
     Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArguments<Indices...>(args));
+        TRY(CheckArgs<Indices...>(args));
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
 
@@ -118,29 +124,19 @@ public:
         : m_Ptr(ptr) {}
 
     [[nodiscard]]
-    constexpr bool IsStatic() const {
-        return Traits::IsStatic;
+    Result<std::vector<TypeID>> GetArgumentsTypes() const {
+        return Traits::GetArgs();
     }
 
     [[nodiscard]]
-    constexpr bool IsConst() const {
-        return Traits::IsConst;
+    bool CanInvokeWithArgs(const ArgumentList& args) const {
+        return CheckArgs(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>()).IsSuccess();
     }
-
-    [[nodiscard]]
-    constexpr bool HasLReferenceObject() const {
-        return Traits::HasLReferenceObject;
-    }
-
-    [[nodiscard]]
-    constexpr bool HasRReferenceObject() const {
-        return Traits::HasRReferenceObject;
-    }
-
+    
     [[nodiscard]]
     Result<Variant> Invoke(const ArgumentList& args, const Variant& obj) const {
         if (args.size() != Traits::ArgCount) {
-            throw std::invalid_argument("incorrect number of arguments");
+            return { RESULT_ERROR(), "incorrect number of arguments given {0} needed {1}", args.size(), Traits::ArgCount };
         }
 
         if constexpr (Traits::IsStatic) {
@@ -153,6 +149,11 @@ public:
             }
         }
         else {
+            if (obj.IsVoid()) {
+                const auto& classType = TRY(Reflect<typename Traits::ClassType>());
+                return { RESULT_ERROR(), "cannot invoke a member function without instance obj: {0}", classType.Dump() };
+            }
+
             if constexpr (Traits::HasReturn) {
                 return InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>(), obj);
             }

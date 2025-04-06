@@ -5,7 +5,13 @@
 
 #include <fmt/format.h>
 
+#include "refl-cpp/common/result_tags.hpp"
+
 namespace ReflCpp {
+
+template <typename T_>
+struct Result;
+
 struct FormattedError {
 private:
     const std::string m_Message;
@@ -41,6 +47,11 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const FormattedError& error) {
         error.Str(os);
         return os;
+    }
+
+    template <typename T_>
+    operator Result<T_>() const {
+        return Result<T_>(detail::PassError, *this);
     }
 };
 }

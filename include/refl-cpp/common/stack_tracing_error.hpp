@@ -46,6 +46,11 @@ public:
         error.Str(os);
         return os;
     }
+
+    template <typename T_>
+    operator Result<T_>() const {
+        return Result<T_>(detail::PassError, *this);
+    }
 };
 
 using ResultError = StackTracingError;

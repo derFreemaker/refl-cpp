@@ -3,19 +3,13 @@
 #include <optional>
 #include <utility>
 
+#include "refl-cpp/common/result_tags.hpp"
 #include "refl-cpp/common/reference_wrapper.hpp"
 #include "refl-cpp/common/type_traits.hpp"
 #include "refl-cpp/common/stack_tracing_error.hpp"
 
 namespace ReflCpp {
 namespace detail {
-struct ErrorTag {};
-
-struct PassErrorTag {};
-
-inline constexpr ErrorTag Error{};
-inline constexpr PassErrorTag PassError{};
-
 template <typename T_>
 struct ResultBase {
     using StoredT = T_;
@@ -178,14 +172,14 @@ struct Result<void> : detail::ResultBase<void> {
         : ResultBase(detail::Error, ResultError(
                          stacktrace,
                          format, std::forward<Args>(args)...)) {}
-#endif
-
+#else
     template <typename... Args>
     Result(detail::ErrorTag,
            const std::string_view& format, Args&&... args) noexcept
         : ResultBase(detail::Error, ResultError(
                          format,
                          std::forward<Args>(args)...)) {}
+#endif
 
 #ifndef NDEBUG
     Result(detail::ErrorTag,
@@ -196,12 +190,8 @@ struct Result<void> : detail::ResultBase<void> {
                          error)) {}
 #endif
 
-    Result(detail::ErrorTag, const ResultError& error) noexcept
+    Result(detail::PassErrorTag, const ResultError& error) noexcept
         : ResultBase(detail::Error, error) {}
-
-    template <typename OtherT_>
-    Result(detail::PassErrorTag, const Result<OtherT_>& result) noexcept
-        : ResultBase(detail::Error, result.Error()) {}
 };
 
 template <typename T_>
@@ -214,14 +204,14 @@ struct Result : detail::ResultBase<T_> {
         : detail::ResultBase<T_>(detail::Error, ResultError(
                                      stacktrace,
                                      format, std::forward<Args>(args)...)) {}
-#endif
-
+#else
     template <typename... Args>
     Result(detail::ErrorTag,
            const std::string_view& format, Args&&... args) noexcept
         : detail::ResultBase<T_>(detail::Error, ResultError(
                                      format,
                                      std::forward<Args>(args)...)) {}
+#endif
 
 #ifndef NDEBUG
     Result(detail::ErrorTag,
@@ -232,12 +222,8 @@ struct Result : detail::ResultBase<T_> {
                                      error)) {}
 #endif
 
-    Result(detail::ErrorTag, const ResultError& error) noexcept
+    Result(detail::PassErrorTag, const ResultError& error) noexcept
         : detail::ResultBase<T_>(detail::Error, error) {}
-
-    template <typename OtherT_>
-    Result(detail::PassErrorTag, const Result<OtherT_>& result) noexcept
-        : detail::ResultBase<T_>(detail::Error, result.Error()) {}
 
     template <typename T2_>
         requires (!std::is_same_v<T2_, T_> && std::is_nothrow_convertible_v<T2_, T_>)
@@ -262,17 +248,15 @@ typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
 }
 }
 
-//TODO: maybe include the expression as well for debug purposes
-//TODO: improve debug information using std::stacktrace its unnecessary long
-//TODO: create TRY macro for functions that don't return a result on error, maybe throw exception
+//TODO: maybe include the expression as well for debug purposes?
+//TODO: improve debug information using std::stacktrace is unnecessary long
+//TODO: create TRY macro for functions that don't return a result on error,
+// with custom error handling and clean syntax
 
 // The TRY macro uses a little bit of a lifetime hack,
 // since we use '_result' after its scope through a pointer.
 // This only works because '_result' lives in the enclosing
 // function stack.
-
-#define RESULT_PASS_ERROR() \
-    ::ReflCpp::detail::PassError
 
 #ifndef NDEBUG
 
@@ -284,7 +268,7 @@ typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
         ({ \
             auto _result = (__VA_ARGS__); \
             if (_result.HasError()) { \
-                return { ::ReflCpp::detail::Error, _result.Error() }; \
+                return _result.Error(); \
             } \
             &_result; \
         }) \

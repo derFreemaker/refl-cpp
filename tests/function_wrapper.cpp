@@ -19,7 +19,7 @@ struct NoCopyOrMoveStruct {
 template <>
 struct ReflectData<NoCopyOrMoveStruct> {
     static Result<TypeData> Create() {
-        return TypeData { .name = "NoCopyOrMoveStruct" };
+        return TypeData{.name = "NoCopyOrMoveStruct"};
     }
 };
 
@@ -48,12 +48,16 @@ struct TestStruct {
     NoCopyOrMoveStruct& Pointer(NoCopyOrMoveStruct* foo) {
         return const_cast<NoCopyOrMoveStruct&>(*foo);
     }
+
+    NoCopyOrMoveStruct& Pointer_Const(const NoCopyOrMoveStruct* foo) {
+        return const_cast<NoCopyOrMoveStruct&>(*foo);
+    }
 };
 
 template <>
 struct ReflectData<TestStruct> {
     static Result<TypeData> Create() {
-        return TypeData { .name = "TestStruct" };
+        return TypeData{.name = "TestStruct"};
     }
 };
 
@@ -87,7 +91,16 @@ TEST(FunctionWrapper, Pointer) {
     const FunctionWrapper funcWrapper(&TestStruct::Pointer);
     NoCopyOrMoveStruct test(nullptr);
     const auto instance = Variant::Create<TestStruct>(TestStruct());
-    const auto result = funcWrapper.Invoke({ Variant::Create<NoCopyOrMoveStruct*>(&test) }, instance).Value();
+    const auto result = funcWrapper.Invoke({Variant::Create<NoCopyOrMoveStruct*>(&test)}, instance).Value();
+    const auto result_value = result.Get<NoCopyOrMoveStruct&>();
+    ASSERT_EQ(result_value.Value().foo, 893745);
+}
+
+TEST(FunctionWrapper, Pointer_Const) {
+    const FunctionWrapper funcWrapper(&TestStruct::Pointer_Const);
+    const NoCopyOrMoveStruct test(nullptr);
+    const auto instance = Variant::Create<TestStruct>(TestStruct());
+    const auto result = funcWrapper.Invoke({Variant::Create<const NoCopyOrMoveStruct*>(&test)}, instance).Value();
     const auto result_value = result.Get<NoCopyOrMoveStruct&>();
     ASSERT_EQ(result_value.Value().foo, 893745);
 }

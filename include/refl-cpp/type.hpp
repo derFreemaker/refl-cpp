@@ -45,7 +45,7 @@ public:
 
           m_Flags(data.flags),
 
-          m_Methods(data.methods),
+          // m_Methods(data.methods),
           m_Fields(data.fields),
 
           m_PrintFunc(options.print_func) {}

@@ -57,7 +57,7 @@ public:
     [[nodiscard]]
     Result<Variant> GetValue(const Variant& instance) const override {
         if constexpr (Traits::IsStatic) {
-            return static_cast<make_lvalue_reference_t<typename Traits::Type>>(*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*m_Field));
         }
         else {
             if (instance.IsVoid()) {
@@ -65,17 +65,18 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field));
         }
     }
 
     [[nodiscard]]
     Result<void> SetValue(const Variant& value, const Variant& instance) const override {
         if constexpr (Traits::IsConst) {
-            return { RESULT_ERROR(), "cannot set value on type: {0}", TRY(Reflect<const typename Traits::Type>()).Dump() };
+            const auto& type = TRY(Reflect<const typename Traits::Type>());
+            return { RESULT_ERROR(), "cannot set value on type: {0}", type.Dump() };
         }
         if constexpr (!std::is_copy_constructible_v<typename Traits::Type> || !std::is_copy_assignable_v<typename Traits::Type>) {
-            //TODO: make it so that it only errors if there is no possible way -> example: std::is_assignable_v<T_, T2_>
+            //TODO: make it so that it only errors if there is no possible way
             return { RESULT_ERROR(), "cannot set value on not copy construct or copy assignable" };
         }
         else if constexpr (Traits::IsStatic) {
@@ -102,7 +103,7 @@ public:
             return { RESULT_ERROR(), "cannot get reference to a const type" };
         }
         else if constexpr (Traits::IsStatic) {
-            return static_cast<typename Traits::Type&>(*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<typename Traits::Type&>(*m_Field));
         }
         else {
             if (instance.IsVoid()) {
@@ -110,7 +111,7 @@ public:
             }
 
             auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return static_cast<typename Traits::Type>(obj.*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field));
         }
     }
 };
