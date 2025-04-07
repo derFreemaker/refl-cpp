@@ -32,6 +32,7 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/result.hpp
         include/refl-cpp/common/type_traits.hpp
         include/refl-cpp/common/reference_wrapper.hpp
+        include/refl-cpp/common/result_tags.hpp
 
         include/refl-cpp/type_id.hpp
         include/refl-cpp/type.hpp
@@ -69,8 +70,6 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/impl/variant_matcher/lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/const_lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/rvalue_ref_variant_matcher.hpp
-        src/common/result.cpp
-        include/refl-cpp/common/result_tags.hpp
 )
 target_include_directories(refl-cpp INTERFACE include)
 target_link_libraries(refl-cpp INTERFACE
@@ -89,4 +88,8 @@ endif ()
 
 if (ENABLE_REFLCPP_TESTS)
     add_subdirectory(tests)
+endif ()
+
+if (ENABLE_REFLCPP_BENCHMARKS)
+    add_subdirectory(benchmarks)
 endif ()
