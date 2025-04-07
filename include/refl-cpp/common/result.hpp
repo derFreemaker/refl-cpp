@@ -190,7 +190,7 @@ struct Result<void> : detail::ResultBase<void> {
                          error)) {}
 #endif
 
-    Result(detail::PassErrorTag, const ResultError& error) noexcept
+    Result(detail::ErrorTag, const ResultError& error) noexcept
         : ResultBase(detail::Error, error) {}
 };
 
@@ -284,7 +284,7 @@ typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
         ({ \
             auto _result = (__VA_ARGS__); \
             if (_result.HasError()) { \
-                return { ::ReflCpp::detail::Error, _result.Error() }; \
+                return _result.Error(); \
             } \
             &_result; \
         }) \
