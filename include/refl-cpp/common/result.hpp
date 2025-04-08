@@ -220,7 +220,7 @@ struct Result : detail::ResultBase<T_> {
                                      std::forward<Args>(args)...)) {}
 #endif
 
-    Result(detail::PassErrorTag, const ResultError& error) noexcept
+    Result(detail::ErrorTag, const ResultError& error) noexcept
         : detail::ResultBase<T_>(detail::Error, error) {}
 
     template <typename T2_>
