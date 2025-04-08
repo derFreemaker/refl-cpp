@@ -89,7 +89,3 @@ endif ()
 if (ENABLE_REFLCPP_TESTS)
     add_subdirectory(tests)
 endif ()
-
-if (ENABLE_REFLCPP_BENCHMARKS)
-    add_subdirectory(benchmarks)
-endif ()
