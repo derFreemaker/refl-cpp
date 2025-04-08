@@ -35,7 +35,7 @@ static ReflCpp::Result<void> ReturnNoFail(const int depth) {
 
 static void BM_ReturnNoFail(benchmark::State& state) {
     for (auto _ : state) {
-        auto result = ReturnNoFail(1000);
+        auto result = ReturnNoFail(100000);
     }
 }
 BENCHMARK(BM_ReturnNoFail);
@@ -49,7 +49,7 @@ static ReflCpp::Result<void> ReturnFail(const int depth) {
 
 static void BM_ReturnFail(benchmark::State& state) {
     for (auto _ : state) {
-        auto result = ReturnFail(1000);
+        auto result = ReturnFail(100000);
     }
 }
 BENCHMARK(BM_ReturnFail);
