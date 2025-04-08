@@ -2,7 +2,7 @@
 
 #include "refl-cpp/common/formatted_error.hpp"
 
-#ifdef NDEBUG
+#if REFLCPP_ENABLE_STACK_TRACING_ERROR == 0
 namespace ReflCpp {
 using ResultError = FormattedError;
 }

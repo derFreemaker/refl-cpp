@@ -164,7 +164,7 @@ template <>
 struct Result<void> : detail::ResultBase<void> {
     Result() noexcept = default;
 
-#ifndef NDEBUG
+#if REFLCPP_ENABLE_STACK_TRACING_ERROR == 1
     template <typename... Args>
     Result(detail::ErrorTag,
            const std::stacktrace&& stacktrace,
@@ -172,6 +172,13 @@ struct Result<void> : detail::ResultBase<void> {
         : ResultBase(detail::Error, ResultError(
                          stacktrace,
                          format, std::forward<Args>(args)...)) {}
+
+    Result(detail::ErrorTag,
+           const std::stacktrace&& stacktrace,
+           const FormattedError& error) noexcept
+        : ResultBase(detail::Error, ResultError(
+                         stacktrace,
+                         error)) {}
 #else
     template <typename... Args>
     Result(detail::ErrorTag,
@@ -181,22 +188,13 @@ struct Result<void> : detail::ResultBase<void> {
                          std::forward<Args>(args)...)) {}
 #endif
 
-#ifndef NDEBUG
-    Result(detail::ErrorTag,
-           const std::stacktrace&& stacktrace,
-           const FormattedError& error) noexcept
-        : ResultBase(detail::Error, ResultError(
-                         stacktrace,
-                         error)) {}
-#endif
-
     Result(detail::ErrorTag, const ResultError& error) noexcept
         : ResultBase(detail::Error, error) {}
 };
 
 template <typename T_>
 struct Result : detail::ResultBase<T_> {
-#ifndef NDEBUG
+#if REFLCPP_ENABLE_STACK_TRACING_ERROR == 1
     template <typename... Args>
     Result(detail::ErrorTag,
            const std::stacktrace&& stacktrace,
@@ -204,6 +202,15 @@ struct Result : detail::ResultBase<T_> {
         : detail::ResultBase<T_>(detail::Error, ResultError(
                                      stacktrace,
                                      format, std::forward<Args>(args)...)) {}
+
+    Result(detail::ErrorTag,
+           const std::stacktrace&& stacktrace,
+           const FormattedError& error)
+        : detail::ResultBase<T_>(detail::Error, ResultError(
+                                     stacktrace,
+                                     error)) {}
+
+
 #else
     template <typename... Args>
     Result(detail::ErrorTag,
@@ -211,15 +218,6 @@ struct Result : detail::ResultBase<T_> {
         : detail::ResultBase<T_>(detail::Error, ResultError(
                                      format,
                                      std::forward<Args>(args)...)) {}
-#endif
-
-#ifndef NDEBUG
-    Result(detail::ErrorTag,
-           const std::stacktrace&& stacktrace,
-           const FormattedError& error)
-        : detail::ResultBase<T_>(detail::Error, ResultError(
-                                     stacktrace,
-                                     error)) {}
 #endif
 
     Result(detail::PassErrorTag, const ResultError& error) noexcept
@@ -258,7 +256,7 @@ typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
 // This only works because '_result' lives in the enclosing
 // function stack.
 
-#ifndef NDEBUG
+#if REFLCPP_ENABLE_STACK_TRACING_ERROR == 1
 
 #define RESULT_ERROR() \
     ::ReflCpp::detail::Error, std::stacktrace::current()
