@@ -24,14 +24,15 @@ public:
     }
 };
 
-template <typename Func_>
+template <typename T_>
 struct MethodWrapper final : public MethodBase {
 private:
-    FunctionWrapper<Func_> func_;
+    FunctionWrapper<T_> func_;
+    std::vector<const char*> argsNames_;
 
 public:
-    MethodWrapper(const Func_& func)
-        : func_(func) {}
+    MethodWrapper(T_ func, const std::vector<const char*>& argsNames)
+        : func_(func), argsNames_(argsNames) {}
 
     [[nodiscard]]
     bool CanInvokeWithArgs(const ArgumentList& args) const {
