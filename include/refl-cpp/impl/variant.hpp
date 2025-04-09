@@ -20,7 +20,7 @@ inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, co
     };
 }
 
-inline Variant& Variant::Void() {
+inline Variant Variant::Void() {
     static auto instance = Variant(
         std::make_shared<detail::VoidVariantWrapper>(),
         ReflectID<void>().Value()

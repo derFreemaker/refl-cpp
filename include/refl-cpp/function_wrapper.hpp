@@ -7,12 +7,12 @@
 #include "refl-cpp/function_traits.hpp"
 
 namespace ReflCpp {
-template <typename Func_>
+template <typename T_>
 struct FunctionWrapper {
-    using Traits = FunctionTraits<Func_>;
+    using Traits = FunctionTraits<T_>;
 
 private:
-    Func_ ptr_;
+    T_ ptr_;
 
     template <size_t... Indices>
     [[nodiscard]]
@@ -120,17 +120,17 @@ private:
 #undef REFLCPP_FUNCTION_WRAPPER_GET_ARGS
 
 public:
-    FunctionWrapper(Func_ ptr)
+    FunctionWrapper(T_ ptr)
         : ptr_(ptr) {}
 
     [[nodiscard]]
-    Result<std::vector<TypeID>> GetArgumentsTypes() const {
+    Result<std::vector<TypeID>> GetArgTypes() const {
         return Traits::GetArgs();
     }
 
     [[nodiscard]]
     bool CanInvokeWithArgs(const ArgumentList& args) const {
-        return CheckArgs(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>()).IsSuccess();
+        return !CheckArgs(args, std::make_index_sequence<Traits::ArgCount>()).HasError();
     }
     
     [[nodiscard]]
@@ -141,10 +141,10 @@ public:
 
         if constexpr (Traits::IsStatic) {
             if constexpr (Traits::HasReturn) {
-                return InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>());
+                return InvokeImpl(args, std::make_index_sequence<Traits::ArgCount>());
             }
             else {
-                TRY(InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>()));
+                TRY(InvokeImpl(args, std::make_index_sequence<Traits::ArgCount>()));
                 return Variant::Void();
             }
         }
@@ -155,10 +155,10 @@ public:
             }
 
             if constexpr (Traits::HasReturn) {
-                return InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>(), obj);
+                return InvokeImpl(args, std::make_index_sequence<Traits::ArgCount>(), obj);
             }
             else {
-                TRY(InvokeImpl(args, std::make_index_sequence<FunctionTraits<Func_>::ArgCount>(), obj));
+                TRY(InvokeImpl(args, std::make_index_sequence<Traits::ArgCount>(), obj));
                 return Variant::Void();
             }
         }

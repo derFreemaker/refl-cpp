@@ -21,7 +21,7 @@ struct TypeData {
     TypeFlags flags;
     
     std::vector<Field> fields;
-    // std::vector<Method> methods;
+    std::vector<Method> methods;
 };
 
 struct TypeOptions {

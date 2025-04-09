@@ -2,19 +2,13 @@
 
 #include <vector>
 
-namespace ReflCpp {
-template <typename Func_>
-struct MethodFuncData {
-    Func_ ptr;
-    std::vector<const char*> args{};
-};
+#include "refl-cpp/method_func.hpp"
 
-template <typename... Funcs_>
+namespace ReflCpp {
+struct Method;
+
 struct MethodData {
     const char* name = "$NONE$";
-    std::tuple<MethodFuncData<Funcs_>...> funcs;
-
-    MethodData(const char* name, MethodFuncData<Funcs_>... fs)
-        : name(name), funcs(fs...) {}
+    std::vector<std::unique_ptr<MethodFunc>> funcs;
 };
 }

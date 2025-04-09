@@ -2,13 +2,13 @@
 
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include <fmt/format.h>
 
 #include "refl-cpp/common/result_tags.hpp"
 
 namespace ReflCpp {
-
 template <typename T_>
 struct Result;
 
@@ -17,8 +17,8 @@ private:
     const std::string msg_;
 
 public:
-    explicit FormattedError(const std::string& msg)
-        : msg_(msg) {}
+    explicit FormattedError(std::string msg)
+        : msg_(std::move(msg)) {}
 
     template <typename... Args>
     FormattedError(const std::string_view& format, Args&&... args)

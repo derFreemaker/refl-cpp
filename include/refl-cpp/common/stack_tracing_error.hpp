@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gtest/gtest-message.h>
+
 #include "refl-cpp/common/formatted_error.hpp"
 
 #if REFLCPP_ENABLE_STACK_TRACING_ERROR == 0
@@ -10,17 +12,23 @@ using ResultError = FormattedError;
 #include <stacktrace>
 
 namespace ReflCpp {
-struct StackTracingError : FormattedError {
+struct StackTracingError {
 private:
+    const FormattedError formatted_;
     const std::stacktrace stacktrace_;
 
 public:
     template <typename... Args>
-    StackTracingError(const std::stacktrace& stacktrace, const std::string_view& format, Args&&... args)
-        : FormattedError(format, std::forward<Args>(args)...), stacktrace_(stacktrace) {}
+    StackTracingError(std::stacktrace stacktrace, const std::string_view& format, Args&&... args)
+        : formatted_(format, std::forward<Args>(args)...), stacktrace_(std::move(stacktrace)) {}
 
-    StackTracingError(const std::stacktrace& stacktrace, const FormattedError& error)
-        : FormattedError(error), stacktrace_(stacktrace) {}
+    StackTracingError(std::stacktrace stacktrace, FormattedError error)
+        : formatted_(std::move(error)), stacktrace_(std::move(stacktrace)) {}
+
+    [[nodiscard]]
+    const std::string& Message() const {
+        return formatted_.Message();
+    }
     
     [[nodiscard]]
     const std::stacktrace& StackTrace() const {
@@ -28,7 +36,7 @@ public:
     }
 
     void Str(std::ostream& stream) const {
-        stream << Message() << "\n" << stacktrace_;
+        stream << formatted_.Message() << "\n" << stacktrace_;
     }
 
     [[nodiscard]]

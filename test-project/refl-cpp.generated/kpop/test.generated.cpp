@@ -12,16 +12,18 @@ ReflCpp::Result<ReflCpp::TypeData> ReflCpp::ReflectData<kpop::Test>::Create() {
             }
         },
         .methods = {
-            MethodData{
-                "foo",
-                MethodFuncData{
-                    .ptr = &kpop::Test::foo,
-                    .args = { "_foo" },
+            MethodData {
+                .name = "foo",
+                .funcs = {
+                    MethodFuncData<void(kpop::Test::*)(int)>{
+                        .ptr = &kpop::Test::foo,
+                        .args = {"_foo"},
+                    },
+                    // MethodFuncData<void(kpop::Test::*)(int)>{
+                    //     .ptr = &kpop::Test::foo,
+                    //     .args = { "_foo" },
+                    // },
                 },
-                // MethodFuncData<void(kpop::Test::*)(int)>{
-                //     .ptr = &kpop::Test::foo,
-                //     .args = { "_foo" },
-                // },
             },
             //     MethodData{
             //         .ptr = &kpop::Test::foo,

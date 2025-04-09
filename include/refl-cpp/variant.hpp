@@ -71,7 +71,7 @@ private:
     friend struct VariantTestHelper;
 
 public:
-    static Variant& Void();
+    static Variant Void();
 
     Variant() = delete;
 

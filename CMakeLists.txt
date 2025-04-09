@@ -70,6 +70,10 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/impl/variant_matcher/lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/const_lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/rvalue_ref_variant_matcher.hpp
+        include/refl-cpp/method_func.hpp
+        include/refl-cpp/method_func_data.hpp
+        include/refl-cpp/impl/method_func_data.hpp
+        include/refl-cpp/impl/method_data.hpp
 )
 target_include_directories(refl-cpp INTERFACE include)
 target_link_libraries(refl-cpp INTERFACE
