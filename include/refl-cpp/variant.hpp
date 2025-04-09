@@ -1,60 +1,59 @@
 #pragma once
 
+#include <concepts>
+
 #include "refl-cpp/common/result.hpp"
-#include "refl-cpp/common/flags.hpp"
 #include "refl-cpp/type_id.hpp"
-#include "refl-cpp/common/type_traits.hpp"
 
 namespace ReflCpp {
 struct Variant;
 
 namespace detail {
-struct VariantBase {
-    virtual ~VariantBase() = default;
+enum class VariantWrapperType : uint8_t {
+    VOID = 0,
+    VALUE,
+    CONST_VALUE,
+    LVALUE_REF,
+    CONST_LVALUE_REF,
+    RVALUE_REF,
+    CONST_RVALUE_REF,
+    POINTER,
+    CONST_POINTER,
 };
 
-enum class VariantWrapperType {
-    VOID = 0 << 0,
-    VALUE = 1 << 0,
-    LVALUE_REF = 1 << 2,
-    CONST_LVALUE_REF = 1 << 1,
-    RVALUE_REF = 1 << 4,
-    CONST_RVALUE_REF = 1 << 3,
-    POINTER = 1 << 6,
-    CONST_POINTER = 1 << 5,
+struct VariantBase {
+    virtual ~VariantBase() = default;
+
+    [[nodiscard]]
+    virtual VariantWrapperType GetType() const = 0;
 };
 
 template <typename R_>
 struct VariantWrapper : public VariantBase {
     [[nodiscard]]
     virtual R_ GetValue() = 0;
+};
 
-    [[nodiscard]]
-    virtual VariantWrapperType GetType() const = 0;
+template <VariantWrapperType Type, typename R_>
+struct VariantMatcher {
+    static bool Match(const TypeID) {
+        return false;
+    }
+};
+
+template <VariantWrapperType Type, typename R_>
+concept HasVariantMatcher = requires(VariantBase* base) {
+    { VariantMatcher<Type, R_>::Get(base) };
 };
 }
+
 
 //TODO: decide if we want variant to be copy able
 struct Variant {
 private:
-    std::shared_ptr<detail::VariantBase> m_Base;
+    std::shared_ptr<detail::VariantBase> base_;
 
-    const TypeID m_Type;
-    bool m_IsConst = false;
-
-
-    Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
-        : m_Base(base), m_Type(type), m_IsConst(isConst) {}
-
-    static FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
-
-    template <typename T_, typename R_>
-    Result<R_> Variant::GetFromWrapper() const;
-
-    friend struct VariantTestHelper;
-
-public:
-    static Variant& Void();
+    const TypeID type_;
 
     [[nodiscard]]
     Result<void> CheckVoid() const {
@@ -64,6 +63,16 @@ public:
         return {};
     }
 
+    Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type)
+        : base_(base), type_(type) {}
+
+    static FormattedError CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+
+    friend struct VariantTestHelper;
+
+public:
+    static Variant& Void();
+
     Variant() = delete;
 
     template <typename T_>
@@ -71,18 +80,26 @@ public:
 
     [[nodiscard]]
     bool IsVoid() const {
-        return m_Type == ReflectID<void>().Value();
+        return base_->GetType() == detail::VariantWrapperType::VOID;
     }
 
     [[nodiscard]]
     TypeID GetType() const {
-        return m_Type;
+        return type_;
     }
+
+    template <typename T_>
+    [[nodiscard]]
+    bool CanGet() const;
+
+    template <typename T_>
+    [[nodiscard]]
+    Result<void> CanGetWithError() const;
 
     template <typename T_>
         requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
     [[nodiscard]]
-    Result<make_const<T_>&> Get() const;
+    Result<std::remove_volatile_t<T_>&> Get() const;
 
     template <typename T_>
         requires (std::is_lvalue_reference_v<T_>)

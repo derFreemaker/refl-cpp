@@ -16,19 +16,19 @@
 namespace ReflCpp {
 struct Type {
 private:
-    const TypeID m_ID;
+    const TypeID id_;
 
-    const char* m_Name;
-    std::optional<const char*> m_Namespace;
-    const std::vector<TypeID> m_Bases;
-    const std::vector<TypeID> m_Inners;
+    const char* name_;
+    std::optional<const char*> namespace_;
+    const std::vector<TypeID> bases_;
+    const std::vector<TypeID> inners_;
 
-    const TypeFlags m_Flags;
+    const TypeFlags flags_;
 
-    const std::vector<Method> m_Methods;
-    const std::vector<Field> m_Fields;
+    const std::vector<Method> methods_;
+    const std::vector<Field> fields_;
 
-    const ReflectPrintFunc m_PrintFunc;
+    const ReflectPrintFunc printFunc_;
 
 public:
     Type() = delete;
@@ -36,94 +36,94 @@ public:
     Type(const Type&&) = delete;
 
     Type(const TypeID id, const TypeData& data, const TypeOptions& options)
-        : m_ID(id),
+        : id_(id),
 
-          m_Name(data.name),
-          m_Namespace(data._namespace),
-          m_Bases(data.bases),
-          m_Inners(data.inners),
+          name_(data.name),
+          namespace_(data._namespace),
+          bases_(data.bases),
+          inners_(data.inners),
 
-          m_Flags(data.flags),
+          flags_(data.flags),
 
-          m_Methods(data.methods),
-          m_Fields(data.fields),
+          // m_Methods(data.methods),
+          fields_(data.fields),
 
-          m_PrintFunc(options.print_func) {}
+          printFunc_(options.printFunc) {}
 
     [[nodiscard]]
     TypeID GetID() const {
-        return m_ID;
+        return id_;
     }
 
     [[nodiscard]]
     const char* GetName() const {
-        return m_Name;
+        return name_;
     }
 
     [[nodiscard]]
     const char* GetNamespace() const {
-        if (m_Namespace.has_value()) {
-            return m_Namespace.value();
+        if (namespace_.has_value()) {
+            return namespace_.value();
         }
         return "";
     }
 
     [[nodiscard]]
     bool InNamespace() const {
-        return m_Namespace.has_value();
+        return namespace_.has_value();
     }
 
     [[nodiscard]]
     bool HasBases() const {
-        return !m_Bases.empty();
+        return !bases_.empty();
     }
     
     [[nodiscard]]
     const std::vector<TypeID>& GetBases() const {
-        return m_Bases;
+        return bases_;
     }
 
     [[nodiscard]]
     Result<const Type&> GetBase(const size_t index) const {
-        return m_Bases[index].GetType();
+        return bases_[index].GetType();
     }
     
     [[nodiscard]]
     bool HasInners() const {
-        return !m_Inners.empty();
+        return !inners_.empty();
     }
 
     [[nodiscard]]
     const std::vector<TypeID>& GetInners() const {
-        return m_Inners;
+        return inners_;
     }
 
     [[nodiscard]]
     Result<const Type&> GetInner(const size_t index) const {
-        return m_Inners[index].GetType();
+        return inners_[index].GetType();
     }
 
     [[nodiscard]]
     bool HasInner(const TypeID id) const {
-        return std::ranges::any_of(m_Inners, [id](const TypeID t) {
+        return std::ranges::any_of(inners_, [id](const TypeID t) {
             return t == id;
         });
     }
 
     [[nodiscard]]
     const TypeFlags& GetFlags() const {
-        return m_Flags;
+        return flags_;
     }
 
     // fields
 
     [[nodiscard]]
     const std::vector<Field>& GetFields() const {
-        return m_Fields;
+        return fields_;
     }
 
     std::optional<std::reference_wrapper<const Field>> GetField(const char* name) const {
-        for (const auto& field : m_Fields) {
+        for (const auto& field : fields_) {
             if (field.GetName() == name) {
                 return field;
             }
@@ -135,11 +135,11 @@ public:
 
     [[nodiscard]]
     const std::vector<Method>& GetMethods() const {
-        return m_Methods;
+        return methods_;
     }
 
     std::optional<std::reference_wrapper<const Method>> GetMethod(const char* name) const {
-        for (const auto& method : m_Methods) {
+        for (const auto& method : methods_) {
             if (method.GetName() == name) {
                 return method;
             }
@@ -151,7 +151,7 @@ public:
 
     [[nodiscard]]
     bool Is(const TypeID id) const {
-        return m_ID == id;
+        return id_ == id;
     }
 
     [[nodiscard]]
@@ -166,8 +166,8 @@ public:
     }
 
     void Print(std::ostream& stream) const {
-        if (m_PrintFunc != nullptr) {
-            return m_PrintFunc(stream, *this);
+        if (printFunc_ != nullptr) {
+            return printFunc_(stream, *this);
         }
 
         if (InNamespace()) {
@@ -179,8 +179,8 @@ public:
     [[nodiscard]]
     std::string Dump() const {
         std::stringstream stream;
-        if (m_PrintFunc != nullptr) {
-            m_PrintFunc(stream, *this);
+        if (printFunc_ != nullptr) {
+            printFunc_(stream, *this);
             return stream.str();
         }
 

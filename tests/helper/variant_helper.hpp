@@ -7,7 +7,7 @@ namespace ReflCpp {
 struct VariantTestHelper {
     template <typename Wrapper_>
     static Wrapper_* GetWrapper(const Variant& variant) {
-        return dynamic_cast<Wrapper_*>(variant.m_Base.get());
+        return dynamic_cast<Wrapper_*>(variant.base_.get());
     }
 
     template <typename Wrapper_>

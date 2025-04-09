@@ -8,38 +8,39 @@ namespace ReflCpp {
 struct MethodBase {
     virtual ~MethodBase() = default;
 
+protected:
     [[nodiscard]]
-    virtual Variant InvokeStatic(const ArgumentList& arguments) const = 0;
+    virtual Result<Variant> InvokeImpl(const ArgumentList& args, const Variant& instance) const = 0;
+
+public:
+    [[nodiscard]]
+    virtual Result<Variant> InvokeStatic(const ArgumentList& args) const {
+        return InvokeImpl(args, Variant::Void());
+    }
 
     [[nodiscard]]
-    virtual Variant Invoke(const Variant& instance, const ArgumentList& arguments) const = 0;
+    virtual Result<Variant> Invoke(const Variant& instance, const ArgumentList& args) const {
+        return InvokeImpl(args, instance);
+    }
 };
 
 template <typename Func_>
 struct MethodWrapper final : public MethodBase {
 private:
-    FunctionWrapper<Func_> m_Func;
+    FunctionWrapper<Func_> func_;
 
 public:
     MethodWrapper(const Func_& func)
-        : m_Func(func) {}
+        : func_(func) {}
 
     [[nodiscard]]
-    Variant InvokeStatic(const ArgumentList& arguments) const override {
-        if (!m_Func.IsStatic()) {
-            throw std::invalid_argument("not a static method");
-        }
-        
-        return m_Func.Invoke(arguments, Variant::Void());
+    bool CanInvokeWithArgs(const ArgumentList& args) const {
+        return func_.CanInvokeWithArgs(args);
     }
 
     [[nodiscard]]
-    Variant Invoke(const Variant& instance, const ArgumentList& arguments) const override {
-        if (m_Func.IsStatic()) {
-            return InvokeStatic(arguments);
-        }
-        
-        return m_Func.Invoke(arguments, instance);
+    Result<Variant> InvokeImpl(const ArgumentList& args, const Variant& instance) const override {
+        return func_.Invoke(args, instance);
     }
 };
 }

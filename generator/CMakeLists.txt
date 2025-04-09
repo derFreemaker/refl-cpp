@@ -3,16 +3,6 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(refl-cpp_generator)
 
-CPMAddPackage(
-        NAME Ccache.cmake
-        GITHUB_REPOSITORY TheLartians/Ccache.cmake
-        VERSION 1.2.5
-        GIT_PROGRESS ON
-        GIT_SHALLOW ON
-        PATCHES
-            patches/ccache.cmake.patch
-)
-
 # --- LLVM --- #
 set(LLVM_ENABLE_PROJECTS "clang;clang-tools-extra" CACHE STRING "")
 set(LLVM_ENABLE_RTTI "ON" CACHE STRING "")

@@ -10,7 +10,7 @@
 namespace ReflCpp {
 struct ReflectionDatabase {
 private:
-    std::vector<std::unique_ptr<Type>> m_types_data;
+    std::vector<std::unique_ptr<Type>> types_;
 
 public:
     static ReflectionDatabase& Instance() {
@@ -20,7 +20,7 @@ public:
 
     template <typename T_>
     Result<TypeID> RegisterType() {
-        if (m_types_data.size() == SIZE_MAX) {
+        if (types_.size() == SIZE_MAX) {
             return {
                 RESULT_ERROR(),
                 "Reflection database size is hitting more than 'SIZE_MAX'."
@@ -29,25 +29,25 @@ public:
         }
 
         TypeData type_data = TRY(ReflectData<T_>::Create());
-        const auto type_id = TypeID(m_types_data.size() + 1);
+        const auto type_id = TypeID(types_.size() + 1);
 
         TypeOptions type_options {};
 
         if constexpr (detail::HasReflectPrinter<T_>) {
-            type_options.print_func = ReflectPrinter<T_>::Print;
+            type_options.printFunc = ReflectPrinter<T_>::Print;
         }
 
-        const auto& type = m_types_data.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
+        const auto& type = types_.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
         return type->GetID();
     }
 
     [[nodiscard]]
     Result<const Type&> GetType(const TypeID id) const {
-        if (id.IsInvalid() || id > m_types_data.size()) {
+        if (id.IsInvalid() || id > types_.size()) {
             return { RESULT_ERROR(), "invalid type id" };
         }
 
-        return *m_types_data[id - 1];
+        return *types_[id - 1];
     }
 };
 }

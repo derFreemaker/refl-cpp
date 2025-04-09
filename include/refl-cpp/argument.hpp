@@ -12,5 +12,5 @@ struct ArgumentInfo {
     const TypeID type;
 };
 
-typedef std::vector<Variant> ArgumentList;
+using ArgumentList = std::vector<Variant>;
 }

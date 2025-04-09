@@ -4,142 +4,238 @@
 #include "helper/variant_helper.hpp"
 
 namespace ReflCpp {
-//TODO: check tests through maybe not exactly right
+struct TestStruct {
+    int value = 42;
+};
 
-#define CREATE_VARIANT_TEST(NAME, WRAPPER, TYPE, ...) \
-    TEST(Variant, NAME) { \
-        __VA_ARGS__; \
-        ASSERT_TRUE(VariantTestHelper::UsesWrapper<WRAPPER>(variant)); \
-        const auto getConstValueResult = variant.Get<const TYPE>(); \
-        const auto getValueResult = variant.Get<TYPE>(); \
-        const auto getConstLValueRefResult = variant.Get<const TYPE&>(); \
-        const auto getLValueRefResult = variant.Get<TYPE&>(); \
-        const auto getConstRValueRefResult = variant.Get<const TYPE&&>(); \
-        const auto getRValueRefResult = variant.Get<TYPE&&>(); \
-        const auto getConstPointerResult = variant.Get<const TYPE*>(); \
-        const auto getPointerResult = variant.Get<TYPE*>();
+template <>
+struct ReflectData<TestStruct> {
+    static Result<TypeData> Create() {
+        return TypeData { .name = "TestStruct" };
+    }
+};
 
-CREATE_VARIANT_TEST(Void, VoidVariantWrapper, int,
-                    const auto& variant = Variant::Void()
-)
-    ASSERT_EQ(getConstValueResult.Error().Message(), "cannot get reference or value from void variant");
-    ASSERT_EQ(getValueResult.Error().Message(), "cannot get reference or value from void variant");
-    ASSERT_EQ(getConstLValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-    ASSERT_EQ(getLValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-    ASSERT_EQ(getRValueRefResult.Error().Message(), "cannot get reference or value from void variant");
-    ASSERT_EQ(getConstPointerResult.Error().Message(), "cannot get reference or value from void variant");
-    ASSERT_EQ(getPointerResult.Error().Message(), "cannot get reference or value from void variant");
+// Helper function to create variants for testing
+template <typename T>
+Variant CreateVariant(T value) {
+    return Variant::Create<T>(std::forward<T>(value));
 }
 
-CREATE_VARIANT_TEST(Value, ValueVariantWrapper<int>, int,
-                    const auto& variant = Variant::Create<int>(123)
-)
-    ASSERT_EQ(getConstValueResult.Value(), 123);
-    ASSERT_EQ(getValueResult.Value(), 123);
-    ASSERT_EQ(getConstLValueRefResult.Value(), 123);
-    ASSERT_EQ(getLValueRefResult.Value(), 123);
-    ASSERT_EQ(getConstRValueRefResult.Error().Message(), "some error");
-    ASSERT_EQ(getRValueRefResult.Error().Message(), "some error");
-    ASSERT_EQ(getConstPointerResult.Error().Message(), "some error");
-    ASSERT_EQ(getPointerResult.Error().Message(), "some error");
+// Test void variant
+TEST(Variant, Void) {
+    const auto& variant = Variant::Void();
+
+    EXPECT_FALSE(variant.CanGet<int>());
+    EXPECT_FALSE(variant.CanGet<const int>());
+    EXPECT_FALSE(variant.CanGet<int&>());
+    EXPECT_FALSE(variant.CanGet<const int&>());
+
+    EXPECT_TRUE(variant.Get<int>().HasError());
+    EXPECT_TRUE(variant.Get<const int>().HasError());
+    EXPECT_TRUE(variant.Get<int&>().HasError());
+    EXPECT_TRUE(variant.Get<const int&>().HasError());
+
+    // Check that it is actually a void variant
+    EXPECT_TRUE(variant.GetType().Equals<void>());
 }
 
-// TEST(Variant, Value) {
-//     const auto variant_constant = Variant::Create<int>(123);
-//
-//     ASSERT_TRUE(VariantTestHelper::UsesWrapper<ValueVariantWrapper<int>>(variant_constant));
-//
-//     ASSERT_EQ(variant_constant.Get<const int>().Value(), 123);
-//     ASSERT_EQ(variant_constant.Get<int>().Value(), 123);
-//
-//     ASSERT_EQ(variant_constant.Get<const int&>().Value(), 123);
-//
-//     const auto constantRefResult = variant_constant.Get<int&>();
-//     ASSERT_EQ(constantRefResult.Error().Message(), "cannot get modifiable reference to constant");
-// }
-//
-// TEST(Variant, LValueReference) {
-//     auto int_ref = std::make_unique<int>(123);
-//     const auto variant_ref = Variant::Create(int_ref);
-//
-//     ASSERT_TRUE(VariantTestHelper::UsesWrapper<LValueRefVariantWrapper<std::unique_ptr<int>>>(variant_ref));
-//
-//     ASSERT_EQ(variant_ref.Get<std::unique_ptr<int>>().Value(), int_ref);
-//     ASSERT_EQ(variant_ref.Get<std::unique_ptr<int>&>().Value(), int_ref);
-// }
-//
-// TEST(Variant, ConstLValueReference) {
-//     const auto int_ref = std::make_unique<int>(123);
-//     const auto variant_ref = Variant::Create(int_ref);
-//
-//     ASSERT_TRUE(VariantTestHelper::UsesWrapper<ConstLValueRefVariantWrapper<std::unique_ptr<int>>>(variant_ref));
-//
-//     ASSERT_EQ(variant_ref.Get<const std::unique_ptr<int>>().Value(), int_ref);
-//
-//     const auto constantRefValueResult = variant_ref.Get<std::unique_ptr<int>>();
-//     ASSERT_EQ(constantRefValueResult.Error().Message(), "passed type 'std::unique_ptr<int32_t>' is not the same as the stored type 'const std::unique_ptr<int32_t>&'");
-//
-//     ASSERT_EQ(variant_ref.Get<const std::unique_ptr<int>&>().Value(), int_ref);
-//
-//     const auto constantRefRefResult = variant_ref.Get<std::unique_ptr<int>&>();
-//     ASSERT_EQ(constantRefRefResult.Error().Message(), "cannot get modifiable reference to constant");
-// }
-//
-// TEST(Variant, RValueReference) {
-//     constexpr auto int_value = 2134234;
-//     auto int_ref = std::make_unique<int>(int_value);
-//     const auto variant_ref = Variant::Create(std::move(int_ref));
-//
-//     ASSERT_TRUE(VariantTestHelper::UsesWrapper<RValueRefVariantWrapper<std::unique_ptr<int>>>(variant_ref));
-//
-//     ASSERT_EQ(*variant_ref.Get<std::unique_ptr<int>&&>().Value(), int_value);
-//     ASSERT_EQ(*variant_ref.GetRef<std::unique_ptr<int>&&>().Value(), int_value);
-// }
-//
-// TEST(Variant, ConstRValueReference) {
-//     constexpr auto int_value = 2134234;
-//     const auto int_ref = std::make_unique<int>(int_value);
-//     auto create_test_value = [&int_ref]() -> const std::unique_ptr<int>&& {
-//         return std::move(int_ref);
-//     };
-//     const auto variant_ref = Variant::Create(std::move(create_test_value()));
-//
-//     ASSERT_TRUE(VariantTestHelper::UsesWrapper<ConstRValueRefVariantWrapper<std::unique_ptr<int>>>(variant_ref));
-//
-//     ASSERT_EQ(*variant_ref.GetValue<const std::unique_ptr<int>&&>().Value(), int_value);
-//
-//     const auto constantRefValueResult = variant_ref.GetValue<std::unique_ptr<int>&&>();
-//     ASSERT_EQ(constantRefValueResult.Error().Message(), "passed type 'std::unique_ptr<int32_t>&&' is not the same as the stored type 'const std::unique_ptr<int32_t>&&'");
-//
-//     ASSERT_EQ(*variant_ref.GetRef<const std::unique_ptr<int>&&>().Value(), int_value);
-//
-//     const auto constantRefRefResult = variant_ref.GetRef<std::unique_ptr<int>&&>();
-//     ASSERT_EQ(constantRefRefResult.Error().Message(), "cannot get modifiable reference to constant");
-// }
-//
-// TEST(Variant, Pointer) {
-//     int int_field = 123;
-//     const auto variant_ref = Variant::Create(&int_field);
-//
-//     ASSERT_TRUE(VariantTestHelper::UsesWrapper<PointerVariantWrapper<int>>(variant_ref));
-//
-//     ASSERT_EQ(*variant_ref.GetValue<int*>().Value(), int_field);
-//     ASSERT_EQ(*variant_ref.GetRef<int*>().Value(), int_field);
-// }
-//
-// TEST(Variant, ConstPointer) {
-//     constexpr int int_field = 123;
-//     const auto variant_ref = Variant::Create(&int_field);
-//
-//     ASSERT_TRUE(VariantTestHelper::UsesWrapper<ConstPointerVariantWrapper<int>>(variant_ref));
-//
-//     ASSERT_EQ(variant_ref.GetValue<const int*>().Value(), &int_field);
-//     ASSERT_EQ(variant_ref.GetValue<int*>().Value(), &int_field);
-//
-//     ASSERT_EQ(variant_ref.GetRef<const int*>().Value(), &int_field);
-//
-//     const auto constantPointerRefResult = variant_ref.GetRef<int*>();
-//     ASSERT_EQ(constantPointerRefResult.Error().Message(), "cannot get reference from Variant (const int32_t*) with passed type: int32_t*");
-// }
+TEST(Variant, Value) {
+    constexpr int value = 42;
+    const auto variant = CreateVariant<int>(value);
+
+    EXPECT_TRUE(variant.CanGet<int>());
+    EXPECT_TRUE(variant.CanGet<const int>());
+    EXPECT_TRUE(variant.CanGet<int&>());
+    EXPECT_TRUE(variant.CanGet<const int&>());
+
+    EXPECT_EQ(variant.Get<int>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int>().Value(), 42);
+    EXPECT_EQ(variant.Get<int&>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
+
+    // Modifying through reference should modify the original
+    variant.Get<int&>().Value() = 100;
+    EXPECT_EQ(variant.Get<int>().Value(), 100);
+}
+
+// Test const value handling
+TEST(Variant, ConstValue) {
+    constexpr int value = 42;
+    const auto variant = CreateVariant<const int>(value);
+
+    // Test CanGet
+    EXPECT_FALSE(variant.CanGet<int>()); // Can't get non-const from const
+    EXPECT_TRUE(variant.CanGet<const int>());
+    EXPECT_FALSE(variant.CanGet<int&>()); // Can't get non-const from const
+    EXPECT_TRUE(variant.CanGet<const int&>());
+
+    // Test actual Get (only const should work)
+    EXPECT_TRUE(variant.Get<int>().HasError());
+    EXPECT_EQ(variant.Get<const int>().Value(), 42);
+    EXPECT_TRUE(variant.Get<int&>().HasError());
+    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
+}
+
+// Test reference handling
+TEST(Variant, LValueReference) {
+    int value = 42;
+    const auto variant = CreateVariant<int&>(value);
+
+    EXPECT_TRUE(variant.CanGet<int>());
+    EXPECT_TRUE(variant.CanGet<const int>());
+    EXPECT_TRUE(variant.CanGet<int&>());
+    EXPECT_TRUE(variant.CanGet<const int&>());
+
+    EXPECT_EQ(variant.Get<int>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int>().Value(), 42);
+    EXPECT_EQ(variant.Get<int&>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
+
+    // Modifying through reference should modify the original
+    variant.Get<int&>().Value() = 100;
+    EXPECT_EQ(value, 100);
+    EXPECT_EQ(variant.Get<int>().Value(), 100);
+}
+
+TEST(Variant, ConstLValueReference) {
+    int value = 42;
+    const auto variant = CreateVariant<const int&>(value);
+
+    EXPECT_FALSE(variant.CanGet<int>()); // Can't get non-const from const
+    EXPECT_TRUE(variant.CanGet<const int>());
+    EXPECT_FALSE(variant.CanGet<int&>()); // Can't get non-const from const
+    EXPECT_TRUE(variant.CanGet<const int&>());
+
+    EXPECT_TRUE(variant.Get<int>().HasError());
+    EXPECT_EQ(variant.Get<const int>().Value(), 42);
+    EXPECT_TRUE(variant.Get<int&>().HasError());
+    EXPECT_EQ(variant.Get<const int&>().Value(), 42);
+
+    // Modifying the original should be visible through the variant
+    value = 100;
+    EXPECT_EQ(variant.Get<const int>().Value(), 100);
+}
+
+
+TEST(Variant, RValueReference) {
+    const auto variant = CreateVariant<int&&>(42);
+
+    EXPECT_TRUE(variant.CanGet<int&&>());
+    EXPECT_TRUE(variant.CanGet<const int&&>());
+
+    EXPECT_EQ(variant.Get<int&&>().Value(), 42);
+    EXPECT_EQ(variant.Get<const int&&>().Value(), 42);
+}
+
+TEST(Variant, ConstRValueReference) {
+    int value = 42;
+    const auto variant = CreateVariant<const int&&>(std::move(value));
+
+    // Test CanGet for rvalue reference
+    EXPECT_TRUE(variant.CanGet<const int&&>());
+
+    // Test actual Get for rvalue reference
+    EXPECT_EQ(variant.Get<const int&&>().Value(), 42);
+}
+
+TEST(Variant, Pointer) {
+    int value = 42;
+    const auto variant = CreateVariant<int*>(&value);
+
+    EXPECT_TRUE(variant.CanGet<int*>());
+    EXPECT_TRUE(variant.CanGet<const int*>());
+
+    EXPECT_EQ(*variant.Get<int*>().Value(), 42);
+    EXPECT_EQ(*variant.Get<const int*>().Value(), 42);
+
+    // Modifying through pointer should modify the original
+    *variant.Get<int*>().Value() = 100;
+    EXPECT_EQ(value, 100);
+    EXPECT_EQ(*variant.Get<int*>().Value(), 100);
+}
+
+TEST(Variant, ConstPointer) {
+    int value = 42;
+    const auto variant = CreateVariant<const int*>(&value);
+
+    EXPECT_FALSE(variant.CanGet<int*>()); // Can't get non-const from const
+    EXPECT_TRUE(variant.CanGet<const int*>());
+
+    EXPECT_TRUE(variant.Get<int*>().HasError());
+    EXPECT_EQ(*variant.Get<const int*>().Value(), 42);
+
+    // Modifying the original should be visible through the variant
+    value = 100;
+    EXPECT_EQ(*variant.Get<const int*>().Value(), 100);
+}
+
+// Test with custom class
+TEST(Variant, CustomClassGet) {
+    TestStruct obj;
+    obj.value = 42;
+    const auto variant = CreateVariant<TestStruct>(obj);
+
+    EXPECT_TRUE(variant.CanGet<TestStruct>());
+    EXPECT_TRUE(variant.CanGet<const TestStruct>());
+    EXPECT_TRUE(variant.CanGet<TestStruct&>());
+    EXPECT_TRUE(variant.CanGet<const TestStruct&>());
+
+    EXPECT_EQ(variant.Get<TestStruct>().Value().value, 42);
+    EXPECT_EQ(variant.Get<const TestStruct>().Value().value, 42);
+    EXPECT_EQ(variant.Get<TestStruct&>().Value().value, 42);
+    EXPECT_EQ(variant.Get<const TestStruct&>().Value().value, 42);
+
+    // Modifying through reference should modify the variant's copy
+    variant.Get<TestStruct&>().Value().value = 100;
+    EXPECT_EQ(variant.Get<TestStruct>().Value().value, 100);
+}
+
+// Test type mismatches
+TEST(Variant, TypeMismatch) {
+    constexpr int value = 42;
+    const auto variant = CreateVariant<int>(value);
+
+    // Test CanGet with wrong types
+    EXPECT_FALSE(variant.CanGet<double>());
+    EXPECT_FALSE(variant.CanGet<std::string>());
+    EXPECT_FALSE(variant.CanGet<TestStruct>());
+
+    // Test actual Get with wrong types
+    EXPECT_TRUE(variant.Get<double>().HasError());
+    EXPECT_TRUE(variant.Get<std::string>().HasError());
+    EXPECT_TRUE(variant.Get<TestStruct>().HasError());
+}
+
+// Test complex type conversions to ensure unified implementation works
+TEST(Variant, ComplexTypeConversions) {
+    TestStruct obj;
+    obj.value = 42;
+
+    // Create variants with different reference/pointer types
+    const auto v1 = CreateVariant<TestStruct>(obj); // value
+    const auto v2 = CreateVariant<TestStruct&>(obj); // reference
+    const auto v3 = CreateVariant<TestStruct*>(&obj); // pointer
+    const auto v4 = CreateVariant<TestStruct&&>(std::move(obj)); // rvalue
+
+    // Check value copy
+    EXPECT_TRUE(v1.CanGet<TestStruct>());
+    EXPECT_EQ(v1.Get<TestStruct>().Value().value, 42);
+
+    // Check reference wrapper
+    EXPECT_TRUE(v2.CanGet<TestStruct&>());
+    EXPECT_EQ(v2.Get<TestStruct&>().Value().value, 42);
+
+    // Check pointer
+    EXPECT_TRUE(v3.CanGet<TestStruct*>());
+    EXPECT_EQ(v3.Get<TestStruct*>().Value()->value, 42);
+
+    // Check rvalue
+    EXPECT_TRUE(v4.CanGet<TestStruct&&>());
+    EXPECT_EQ(v4.Get<TestStruct&&>().Value().value, 42);
+
+    // Modify original and check pointer reflects change
+    obj.value = 100;
+    EXPECT_EQ(v2.Get<TestStruct&>().Value().value, 100);
+    EXPECT_EQ(v3.Get<TestStruct*>().Value()->value, 100);
+}
 }

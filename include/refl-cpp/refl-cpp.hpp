@@ -2,6 +2,10 @@
 
 #include "refl-cpp/reflect.hpp"
 
-#define REFLECT() __attribute__((annotate("reflect")))
+#ifdef REFLECT_PARSER
+#define REFLECT() [[reflect]]
+#else
+#define REFLECT()
+#endif
 
 #include "impl/impl.hpp"

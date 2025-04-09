@@ -60,6 +60,6 @@
 //     const FieldWrapper fieldWrapper(&Normal_Struct::Normal);
 //
 //     Normal_Struct _struct;
-//     ASSERT_EQ(fieldWrapper.GetValue(_struct).Value().GetValue<NoCopyOrMoveStruct>().Value().foo, 893745);
+//     ASSERT_EQ(fieldWrapper.GetValue(Variant::Create<Normal_Struct&>(_struct)).Value().Get<NoCopyOrMoveStruct>().Value().foo, 893745);
 // }
 // }

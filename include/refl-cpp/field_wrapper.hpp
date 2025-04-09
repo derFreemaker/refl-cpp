@@ -28,16 +28,16 @@ struct FieldBase {
     virtual Result<Variant> GetRef(const Variant& instance) const = 0;
 };
 
-template <typename Field_>
+template <typename T_>
 struct FieldWrapper final : public FieldBase {
 private:
-    Field_ m_Field;
+    T_ ptr_;
 
 public:
-    using Traits = FieldTraits<Field_>;
+    using Traits = FieldTraits<T_>;
 
-    FieldWrapper(Field_ field)
-        : m_Field(field) {}
+    FieldWrapper(T_ ptr)
+        : ptr_(ptr) {}
 
     [[nodiscard]]
     constexpr bool IsStatic() const override {
@@ -57,7 +57,7 @@ public:
     [[nodiscard]]
     Result<Variant> GetValue(const Variant& instance) const override {
         if constexpr (Traits::IsStatic) {
-            return static_cast<make_lvalue_reference_t<typename Traits::Type>>(*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
@@ -65,21 +65,22 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
         }
     }
 
     [[nodiscard]]
     Result<void> SetValue(const Variant& value, const Variant& instance) const override {
         if constexpr (Traits::IsConst) {
-            return { RESULT_ERROR(), "cannot set value on type: {0}", TRY(Reflect<const typename Traits::Type>()).Dump() };
+            const auto& type = TRY(Reflect<const typename Traits::Type>());
+            return { RESULT_ERROR(), "cannot set value on type: {0}", type.Dump() };
         }
         if constexpr (!std::is_copy_constructible_v<typename Traits::Type> || !std::is_copy_assignable_v<typename Traits::Type>) {
-            //TODO: make it so that it only errors if there is no possible way -> example: std::is_assignable_v<T_, T2_>
+            //TODO: make it so that it only errors if there is no possible way
             return { RESULT_ERROR(), "cannot set value on not copy construct or copy assignable" };
         }
         else if constexpr (Traits::IsStatic) {
-            *m_Field = value.Get<const typename Traits::Type&>();
+            *ptr_ = value.Get<const typename Traits::Type&>();
         }
         else {
             if (instance.IsVoid()) {
@@ -87,7 +88,7 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            obj.*m_Field = value.Get<const typename Traits::Type&>();
+            obj.*ptr_ = value.Get<const typename Traits::Type&>();
 
             return {};
         }
@@ -102,7 +103,7 @@ public:
             return { RESULT_ERROR(), "cannot get reference to a const type" };
         }
         else if constexpr (Traits::IsStatic) {
-            return static_cast<typename Traits::Type&>(*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<typename Traits::Type&>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
@@ -110,7 +111,7 @@ public:
             }
 
             auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return static_cast<typename Traits::Type>(obj.*m_Field);
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
         }
     }
 };

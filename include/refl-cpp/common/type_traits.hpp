@@ -3,62 +3,99 @@
 #include <type_traits>
 
 namespace ReflCpp {
+namespace detail {
 template <typename T_>
-using make_const = std::add_const_t<std::remove_const_t<T_>>;
+struct make_const {
+    using type = std::add_const_t<std::remove_const_t<T_>>;
+};
+
+template <typename T_>
+struct make_const<T_&> {
+    using type = typename make_const<T_>::type&;
+};
+
+template <typename T_>
+struct make_const<T_&&> {
+    using type = typename make_const<T_>::type&&;
+};
+}
+
+template <typename T_>
+using make_const_t = typename detail::make_const<T_>::type;
 
 namespace detail {
 template <typename T_>
-struct add_const_to_pointer_type;
+struct add_const_to_pointer;
 
 template <typename T_>
-struct add_const_to_pointer_type<T_*> {
+struct add_const_to_pointer<T_*> {
     using type = const T_*;
 };
 
 template <typename T_>
-struct add_const_to_pointer_type<T_* const> {
+struct add_const_to_pointer<T_* const> {
     using type = const T_* const;
 };
 
 template <typename T_>
-struct add_const_to_pointer_type<T_* volatile> {
+struct add_const_to_pointer<T_* volatile> {
     using type = const T_* volatile;
 };
 
 template <typename T_>
-struct add_const_to_pointer_type<T_* const volatile> {
+struct add_const_to_pointer<T_* const volatile> {
     using type = const T_* const volatile;
 };
 }
 
 template <typename T_>
     requires std::is_pointer_v<T_>
-struct add_const_to_pointer_type {
-    using type = typename detail::add_const_to_pointer_type<T_>::type;
+struct add_const_to_pointer {
+    using type = typename detail::add_const_to_pointer<T_>::type;
 };
 
 template <typename T_>
-using add_const_to_pointer_type_t = typename add_const_to_pointer_type<T_>::type;
+using add_const_to_pointer_t = typename add_const_to_pointer<T_>::type;
 
 namespace detail {
 template <typename T_>
-struct make_lvalue_reference {
-    using type = T_&;
+struct remove_const_from_pointer;
+
+template <typename T_>
+struct remove_const_from_pointer<T_*> {
+    using type = std::remove_const_t<T_>*;
 };
 
 template <typename T_>
-struct make_lvalue_reference<T_&> {
-    using type = T_&;
+struct remove_const_from_pointer<T_* const> {
+    using type = std::remove_const_t<T_>* const;
+};
+
+template <typename T_>
+struct remove_const_from_pointer<T_* volatile> {
+    using type = std::remove_const_t<T_>* volatile;
+};
+
+template <typename T_>
+struct remove_const_from_pointer<T_* const volatile> {
+    using type = std::remove_const_t<T_>* const volatile;
 };
 }
 
 template <typename T_>
-struct make_lvalue_reference {
-    using type = typename detail::make_lvalue_reference<T_>::type;
+    requires std::is_pointer_v<T_>
+struct remove_const_from_pointer {
+    using type = typename detail::remove_const_from_pointer<T_>::type;
 };
 
 template <typename T_>
-using make_lvalue_reference_t = typename make_lvalue_reference<T_>::type;
+using remove_const_from_pointer_t = typename remove_const_from_pointer<T_>::type;
+
+template <typename T_>
+using make_lvalue_reference_t = std::remove_reference_t<T_>&;
+
+template <typename T_>
+using make_rvalue_reference_t = std::remove_reference_t<T_>&&;
 
 namespace detail {
 template <typename T_>
@@ -67,7 +104,7 @@ struct remove_all_pointers {
 };
 
 template <typename T_>
-struct remove_all_pointers<T_* > {
+struct remove_all_pointers<T_*> {
     using type = typename remove_all_pointers<T_>::type;
 };
 
@@ -94,10 +131,10 @@ namespace detail {
 template <typename T_, bool IsConst_, bool IsVolatile_, bool IsLValueReference_, bool IsRValueReference_, bool IsPointer_>
 struct TypeTraitsBase {
     using Type = T_;
-    
+
     static constexpr bool IsConst = IsConst_;
     static constexpr bool IsVolatile = IsVolatile_;
-    
+
     static constexpr bool IsLValueReference = IsLValueReference_;
     static constexpr bool IsRValueReference = IsRValueReference_;
     static constexpr bool IsReference = IsLValueReference_ || IsRValueReference_;

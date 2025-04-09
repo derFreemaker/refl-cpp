@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "refl-cpp/common/result.hpp"
 
 namespace ReflCpp {
