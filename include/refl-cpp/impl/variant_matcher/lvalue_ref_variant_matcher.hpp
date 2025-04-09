@@ -3,52 +3,49 @@
 #include "refl-cpp/variant.hpp"
 
 namespace ReflCpp::detail {
-
 template <typename R_>
     requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
 struct VariantMatcher<VariantWrapperType::LVALUE_REF, R_> {
-    static bool Match(const TypeID type) {
+    static bool Match(const TypeID type) noexcept {
         return type.Equals<R_&>();
     }
 
-    using ResultT = R_&;
-    static ResultT Get(VariantBase* base) {
-        return static_cast<VariantWrapper<ResultT>*>(base)->GetValue();
+    static R_& Get(VariantBase* base) noexcept {
+        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
 
 template <typename R_>
     requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
 struct VariantMatcher<VariantWrapperType::LVALUE_REF, const R_> {
-    static bool Match(const TypeID type) {
+    static bool Match(const TypeID type) noexcept {
         return type.Equals<R_&>();
     }
 
-    static const R_& Get(VariantBase* base) {
+    static const R_& Get(VariantBase* base) noexcept {
         return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
 
 template <typename R_>
 struct VariantMatcher<VariantWrapperType::LVALUE_REF, R_&> {
-    static bool Match(const TypeID type) {
+    static bool Match(const TypeID type) noexcept {
         return type.Equals<R_&>();
     }
 
-    static R_& Get(VariantBase* base) {
+    static R_& Get(VariantBase* base) noexcept {
         return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
 
 template <typename R_>
 struct VariantMatcher<VariantWrapperType::LVALUE_REF, const R_&> {
-    static bool Match(const TypeID type) {
+    static bool Match(const TypeID type) noexcept {
         return type.Equals<R_&>();
     }
 
-    static const R_& Get(VariantBase* base) {
+    static const R_& Get(VariantBase* base) noexcept {
         return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
     }
 };
-
 }

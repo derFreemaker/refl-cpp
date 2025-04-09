@@ -1,20 +1,18 @@
 #pragma once
 
-#include <ostream>
-
 #include "refl-cpp/type_data.hpp"
 #include "refl-cpp/reflect_printer.hpp"
 
 #define REFLECT_BUILTIN_TYPE_IMPL(TEMPLATE, TYPE, NAME, PRINT) \
     template <TEMPLATE> \
     struct ReflCpp::ReflectData<TYPE> { \
-        static Result<TypeData> Create() { \
+        static Result<TypeData> Create() noexcept { \
             return TypeData { .name = NAME }; \
         } \
     }; \
     template <TEMPLATE> \
     struct ReflCpp::ReflectPrinter<TYPE> { \
-        static void Print(std::ostream& stream, const Type& type) { \
+        static void Print(std::ostream& stream, const Type& type) noexcept { \
             stream << PRINT; \
         } \
     };

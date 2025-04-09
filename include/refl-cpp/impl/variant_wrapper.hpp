@@ -7,7 +7,7 @@ struct VoidVariantWrapper final : public VariantWrapper<void> {
     void GetValue() override {}
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::VOID;
     }
 };
@@ -18,16 +18,16 @@ private:
     T_ value_;
 
 public:
-    ValueVariantWrapper(T_& value)
+    ValueVariantWrapper(T_& value) noexcept
         : value_(value) {}
 
     [[nodiscard]]
-    T_& GetValue() override {
+    T_& GetValue() noexcept override {
         return value_;
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::VALUE;
     }
 };
@@ -38,16 +38,16 @@ private:
     const T_ value_;
 
 public:
-    ConstValueVariantWrapper(const T_& value)
+    ConstValueVariantWrapper(const T_& value) noexcept
         : value_(value) {}
 
     [[nodiscard]]
-    const T_& GetValue() override {
+    const T_& GetValue() noexcept override {
         return value_;
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::CONST_VALUE;
     }
 };
@@ -58,16 +58,16 @@ private:
     T_& value_;
 
 public:
-    LValueRefVariantWrapper(T_& value)
+    LValueRefVariantWrapper(T_& value) noexcept
         : value_(value) {}
 
     [[nodiscard]]
-    T_& GetValue() override {
+    T_& GetValue() noexcept override {
         return value_;
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::LVALUE_REF;
     }
 };
@@ -78,17 +78,17 @@ private:
     const T_& value_;
 
 public:
-    ConstLValueRefVariantWrapper(const T_& value)
+    ConstLValueRefVariantWrapper(const T_& value) noexcept
         : value_(value) {}
 
 
     [[nodiscard]]
-    const T_& GetValue() override {
+    const T_& GetValue() noexcept override {
         return value_;
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::CONST_LVALUE_REF;
     }
 };
@@ -99,16 +99,16 @@ private:
     T_&& value_;
 
 public:
-    RValueRefVariantWrapper(T_&& value)
+    RValueRefVariantWrapper(T_&& value) noexcept
         : value_(std::move(value)) {}
 
     [[nodiscard]]
-    T_&& GetValue() override {
+    T_&& GetValue() noexcept override {
         return std::move(value_);
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::RVALUE_REF;
     }
 };
@@ -119,17 +119,17 @@ private:
     const T_&& value_;
 
 public:
-    ConstRValueRefVariantWrapper(const T_&& value)
+    ConstRValueRefVariantWrapper(const T_&& value) noexcept
         : value_(std::move(value)) {}
 
 
     [[nodiscard]]
-    const T_&& GetValue() override {
+    const T_&& GetValue() noexcept override {
         return std::move(value_);
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::CONST_RVALUE_REF;
     }
 };
@@ -140,16 +140,16 @@ private:
     T_* value_;
 
 public:
-    PointerVariantWrapper(T_* value)
+    PointerVariantWrapper(T_* value) noexcept
         : value_(value) {}
 
     [[nodiscard]]
-    T_* GetValue() override {
+    T_* GetValue() noexcept override {
         return value_;
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::POINTER;
     }
 };
@@ -160,22 +160,22 @@ private:
     const T_* value_;
 
 public:
-    ConstPointerVariantWrapper(const T_* value)
+    ConstPointerVariantWrapper(const T_* value) noexcept
         : value_(value) {}
 
     [[nodiscard]]
-    const T_* GetValue() override {
+    const T_* GetValue() noexcept override {
         return value_;
     }
 
     [[nodiscard]]
-    VariantWrapperType GetType() const override {
+    VariantWrapperType GetType() const noexcept override {
         return VariantWrapperType::CONST_POINTER;
     }
 };
 
 template <typename T_, typename CleanT>
-std::shared_ptr<VariantBase> MakeValueWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeValueWrapper(T_&& data) noexcept {
     if constexpr (std::is_copy_constructible_v<T_>) {
         if constexpr (std::is_const_v<T_>) {
             return std::make_shared<ConstValueVariantWrapper<CleanT>>(data);
@@ -193,7 +193,7 @@ std::shared_ptr<VariantBase> MakeValueWrapper(T_&& data) {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-std::shared_ptr<VariantBase> MakeLValueRefWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeLValueRefWrapper(T_&& data) noexcept {
     if constexpr (IsConst_) {
         return std::make_shared<ConstLValueRefVariantWrapper<CleanT_>>(data);
     }
@@ -203,7 +203,7 @@ std::shared_ptr<VariantBase> MakeLValueRefWrapper(T_&& data) {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-std::shared_ptr<VariantBase> MakeRValueRefWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeRValueRefWrapper(T_&& data) noexcept {
     if constexpr (IsConst_) {
         return std::make_shared<ConstRValueRefVariantWrapper<CleanT_>>(std::forward<T_>(data));
     }
@@ -213,7 +213,7 @@ std::shared_ptr<VariantBase> MakeRValueRefWrapper(T_&& data) {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-std::shared_ptr<VariantBase> MakePointerWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakePointerWrapper(T_&& data) noexcept {
     if constexpr (IsConst_) {
         return std::make_shared<ConstPointerVariantWrapper<CleanT_>>(data);
     }
@@ -223,7 +223,7 @@ std::shared_ptr<VariantBase> MakePointerWrapper(T_&& data) {
 }
 
 template <typename T_>
-std::shared_ptr<VariantBase> MakeWrapper(T_&& data) {
+std::shared_ptr<VariantBase> MakeWrapper(T_&& data) noexcept {
     using CleanT = std::remove_const_t<std::remove_pointer_t<std::remove_reference_t<T_>>>;
 
     if constexpr (std::is_lvalue_reference_v<T_>) {

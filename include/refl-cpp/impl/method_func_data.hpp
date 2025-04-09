@@ -5,7 +5,7 @@
 
 namespace ReflCpp {
 template <typename T_>
-MethodFuncData<T_>::operator std::shared_ptr<MethodFunc>() const {
+MethodFuncData<T_>::operator std::shared_ptr<MethodFunc>() const noexcept {
     return std::make_shared<MethodFuncWrapper<T_>>(*this);
 }
 }

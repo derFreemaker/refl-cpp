@@ -6,7 +6,7 @@
 namespace ReflCpp {
 template <typename T>
 struct TypeInstance {
-    static Result<TypeID> ID() {
+    static Result<TypeID> ID() noexcept {
         static TypeID id = TypeID::Invalid();
         if (id.IsValid()) {
             return id;
@@ -18,7 +18,7 @@ struct TypeInstance {
         return id;
     }
 
-    static Result<const Type&> Type() {
+    static Result<const Type&> Type() noexcept {
         const TypeID id = TRY(ID());
         const auto& database = ReflectionDatabase::Instance();
         return database.GetType(id);

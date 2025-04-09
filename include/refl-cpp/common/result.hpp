@@ -37,11 +37,11 @@ private:
     }
 
 public:
-    ResultBase(ErrorTag, ResultError&& error)
+    ResultBase(ErrorTag, ResultError&& error) noexcept
         : error_(error),
           hasError_(true) {}
 
-    ResultBase(ErrorTag, const ResultError& error)
+    ResultBase(ErrorTag, const ResultError& error) noexcept
         : error_(error),
           hasError_(true) {}
 
@@ -56,7 +56,7 @@ public:
           hasError_(false) {}
 
     //NOTE: we need this deconstructor since it is implicitly deleted
-    ~ResultBase() {}
+    ~ResultBase() noexcept {}
 
     ResultBase(const ResultBase& other) noexcept
         : hasError_(other.hasError_) {
@@ -69,7 +69,7 @@ public:
     }
     
     [[nodiscard]]
-    bool HasError() const {
+    bool HasError() const noexcept {
         return hasError_;
     }
 
@@ -158,18 +158,13 @@ public:
     ResultBase() noexcept = default;
 
     [[nodiscard]]
-    bool IsSuccess() const {
-        return !error_.has_value();
-    }
-
-    [[nodiscard]]
-    bool HasError() const {
+    bool HasError() const noexcept {
         return error_.has_value();
     }
 
     [[nodiscard]]
     const ResultError& Error() const {
-        if (IsSuccess()) {
+        if (!HasError()) {
             ResultThrowBadErrorAccessException();
         }
         return error_.value();
@@ -225,7 +220,7 @@ struct Result : detail::ResultBase<T_> {
 
     Result(detail::ErrorTag,
            const std::stacktrace&& stacktrace,
-           const FormattedError& error)
+           const FormattedError& error) noexcept
         : detail::ResultBase<T_>(detail::Error, ResultError(
                                      stacktrace,
                                      error)) {}
@@ -253,17 +248,21 @@ struct Result : detail::ResultBase<T_> {
 };
 
 namespace detail {
-inline void TryHelper(const Result<void>* _) {}
+inline void TryHelper(const Result<void>* _) noexcept {}
 
 template <typename T_>
 [[nodiscard]]
-typename Result<T_>::StoredReturnT TryHelper(Result<T_>* result) {
+typename Result<T_>::StoredReturnT TryHelper(Result<T_>* result) noexcept {
+    // result->Value could throw an exception but since we only use this
+    // function normally after checking if result has an error we should be good
     return result->Value();
 }
 
 template <typename T_>
 [[nodiscard]]
-typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
+typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) noexcept {
+    // result->Value could throw an exception but since we only use this
+    // function normally after checking if result has an error we should be good
     return result->Value();
 }
 }

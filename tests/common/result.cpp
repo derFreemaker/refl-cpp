@@ -11,7 +11,6 @@ TEST(Result, Error) {
     const auto resultTestError = testError();
 
     EXPECT_TRUE(resultTestError.HasError());
-    EXPECT_FALSE(resultTestError.IsSuccess());
     EXPECT_EQ(resultTestError.Error().Message(), "some error: 2345");
 }
 
@@ -37,7 +36,6 @@ TEST(Result, Void) {
 
     const auto resultTestSuccess = testSuccess();
 
-    EXPECT_TRUE(resultTestSuccess.IsSuccess());
     EXPECT_FALSE(resultTestSuccess.HasError());
 }
 

@@ -9,12 +9,12 @@ private:
     std::string sep_ = ", ";
 
 public:
-    ListSeperator() = default;
+    ListSeperator() noexcept = default;
 
-    ListSeperator(const std::string& sep)
+    ListSeperator(const std::string& sep) noexcept
         : sep_(sep) {}
 
-    const char* Get() {
+    const char* Get() noexcept {
         if (first_) {
             first_ = false;
             return "";
@@ -23,11 +23,7 @@ public:
         return sep_.c_str();
     }
 
-    operator std::string() {
-        return Get();
-    }
-
-    operator const char*() {
+    operator const char*() noexcept {
         return Get();
     }
 };

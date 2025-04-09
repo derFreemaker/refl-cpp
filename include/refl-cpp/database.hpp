@@ -13,13 +13,13 @@ private:
     std::vector<std::unique_ptr<Type>> types_;
 
 public:
-    static ReflectionDatabase& Instance() {
+    static ReflectionDatabase& Instance() noexcept {
         static ReflectionDatabase instance;
         return instance;
     }
 
     template <typename T_>
-    Result<TypeID> RegisterType() {
+    Result<TypeID> RegisterType() noexcept {
         if (types_.size() == SIZE_MAX) {
             return {
                 RESULT_ERROR(),
@@ -31,18 +31,23 @@ public:
         TypeData type_data = TRY(ReflectData<T_>::Create());
         const auto type_id = TypeID(types_.size() + 1);
 
-        TypeOptions type_options {};
+        TypeOptions type_options{};
 
         if constexpr (detail::HasReflectPrinter<T_>) {
             type_options.printFunc = ReflectPrinter<T_>::Print;
         }
 
-        const auto& type = types_.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
-        return type->GetID();
+        try {
+            const auto& type = types_.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
+            return type->GetID();
+        }
+        catch (const std::exception& e) {
+            return { RESULT_ERROR(), e.what() };
+        }
     }
 
     [[nodiscard]]
-    Result<const Type&> GetType(const TypeID id) const {
+    Result<const Type&> GetType(const TypeID id) const noexcept {
         if (id.IsInvalid() || id > types_.size()) {
             return { RESULT_ERROR(), "invalid type id" };
         }

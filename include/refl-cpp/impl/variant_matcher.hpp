@@ -14,7 +14,7 @@
 // There is technically no need for this since we just default to 'false' anyway
 template <typename R_>
 struct ReflCpp::detail::VariantMatcher<ReflCpp::detail::VariantWrapperType::VOID, R_> {
-    static bool Match(const TypeID) {
+    static bool Match(const TypeID) noexcept {
         return false;
     }
 };

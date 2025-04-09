@@ -14,10 +14,10 @@ private:
 
 public:
     template <typename T_>
-    Field(const FieldData<T_>& data)
+    Field(const FieldData<T_>& data) noexcept
         : base_(std::make_shared<FieldWrapper<T_>>(data.ptr)),
           name_(data.name) {}
-
+    
     [[nodiscard]]
     const char* GetName() const {
         return name_;

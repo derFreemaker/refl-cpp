@@ -33,9 +33,9 @@ private:
 public:
     Type() = delete;
     Type(const Type&) = delete;
-    Type(const Type&&) = delete;
+    Type(Type&&) = delete;
 
-    Type(const TypeID id, const TypeData& data, const TypeOptions& options)
+    Type(const TypeID id, const TypeData& data, const TypeOptions& options) noexcept
         : id_(id),
 
           name_(data.name),
@@ -51,17 +51,17 @@ public:
           printFunc_(options.printFunc) {}
 
     [[nodiscard]]
-    TypeID GetID() const {
+    TypeID GetID() const noexcept {
         return id_;
     }
 
     [[nodiscard]]
-    const char* GetName() const {
+    const char* GetName() const noexcept {
         return name_;
     }
 
     [[nodiscard]]
-    const char* GetNamespace() const {
+    const char* GetNamespace() const noexcept { // NOLINT(*-exception-escape)
         if (namespace_.has_value()) {
             return namespace_.value();
         }
@@ -69,60 +69,60 @@ public:
     }
 
     [[nodiscard]]
-    bool InNamespace() const {
+    bool InNamespace() const noexcept {
         return namespace_.has_value();
     }
 
     [[nodiscard]]
-    bool HasBases() const {
+    bool HasBases() const noexcept {
         return !bases_.empty();
     }
 
     [[nodiscard]]
-    const std::vector<TypeID>& GetBases() const {
+    const std::vector<TypeID>& GetBases() const noexcept {
         return bases_;
     }
 
     [[nodiscard]]
-    Result<const Type&> GetBase(const size_t index) const {
+    Result<const Type&> GetBase(const size_t index) const noexcept {
         return bases_[index].GetType();
     }
 
     [[nodiscard]]
-    bool HasInners() const {
+    bool HasInners() const noexcept {
         return !inners_.empty();
     }
 
     [[nodiscard]]
-    const std::vector<TypeID>& GetInners() const {
+    const std::vector<TypeID>& GetInners() const noexcept {
         return inners_;
     }
 
     [[nodiscard]]
-    Result<const Type&> GetInner(const size_t index) const {
+    Result<const Type&> GetInner(const size_t index) const noexcept {
         return inners_[index].GetType();
     }
 
     [[nodiscard]]
-    bool HasInner(const TypeID id) const {
+    bool HasInner(const TypeID id) const noexcept {
         return std::ranges::any_of(inners_, [id](const TypeID t) {
             return t == id;
         });
     }
 
     [[nodiscard]]
-    const TypeFlags& GetFlags() const {
+    const TypeFlags& GetFlags() const noexcept {
         return flags_;
     }
 
     // fields
 
     [[nodiscard]]
-    const std::vector<Field>& GetFields() const {
+    const std::vector<Field>& GetFields() const noexcept {
         return fields_;
     }
 
-    Result<const Field&> GetField(const char* name) const {
+    Result<const Field&> GetField(const char* name) const noexcept {
         for (const auto& field : fields_) {
             if (field.GetName() == name) {
                 return field;
@@ -134,11 +134,11 @@ public:
     // methods
 
     [[nodiscard]]
-    const std::vector<Method>& GetMethods() const {
+    const std::vector<Method>& GetMethods() const noexcept {
         return methods_;
     }
 
-    Result<const Method&> GetMethod(const char* name) const {
+    Result<const Method&> GetMethod(const char* name) const noexcept {
         for (const auto& method : methods_) {
             if (method.GetName() == name) {
                 return method;
@@ -150,22 +150,22 @@ public:
     // utils
 
     [[nodiscard]]
-    bool Is(const TypeID id) const {
+    bool Is(const TypeID id) const noexcept {
         return id_ == id;
     }
 
     [[nodiscard]]
-    bool Is(const Type& type) const {
+    bool Is(const Type& type) const noexcept {
         return Is(type.GetID());
     }
 
     template <typename T>
     [[nodiscard]]
-    bool Is() const {
+    bool Is() const noexcept {
         return Is(ReflectID<T>());
     }
 
-    void Print(std::ostream& stream) const {
+    void Print(std::ostream& stream) const noexcept {
         if (printFunc_ != nullptr) {
             return printFunc_(stream, *this);
         }
@@ -177,7 +177,7 @@ public:
     }
 
     [[nodiscard]]
-    std::string Dump() const {
+    std::string Dump() const noexcept {
         std::stringstream stream;
         if (printFunc_ != nullptr) {
             printFunc_(stream, *this);
@@ -193,7 +193,7 @@ public:
 };
 }
 
-inline std::ostream& operator<<(std::ostream& stream, const ReflCpp::Type& type) {
+inline std::ostream& operator<<(std::ostream& stream, const ReflCpp::Type& type) noexcept {
     type.Print(stream);
     return stream;
 }

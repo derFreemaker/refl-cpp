@@ -8,14 +8,14 @@ struct TypeID;
 
 template <typename T>
 [[nodiscard]]
-Result<const Type&> Reflect();
+Result<const Type&> Reflect() noexcept;
 
 template <typename T>
 [[nodiscard]]
-Result<TypeID> ReflectID();
+Result<TypeID> ReflectID() noexcept;
 
 namespace detail {
 [[nodiscard]]
-Result<const Type&> Reflect(TypeID id);
+Result<const Type&> Reflect(TypeID id) noexcept;
 }
 }
