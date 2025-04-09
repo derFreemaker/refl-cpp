@@ -49,7 +49,7 @@ public:
 
     template <typename T_>
     operator Result<T_>() const {
-        return Result<T_>(detail::PassError, *this);
+        return Result<T_>(detail::Error, *this);
     }
 };
 
