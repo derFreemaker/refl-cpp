@@ -66,7 +66,7 @@ struct ReflectData<TestStruct> {
         const FunctionWrapper funcWrapper(&TestStruct::NAME); \
         ARG NoCopyOrMoveStruct test(nullptr); \
         INSTANCE_TYPE __VA_ARGS__; \
-        const auto result = funcWrapper.Invoke({ Variant::Create(test) }, instance).Value(); \
+        const auto result = funcWrapper.Invoke({ Variant::Create<ARG NoCopyOrMoveStruct&>(test) }, instance).Value(); \
         const auto result_value = result.Get<RETURN NoCopyOrMoveStruct&>(); \
         ASSERT_EQ(result_value.Value().foo, 893745); \
     }

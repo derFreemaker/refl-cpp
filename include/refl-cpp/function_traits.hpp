@@ -18,14 +18,21 @@ private:
     static_assert(m_ArgCount < 256, "only support up to 255 arguments");
 
     template <size_t... Indices>
-    static std::vector<Result<TypeID>> GetArgsImpl(std::index_sequence<Indices...>) {
-        return { ReflectID<Arg<Indices>>()... };
+    static const std::vector<Result<TypeID>>& GetArgsImpl(std::index_sequence<Indices...>) {
+        static std::vector<Result<TypeID>> results{};
+        if (!results.empty()) {
+            return results;
+        }
+        
+        results.reserve(sizeof...(Indices));
+        (results.push_back(ReflectID<typename Arg<Indices>::Type>()), ...);
+        return results;
     }
-    
+
 public:
     static constexpr bool IsStatic = IsStatic_;
     static constexpr bool IsConst = IsConst_;
-    
+
     static constexpr bool HasReferenceObject = HasLReferenceObject_ || HasRReferenceObject_;
     static constexpr bool HasLReferenceObject = HasLReferenceObject_;
     static constexpr bool HasRReferenceObject = HasRReferenceObject_;
@@ -35,12 +42,13 @@ public:
     static constexpr bool HasReturn = !std::is_same_v<R_, void>;
 
     static constexpr uint8_t ArgCount = m_ArgCount;
+
     template <uint8_t I>
     struct Arg {
         using Type = std::tuple_element_t<I, std::tuple<Args_...>>;
     };
 
-    static Result<std::vector<TypeID>> GetArgs() {
+    static const std::vector<Result<TypeID>>& GetArgs() {
         return GetArgsImpl(std::make_index_sequence<ArgCount>());
     }
 };

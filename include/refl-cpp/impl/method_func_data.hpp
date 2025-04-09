@@ -5,7 +5,7 @@
 
 namespace ReflCpp {
 template <typename T_>
-MethodFuncData<T_>::operator std::unique_ptr<MethodFunc>() const {
-    return std::unique_ptr(static_cast<MethodFunc*>(new MethodFuncWrapper<T_>(*this)));
+MethodFuncData<T_>::operator std::shared_ptr<MethodFunc>() const {
+    return std::make_shared<MethodFuncWrapper<T_>>(*this);
 }
 }

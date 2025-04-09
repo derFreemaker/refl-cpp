@@ -9,9 +9,8 @@
 namespace ReflCpp {
 template <typename T_>
 struct FunctionWrapper {
-    using Traits = FunctionTraits<T_>;
-
 private:
+    using Traits = FunctionTraits<T_>;
     T_ ptr_;
 
     template <size_t... Indices>
@@ -124,7 +123,7 @@ public:
         : ptr_(ptr) {}
 
     [[nodiscard]]
-    Result<std::vector<TypeID>> GetArgTypes() const {
+    std::vector<Result<TypeID>> GetArgTypes() const {
         return Traits::GetArgs();
     }
 

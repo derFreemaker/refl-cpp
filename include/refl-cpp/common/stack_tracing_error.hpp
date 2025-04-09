@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gtest/gtest-message.h>
-
 #include "refl-cpp/common/formatted_error.hpp"
 
 #if REFLCPP_ENABLE_STACK_TRACING_ERROR == 0
@@ -25,11 +23,21 @@ public:
     StackTracingError(std::stacktrace stacktrace, FormattedError error)
         : formatted_(std::move(error)), stacktrace_(std::move(stacktrace)) {}
 
+    StackTracingError(const StackTracingError& other) = default;
+
+    StackTracingError& operator=(const StackTracingError& other) noexcept {
+        if (this != &other) {
+            this->~StackTracingError();
+            new(this) StackTracingError(other);
+        }
+        return *this;
+    }
+
     [[nodiscard]]
     const std::string& Message() const {
         return formatted_.Message();
     }
-    
+
     [[nodiscard]]
     const std::stacktrace& StackTrace() const {
         return stacktrace_;

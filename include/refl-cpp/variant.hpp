@@ -71,12 +71,25 @@ private:
     friend struct VariantTestHelper;
 
 public:
-    static Variant Void();
+    static Variant& Void();
 
     Variant() = delete;
 
     template <typename T_>
+        requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
+    static Variant Create(T_& data);
+
+    template <typename T_>
+        requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
+    static Variant Variant::Create(T_&& data);
+
+    template <typename T_>
+        requires (std::is_reference_v<T_>)
     static Variant Create(T_&& data);
+
+    template <typename T_>
+        requires (std::is_pointer_v<T_>)
+    static Variant Create(T_ data);
 
     [[nodiscard]]
     bool IsVoid() const {

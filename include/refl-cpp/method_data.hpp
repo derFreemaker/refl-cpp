@@ -9,6 +9,6 @@ struct Method;
 
 struct MethodData {
     const char* name = "$NONE$";
-    std::vector<std::unique_ptr<MethodFunc>> funcs;
+    std::vector<std::shared_ptr<MethodFunc>> funcs;
 };
 }

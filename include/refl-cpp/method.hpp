@@ -3,15 +3,13 @@
 #include <vector>
 
 #include "refl-cpp/method_data.hpp"
-#include "refl-cpp/variant.hpp"
-#include "refl-cpp/argument.hpp"
 #include "refl-cpp/method_wrapper.hpp"
 
 namespace ReflCpp {
 struct Method {
 private:
     const char* name_;
-    std::vector<std::unique_ptr<MethodFunc>> funcs_;
+    std::vector<std::shared_ptr<MethodFunc>> funcs_;
 
 public:
     Method(const MethodData& builder)
@@ -23,20 +21,40 @@ public:
         return name_;
     }
 
-    // [[nodiscard]]
-    // Result<Variant> InvokeStatic(const ArgumentList& args) const {
-    //     return m_Funcs->InvokeStatic(args);
-    // }
+    [[nodiscard]]
+    const std::vector<std::shared_ptr<MethodFunc>>& GetFunctions() const {
+        return funcs_;
+    }
 
-    // [[nodiscard]]
-    // Result<Variant> Invoke(const Variant& instance, const ArgumentList& args = {}) const {
-    //     return m_Funcs->Invoke(instance, args);
-    // }
+    [[nodiscard]]
+    std::shared_ptr<MethodFunc> GetFunction(const size_t index) const {
+        return funcs_[index];
+    }
 
-    // template <typename... Args>
-    // [[nodiscard]]
-    // Variant Invoke(const Variant& instance, Args&&... args) const {
-    //     return m_Funcs->Invoke(instance, { Variant::Create<Args>(std::forward<Args>(args))... });
-    // }
+    [[nodiscard]]
+    Result<Variant> Invoke(const ArgumentList& args) const {
+        for (const auto& func : funcs_) {
+            if (!func->IsStatic() && !func->CanInvokeWithArgs(args)) {
+                continue;
+            }
+            return func->Invoke(Variant::Void(), args);
+        }
+
+        //TODO: better error give feedback about passed types
+        return { RESULT_ERROR(), "no matching static function found" };
+    }
+
+    [[nodiscard]]
+    Result<Variant> Invoke(const Variant& obj, const ArgumentList& args) const {
+        for (const auto& func : funcs_) {
+            if (!func->CanInvokeWithArgs(args)) {
+                continue;
+            }
+            return func->Invoke(obj, args);
+        }
+
+        //TODO: better error give feedback about passed types
+        return { RESULT_ERROR(), "no matching function found" };
+    }
 };
 }

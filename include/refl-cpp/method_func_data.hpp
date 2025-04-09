@@ -11,6 +11,6 @@ struct MethodFuncData {
     T_ ptr;
     std::vector<const char*> args{};
 
-    operator std::unique_ptr<MethodFunc>() const;
+    operator std::shared_ptr<MethodFunc>() const;
 };
 }

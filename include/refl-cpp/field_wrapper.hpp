@@ -88,7 +88,7 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            obj.*ptr_ = value.Get<const typename Traits::Type&>();
+            obj.*ptr_ = TRY(value.Get<make_lvalue_reference_t<make_const_t<typename Traits::Type>>>());
 
             return {};
         }

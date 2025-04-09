@@ -45,7 +45,7 @@ public:
 
           flags_(data.flags),
 
-          // m_Methods(data.methods),
+          methods_(data.methods),
           fields_(data.fields),
 
           printFunc_(options.printFunc) {}
@@ -77,7 +77,7 @@ public:
     bool HasBases() const {
         return !bases_.empty();
     }
-    
+
     [[nodiscard]]
     const std::vector<TypeID>& GetBases() const {
         return bases_;
@@ -87,7 +87,7 @@ public:
     Result<const Type&> GetBase(const size_t index) const {
         return bases_[index].GetType();
     }
-    
+
     [[nodiscard]]
     bool HasInners() const {
         return !inners_.empty();
@@ -122,13 +122,13 @@ public:
         return fields_;
     }
 
-    std::optional<std::reference_wrapper<const Field>> GetField(const char* name) const {
+    Result<const Field&> GetField(const char* name) const {
         for (const auto& field : fields_) {
             if (field.GetName() == name) {
                 return field;
             }
         }
-        return std::nullopt;
+        return { RESULT_ERROR(), "no field found with name: {0}", name };
     }
 
     // methods
@@ -138,13 +138,13 @@ public:
         return methods_;
     }
 
-    std::optional<std::reference_wrapper<const Method>> GetMethod(const char* name) const {
+    Result<const Method&> GetMethod(const char* name) const {
         for (const auto& method : methods_) {
             if (method.GetName() == name) {
                 return method;
             }
         }
-        return std::nullopt;
+        return { RESULT_ERROR(), "no function found with name: {0}", name };
     }
 
     // utils

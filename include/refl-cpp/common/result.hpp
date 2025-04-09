@@ -26,7 +26,7 @@ struct ResultBase {
 
 private:
     union {
-        const ResultError error_;
+        ResultError error_;
         StoringT value_;
     };
 
@@ -38,14 +38,19 @@ private:
 
 public:
     ResultBase(ErrorTag, ResultError&& error)
-        : error_(std::move(error)),
+        : error_(error),
           hasError_(true) {}
 
     ResultBase(ErrorTag, const ResultError& error)
         : error_(error),
           hasError_(true) {}
 
+    ResultBase(T_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
+        : value_(std::forward<T_>(value)),
+          hasError_(false) {}
+    
     template <typename T2_>
+        requires (!std::is_same_v<T2_, T_> && std::is_nothrow_convertible_v<T2_, T_>)
     ResultBase(T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
         : value_(std::forward<T2_>(value)),
           hasError_(false) {}
@@ -53,6 +58,16 @@ public:
     //NOTE: we need this deconstructor since it is implicitly deleted
     ~ResultBase() {}
 
+    ResultBase(const ResultBase& other) noexcept
+        : hasError_(other.hasError_) {
+        hasError_ = other.hasError_;
+        if (hasError_) {
+            error_ = other.error_;
+        } else {
+            value_ = other.value_;
+        }
+    }
+    
     [[nodiscard]]
     bool HasError() const {
         return hasError_;
@@ -241,11 +256,13 @@ namespace detail {
 inline void TryHelper(const Result<void>* _) {}
 
 template <typename T_>
+[[nodiscard]]
 typename Result<T_>::StoredReturnT TryHelper(Result<T_>* result) {
     return result->Value();
 }
 
 template <typename T_>
+[[nodiscard]]
 typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
     return result->Value();
 }
@@ -266,32 +283,28 @@ typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) {
 #define RESULT_ERROR() \
     ::ReflCpp::detail::Error, std::stacktrace::current()
 
-#define TRY(...) \
-    (::ReflCpp::detail::TryHelper( \
-        ({ \
-            auto _result = (__VA_ARGS__); \
-            if (_result.HasError()) { \
-                return _result.Error(); \
-            } \
-            &_result; \
-        }) \
-    ))
-
 #else
 
 #define RESULT_ERROR() \
     ::ReflCpp::detail::Error
 
-#define TRY(...) \
+#endif
+
+/// the 'expr' parameter has to be in parentheses for this to work!
+/// otherwise we get macro comma problems
+/// '__result__' is the variable name of the result
+#define CUSTOM_TRY(expr, on_error) \
     (::ReflCpp::detail::TryHelper( \
         ({ \
-            auto _result = (__VA_ARGS__); \
-            if (_result.HasError()) { \
-                return _result.Error(); \
+            auto __result__ = (expr); \
+            if (__result__.HasError()) { \
+                on_error \
             } \
-            &_result; \
+            &__result__; \
         }) \
     ))
 
-#endif
+#define TRY(...) \
+    CUSTOM_TRY((__VA_ARGS__), return __result__.Error();)
+
 }

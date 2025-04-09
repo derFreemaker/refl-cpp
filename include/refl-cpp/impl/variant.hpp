@@ -7,11 +7,6 @@
 #include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
-template <typename T_>
-Variant Variant::Create(T_&& data) {
-    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
-}
-
 inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) {
     return FormattedError{
         "cannot get from Variant ({0}) with passed type: {1}",
@@ -20,12 +15,36 @@ inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, co
     };
 }
 
-inline Variant Variant::Void() {
+inline Variant& Variant::Void() {
     static auto instance = Variant(
         std::make_shared<detail::VoidVariantWrapper>(),
         ReflectID<void>().Value()
     );
     return instance;
+}
+
+template <typename T_>
+    requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
+Variant Variant::Create(T_& data) {
+    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
+}
+
+template <typename T_>
+    requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
+Variant Variant::Create(T_&& data) {
+    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
+}
+
+template <typename T_>
+    requires (std::is_reference_v<T_>)
+Variant Variant::Create(T_&& data) {
+    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
+}
+
+template <typename T_>
+    requires (std::is_pointer_v<T_>)
+Variant Variant::Create(T_ data) {
+    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
 }
 
 template <typename T_>
