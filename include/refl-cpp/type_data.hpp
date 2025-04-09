@@ -25,7 +25,7 @@ struct TypeData {
 };
 
 struct TypeOptions {
-    ReflectPrintFunc print_func = nullptr;
+    ReflectPrintFunc printFunc = nullptr;
 };
 
 template <typename T>

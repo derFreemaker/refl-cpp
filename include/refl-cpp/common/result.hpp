@@ -10,115 +10,120 @@
 
 namespace ReflCpp {
 namespace detail {
+inline void ResultThrowBadErrorAccessException() {
+    throw std::runtime_error("Attempted to access error of a success Result");
+}
+
 template <typename T_>
 struct ResultBase {
     using StoredT = T_;
+    using StoringT = std::conditional_t<std::is_reference_v<StoredT>,
+                           reference_wrapper<StoredT>,
+                           StoredT>;
     using StoredReturnT = std::conditional_t<std::is_reference_v<StoredT>,
                                              StoredT,
                                              make_lvalue_reference_t<StoredT>>;
 
 private:
     union {
-        const ResultError m_Error;
-        std::conditional_t<std::is_reference_v<StoredT>,
-                           reference_wrapper<StoredT>,
-                           StoredT> m_Value;
+        const ResultError error_;
+        StoringT value_;
     };
 
-    bool _hasError;
+    bool hasError_;
 
-    void m_ThrowBadAccessException() const {
+    void m_ThrowBadValueAccessException() const {
         throw std::runtime_error("Attempted to access value of an error Result. Error: " + this->Error().Str());
     }
 
 public:
     ResultBase(ErrorTag, ResultError&& error)
-        : m_Error(std::move(error)),
-          _hasError(true) {}
+        : error_(std::move(error)),
+          hasError_(true) {}
 
     ResultBase(ErrorTag, const ResultError& error)
-        : m_Error(error),
-          _hasError(true) {}
+        : error_(error),
+          hasError_(true) {}
 
     template <typename T2_>
     ResultBase(T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
-        : m_Value(std::forward<T2_>(value)),
-          _hasError(false) {}
+        : value_(std::forward<T2_>(value)),
+          hasError_(false) {}
 
     //NOTE: we need this deconstructor since it is implicitly deleted
     ~ResultBase() {}
 
     [[nodiscard]]
     bool HasError() const {
-        return _hasError;
+        return hasError_;
     }
 
     [[nodiscard]]
     const ResultError& Error() const {
         if (!HasError()) {
-            throw std::runtime_error("Attempted to access error of a success Result");
+            ResultThrowBadErrorAccessException();
         }
-        return m_Error;
+        return error_;
     }
 
 
     StoredReturnT Value() & {
         if (this->HasError()) {
-            this->m_ThrowBadAccessException();
+            this->m_ThrowBadValueAccessException();
         }
         if constexpr (std::is_lvalue_reference_v<StoredT>) {
-            return this->m_Value.get();
+            return this->value_.get();
         }
         if constexpr (std::is_rvalue_reference_v<StoredT>) {
-            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+            return std::forward<std::remove_reference_t<StoredT>>(this->value_.get());
         }
         else {
-            return this->m_Value;
+            return this->value_;
         }
     }
 
     make_const_t<StoredReturnT> Value() const & {
         if (this->HasError()) {
-            this->m_ThrowBadAccessException();
+            this->m_ThrowBadValueAccessException();
         }
         if constexpr (std::is_lvalue_reference_v<StoredT>) {
-            return this->m_Value.get();
+            return this->value_.get();
         }
         if constexpr (std::is_rvalue_reference_v<StoredT>) {
-            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+            return std::forward<std::remove_reference_t<StoredT>>(this->value_.get());
         }
         else {
-            return this->m_Value;
+            return this->value_;
         }
     }
 
     StoredReturnT Value() && {
         if (this->HasError()) {
-            this->m_ThrowBadAccessException();
+            this->m_ThrowBadValueAccessException();
         }
         if constexpr (std::is_lvalue_reference_v<StoredT>) {
-            return this->m_Value.get();
+            return this->value_.get();
         }
         if constexpr (std::is_rvalue_reference_v<StoredT>) {
-            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+            return std::forward<std::remove_reference_t<StoredT>>(this->value_.get());
         }
         else {
-            return this->m_Value;
+            return this->value_;
         }
     }
 
     make_const_t<StoredReturnT> Value() const && {
         if (this->HasError()) {
-            this->m_ThrowBadAccessException();
+            this->m_ThrowBadValueAccessException();
         }
         if constexpr (std::is_lvalue_reference_v<StoredT>) {
-            return this->m_Value.get();
+            return this->value_.get();
         }
         if constexpr (std::is_rvalue_reference_v<StoredT>) {
-            return std::forward<std::remove_reference_t<StoredT>>(this->m_Value.get());
+            return std::forward<std::remove_reference_t<StoredT>>(this->value_.get());
         }
         else {
-            return this->m_Value;
+            return this->value_;
         }
     }
 };
@@ -126,33 +131,33 @@ public:
 template <>
 struct ResultBase<void> {
 private:
-    const std::optional<ResultError> m_Error;
+    const std::optional<ResultError> error_;
 
 public:
     ResultBase(ErrorTag, ResultError&& error) noexcept
-        : m_Error(std::move(error)) {}
+        : error_(std::move(error)) {}
 
     ResultBase(ErrorTag, const ResultError& error) noexcept
-        : m_Error(error) {}
+        : error_(error) {}
 
     ResultBase() noexcept = default;
 
     [[nodiscard]]
     bool IsSuccess() const {
-        return !m_Error.has_value();
+        return !error_.has_value();
     }
 
     [[nodiscard]]
     bool HasError() const {
-        return m_Error.has_value();
+        return error_.has_value();
     }
 
     [[nodiscard]]
     const ResultError& Error() const {
         if (IsSuccess()) {
-            throw std::runtime_error("Attempted to access error of a success Result");
+            ResultThrowBadErrorAccessException();
         }
-        return m_Error.value();
+        return error_.value();
     }
 };
 }

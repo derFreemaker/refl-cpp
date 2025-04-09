@@ -28,16 +28,16 @@ struct FieldBase {
     virtual Result<Variant> GetRef(const Variant& instance) const = 0;
 };
 
-template <typename Field_>
+template <typename T_>
 struct FieldWrapper final : public FieldBase {
 private:
-    Field_ m_Field;
+    T_ ptr_;
 
 public:
-    using Traits = FieldTraits<Field_>;
+    using Traits = FieldTraits<T_>;
 
-    FieldWrapper(Field_ field)
-        : m_Field(field) {}
+    FieldWrapper(T_ ptr)
+        : ptr_(ptr) {}
 
     [[nodiscard]]
     constexpr bool IsStatic() const override {
@@ -57,7 +57,7 @@ public:
     [[nodiscard]]
     Result<Variant> GetValue(const Variant& instance) const override {
         if constexpr (Traits::IsStatic) {
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*m_Field));
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
@@ -65,7 +65,7 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field));
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
         }
     }
 
@@ -80,7 +80,7 @@ public:
             return { RESULT_ERROR(), "cannot set value on not copy construct or copy assignable" };
         }
         else if constexpr (Traits::IsStatic) {
-            *m_Field = value.Get<const typename Traits::Type&>();
+            *ptr_ = value.Get<const typename Traits::Type&>();
         }
         else {
             if (instance.IsVoid()) {
@@ -88,7 +88,7 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            obj.*m_Field = value.Get<const typename Traits::Type&>();
+            obj.*ptr_ = value.Get<const typename Traits::Type&>();
 
             return {};
         }
@@ -103,7 +103,7 @@ public:
             return { RESULT_ERROR(), "cannot get reference to a const type" };
         }
         else if constexpr (Traits::IsStatic) {
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<typename Traits::Type&>(*m_Field));
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<typename Traits::Type&>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
@@ -111,7 +111,7 @@ public:
             }
 
             auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*m_Field));
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
         }
     }
 };

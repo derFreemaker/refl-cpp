@@ -15,15 +15,15 @@ struct VoidVariantWrapper final : public VariantWrapper<void> {
 template <typename T_>
 struct ValueVariantWrapper final : public VariantWrapper<T_&> {
 private:
-    T_ m_Value;
+    T_ value_;
 
 public:
     ValueVariantWrapper(T_& value)
-        : m_Value(value) {}
+        : value_(value) {}
 
     [[nodiscard]]
     T_& GetValue() override {
-        return m_Value;
+        return value_;
     }
 
     [[nodiscard]]
@@ -35,15 +35,15 @@ public:
 template <typename T_>
 struct ConstValueVariantWrapper final : public VariantWrapper<const T_&> {
 private:
-    const T_ m_Value;
+    const T_ value_;
 
 public:
     ConstValueVariantWrapper(const T_& value)
-        : m_Value(value) {}
+        : value_(value) {}
 
     [[nodiscard]]
     const T_& GetValue() override {
-        return m_Value;
+        return value_;
     }
 
     [[nodiscard]]
@@ -55,15 +55,15 @@ public:
 template <typename T_>
 struct LValueRefVariantWrapper final : public VariantWrapper<T_&> {
 private:
-    T_& m_Value;
+    T_& value_;
 
 public:
     LValueRefVariantWrapper(T_& value)
-        : m_Value(value) {}
+        : value_(value) {}
 
     [[nodiscard]]
     T_& GetValue() override {
-        return m_Value;
+        return value_;
     }
 
     [[nodiscard]]
@@ -75,16 +75,16 @@ public:
 template <typename T_>
 struct ConstLValueRefVariantWrapper final : public VariantWrapper<const T_&> {
 private:
-    const T_& m_Value;
+    const T_& value_;
 
 public:
     ConstLValueRefVariantWrapper(const T_& value)
-        : m_Value(value) {}
+        : value_(value) {}
 
 
     [[nodiscard]]
     const T_& GetValue() override {
-        return m_Value;
+        return value_;
     }
 
     [[nodiscard]]
@@ -96,15 +96,15 @@ public:
 template <typename T_>
 struct RValueRefVariantWrapper final : public VariantWrapper<T_&&> {
 private:
-    T_&& m_Value;
+    T_&& value_;
 
 public:
     RValueRefVariantWrapper(T_&& value)
-        : m_Value(std::move(value)) {}
+        : value_(std::move(value)) {}
 
     [[nodiscard]]
     T_&& GetValue() override {
-        return std::move(m_Value);
+        return std::move(value_);
     }
 
     [[nodiscard]]
@@ -116,16 +116,16 @@ public:
 template <typename T_>
 struct ConstRValueRefVariantWrapper final : public VariantWrapper<const T_&&> {
 private:
-    const T_&& m_Value;
+    const T_&& value_;
 
 public:
     ConstRValueRefVariantWrapper(const T_&& value)
-        : m_Value(std::move(value)) {}
+        : value_(std::move(value)) {}
 
 
     [[nodiscard]]
     const T_&& GetValue() override {
-        return std::move(m_Value);
+        return std::move(value_);
     }
 
     [[nodiscard]]
@@ -137,15 +137,15 @@ public:
 template <typename T_>
 struct PointerVariantWrapper final : public VariantWrapper<T_*> {
 private:
-    T_* m_Value;
+    T_* value_;
 
 public:
     PointerVariantWrapper(T_* value)
-        : m_Value(value) {}
+        : value_(value) {}
 
     [[nodiscard]]
     T_* GetValue() override {
-        return m_Value;
+        return value_;
     }
 
     [[nodiscard]]
@@ -157,15 +157,15 @@ public:
 template <typename T_>
 struct ConstPointerVariantWrapper final : public VariantWrapper<const T_*> {
 private:
-    const T_* m_Value;
+    const T_* value_;
 
 public:
     ConstPointerVariantWrapper(const T_* value)
-        : m_Value(value) {}
+        : value_(value) {}
 
     [[nodiscard]]
     const T_* GetValue() override {
-        return m_Value;
+        return value_;
     }
 
     [[nodiscard]]

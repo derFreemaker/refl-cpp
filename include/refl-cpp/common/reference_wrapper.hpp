@@ -4,7 +4,6 @@
 #include <type_traits>
 
 namespace ReflCpp {
-
 template <typename T_>
 struct reference_wrapper;
 
@@ -43,5 +42,4 @@ public:
         return get();
     }
 };
-
 }

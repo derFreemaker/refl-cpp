@@ -12,7 +12,7 @@ struct FunctionWrapper {
     using Traits = FunctionTraits<Func_>;
 
 private:
-    Func_ m_Ptr;
+    Func_ ptr_;
 
     template <size_t... Indices>
     [[nodiscard]]
@@ -54,7 +54,7 @@ private:
         TRY(CheckArgs<Indices...>(args));
 
         return Variant::Create<typename Traits::ReturnType>(
-            (m_Ptr)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
+            (ptr_)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
         );
     }
 
@@ -62,7 +62,7 @@ private:
     Result<void> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
         TRY(CheckArgs<Indices...>(args));
 
-        (m_Ptr)(
+        (ptr_)(
             REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
 
@@ -76,7 +76,7 @@ private:
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
 
         return Variant::Create<typename Traits::ReturnType>(
-            (TRY(obj.Get<ClassT_>()).*m_Ptr)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
+            (TRY(obj.Get<ClassT_>()).*ptr_)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
         );
     }
 
@@ -86,7 +86,7 @@ private:
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
 
-        (TRY(obj.Get<ClassT_>()).*m_Ptr)(
+        (TRY(obj.Get<ClassT_>()).*ptr_)(
             REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
 
@@ -100,7 +100,7 @@ private:
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
 
         return Variant::Create<typename Traits::ReturnType>(
-            (std::move(TRY(obj.Get<ClassT_>())).*m_Ptr)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
+            (std::move(TRY(obj.Get<ClassT_>())).*ptr_)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
         );
     }
 
@@ -110,7 +110,7 @@ private:
 
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
 
-        (std::move(TRY(obj.Get<ClassT_>())).*m_Ptr)(
+        (std::move(TRY(obj.Get<ClassT_>())).*ptr_)(
             REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
 
@@ -121,7 +121,7 @@ private:
 
 public:
     FunctionWrapper(Func_ ptr)
-        : m_Ptr(ptr) {}
+        : ptr_(ptr) {}
 
     [[nodiscard]]
     Result<std::vector<TypeID>> GetArgumentsTypes() const {

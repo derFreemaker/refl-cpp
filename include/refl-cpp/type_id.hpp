@@ -7,34 +7,34 @@
 namespace ReflCpp {
 struct TypeID {
 private:
-    static constexpr auto m_Invalid = 0;
+    static constexpr auto invalid_ = 0;
 
-    uint32_t m_ID = m_Invalid;
+    uint32_t id_ = invalid_;
 
 public:
     static constexpr auto Invalid() {
-        return TypeID(m_Invalid);
+        return TypeID(invalid_);
     }
 
     operator uint32_t() const {
-        return m_ID;
+        return id_;
     }
     
     constexpr TypeID(const uint32_t id)
-        : m_ID(id) {}
+        : id_(id) {}
 
     bool operator==(const TypeID other) const {
-        return m_ID == other.m_ID;
+        return id_ == other.id_;
     }
 
     [[nodiscard]]
     bool IsValid() const {
-        return this->m_ID != m_Invalid;
+        return this->id_ != invalid_;
     }
 
     [[nodiscard]]
     bool IsInvalid() const {
-        return this->m_ID == m_Invalid;
+        return this->id_ == invalid_;
     }
 
     [[nodiscard]]
@@ -43,7 +43,7 @@ public:
             return { RESULT_ERROR(), "invalid type id" };
         }
 
-        return detail::Reflect(m_ID);
+        return detail::Reflect(id_);
     }
     
     operator Result<const Type&>() const {
@@ -54,7 +54,8 @@ public:
     [[nodiscard]]
     bool Equals() const {
         const auto result = ReflectID<T_>();
-        return !result.HasError() && m_ID == result.Value().m_ID;
+        const auto other = result.Value();
+        return !result.HasError() && id_ == other.id_;
     }
 };
 }

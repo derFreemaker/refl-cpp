@@ -9,12 +9,11 @@
 namespace ReflCpp {
 template <typename T_>
 Variant Variant::Create(T_&& data) {
-    constexpr bool isConst = std::is_const_v<T_>;
-    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value(), isConst);
+    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
 }
 
 inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) {
-    return FormattedError {
+    return FormattedError{
         "cannot get from Variant ({0}) with passed type: {1}",
         type.Dump(),
         passed_type.Dump()
@@ -24,8 +23,7 @@ inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, co
 inline Variant& Variant::Void() {
     static auto instance = Variant(
         std::make_shared<detail::VoidVariantWrapper>(),
-        ReflectID<void>().Value(),
-        false
+        ReflectID<void>().Value()
     );
     return instance;
 }
@@ -34,13 +32,13 @@ template <typename T_>
 bool Variant::CanGet() const {
 #define REFLCPP_VARIANT_MATCH(TYPE) \
     case detail::VariantWrapperType::TYPE: { \
-        if (detail::VariantMatcher<detail::VariantWrapperType::TYPE, T_>::Match(m_Type)) { \
+        if (detail::VariantMatcher<detail::VariantWrapperType::TYPE, T_>::Match(type_)) { \
             return true; \
         } \
         break; \
     }
 
-    switch (m_Base->GetType()) {
+    switch (base_->GetType()) {
         REFLCPP_VARIANT_MATCH(VOID)
         REFLCPP_VARIANT_MATCH(VALUE)
         REFLCPP_VARIANT_MATCH(CONST_VALUE)
@@ -66,7 +64,7 @@ Result<void> Variant::CanGetWithError() const {
         return {};
     }
 
-    const Type& type = TRY(m_Type.GetType());
+    const Type& type = TRY(type_.GetType());
     const Type& passed_type = TRY(Reflect<T_>());
     return { RESULT_ERROR(), CanNotGetFromVariantWithType(type, passed_type) };
 }
@@ -74,12 +72,12 @@ Result<void> Variant::CanGetWithError() const {
 #define REFLCPP_MATCH_VARIANT(Type) \
     if constexpr (detail::HasVariantMatcher<detail::VariantWrapperType::Type, T_>) { \
         if (wrapperType == detail::VariantWrapperType::Type) { \
-            return detail::VariantMatcher<detail::VariantWrapperType::Type, T_>::Get(m_Base.get()); \
+            return detail::VariantMatcher<detail::VariantWrapperType::Type, T_>::Get(base_.get()); \
         } \
     }
 
 #define REFLCPP_MATCH_VARIANTS() \
-    const auto wrapperType = m_Base->GetType(); \
+    const auto wrapperType = base_->GetType(); \
     REFLCPP_MATCH_VARIANT(VALUE) \
     REFLCPP_MATCH_VARIANT(CONST_VALUE) \
     REFLCPP_MATCH_VARIANT(LVALUE_REF) \

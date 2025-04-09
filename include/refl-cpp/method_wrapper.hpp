@@ -27,20 +27,20 @@ public:
 template <typename Func_>
 struct MethodWrapper final : public MethodBase {
 private:
-    FunctionWrapper<Func_> m_Func;
+    FunctionWrapper<Func_> func_;
 
 public:
     MethodWrapper(const Func_& func)
-        : m_Func(func) {}
+        : func_(func) {}
 
     [[nodiscard]]
     bool CanInvokeWithArgs(const ArgumentList& args) const {
-        return m_Func.CanInvokeWithArgs(args);
+        return func_.CanInvokeWithArgs(args);
     }
 
     [[nodiscard]]
     Result<Variant> InvokeImpl(const ArgumentList& args, const Variant& instance) const override {
-        return m_Func.Invoke(args, instance);
+        return func_.Invoke(args, instance);
     }
 };
 }

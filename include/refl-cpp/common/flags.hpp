@@ -4,47 +4,47 @@ namespace ReflCpp {
 template <typename Derived, typename ValueT = uint32_t>
 struct Flags {
 protected:
-    ValueT _value;
+    ValueT value_;
 
 public:
-    constexpr Flags() noexcept : _value(0) {}
-    explicit constexpr Flags(ValueT value) noexcept : _value(value) {}
+    constexpr Flags() noexcept : value_(0) {}
+    explicit constexpr Flags(ValueT value) noexcept : value_(value) {}
 
     constexpr ValueT Value() const noexcept {
-        return _value;
+        return value_;
     }
 
     [[nodiscard]]
     constexpr bool IsEmpty() const noexcept {
-        return _value == 0;
+        return value_ == 0;
     }
 
     constexpr bool Has(Derived flag) const noexcept {
-        return (_value & flag._value) == flag._value;
+        return (value_ & flag.value_) == flag.value_;
     }
 
     constexpr bool Is(Derived flag) const noexcept {
-        return _value == flag._value;
+        return value_ == flag.value_;
     }
     
     constexpr void Set(Derived flag) noexcept {
-        _value |= flag._value;
+        value_ |= flag.value_;
     }
 
     constexpr void Clear(Derived flag) noexcept {
-        _value &= ~flag._value;
+        value_ &= ~flag.value_;
     }
 
     constexpr void Toggle(Derived flag) noexcept {
-        _value ^= flag._value;
+        value_ ^= flag.value_;
     }
 
     constexpr Derived operator|(Derived flag) const noexcept {
-        return Derived(_value | flag._value);
+        return Derived(value_ | flag.value_);
     }
 
     constexpr Derived operator|(const Flags& other) const noexcept {
-        return Derived(_value | other._value);
+        return Derived(value_ | other.value_);
     }
 
     static constexpr Derived FromValue(ValueT value) noexcept {

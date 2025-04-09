@@ -51,10 +51,9 @@ concept HasVariantMatcher = requires(VariantBase* base) {
 //TODO: decide if we want variant to be copy able
 struct Variant {
 private:
-    std::shared_ptr<detail::VariantBase> m_Base;
+    std::shared_ptr<detail::VariantBase> base_;
 
-    const TypeID m_Type;
-    bool m_IsConst = false;
+    const TypeID type_;
 
     [[nodiscard]]
     Result<void> CheckVoid() const {
@@ -64,8 +63,8 @@ private:
         return {};
     }
 
-    Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type, const bool isConst)
-        : m_Base(base), m_Type(type), m_IsConst(isConst) {}
+    Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type)
+        : base_(base), type_(type) {}
 
     static FormattedError CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
 
@@ -81,12 +80,12 @@ public:
 
     [[nodiscard]]
     bool IsVoid() const {
-        return m_Base->GetType() == detail::VariantWrapperType::VOID;
+        return base_->GetType() == detail::VariantWrapperType::VOID;
     }
 
     [[nodiscard]]
     TypeID GetType() const {
-        return m_Type;
+        return type_;
     }
 
     template <typename T_>
@@ -96,9 +95,6 @@ public:
     template <typename T_>
     [[nodiscard]]
     Result<void> CanGetWithError() const;
-
-    // template <typename T_>
-    // auto Variant::Get() const -> Result<decltype(std::declval<detail::VariantWrapper<T_>>().GetValue())>;
 
     template <typename T_>
         requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
