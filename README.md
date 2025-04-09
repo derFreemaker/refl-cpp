@@ -1,12 +1,17 @@
 # refl-cpp [WIP]
-A more simple reflection library for `C++`.
-With a hands-off approach.
+A simple reflection library for `C++`, with a hands-off approach.
 Only one macro to mark the `class/struct` to be reflected.
 
 ## TODO
 - [critical] add code generator
 - [critical] add easy build hook for projects
 - support template parameters?
+- add reflection for enums
+
+## Contribute
+The project is not in a state where contribution is easily possible.
+If necessity comes I will work on that just open a pull request saying
+want to contribute.
 
 ## Dependencies
 these are getting managed through [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
