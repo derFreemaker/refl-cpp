@@ -10,22 +10,22 @@ struct FieldBase {
     virtual ~FieldBase() = default;
 
     [[nodiscard]]
-    virtual bool IsStatic() const = 0;
+    virtual bool IsStatic() const noexcept = 0;
 
     [[nodiscard]]
-    virtual bool IsConst() const = 0;
+    virtual bool IsConst() const noexcept = 0;
 
     [[nodiscard]]
-    virtual Result<TypeID> GetType() const = 0;
+    virtual Result<TypeID> GetType() const noexcept = 0;
 
     [[nodiscard]]
-    virtual Result<Variant> GetValue(const Variant& instance) const = 0;
+    virtual Result<Variant> GetValue(const Variant& instance) const noexcept = 0;
 
     [[nodiscard]]
-    virtual Result<void> SetValue(const Variant& value, const Variant& instance) const = 0;
+    virtual Result<void> SetValue(const Variant& value, const Variant& instance) const noexcept = 0;
 
     [[nodiscard]]
-    virtual Result<Variant> GetRef(const Variant& instance) const = 0;
+    virtual Result<Variant> GetRef(const Variant& instance) const noexcept = 0;
 };
 
 template <typename T_>
@@ -40,22 +40,22 @@ public:
         : ptr_(ptr) {}
 
     [[nodiscard]]
-    constexpr bool IsStatic() const override {
+    constexpr bool IsStatic() const noexcept override {
         return Traits::IsStatic;
     }
 
     [[nodiscard]]
-    constexpr bool IsConst() const override {
+    constexpr bool IsConst() const noexcept override {
         return Traits::IsConst;
     }
 
     [[nodiscard]]
-    Result<TypeID> GetType() const override {
+    Result<TypeID> GetType() const noexcept override {
         return ReflectID<typename Traits::Type>();
     }
 
     [[nodiscard]]
-    Result<Variant> GetValue(const Variant& instance) const override {
+    Result<Variant> GetValue(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsStatic) {
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_));
         }
@@ -70,7 +70,7 @@ public:
     }
 
     [[nodiscard]]
-    Result<void> SetValue(const Variant& value, const Variant& instance) const override {
+    Result<void> SetValue(const Variant& value, const Variant& instance) const noexcept override {
         if constexpr (Traits::IsConst) {
             const auto& type = TRY(Reflect<const typename Traits::Type>());
             return { RESULT_ERROR(), "cannot set value on type: {0}", type.Dump() };
@@ -81,6 +81,7 @@ public:
         }
         else if constexpr (Traits::IsStatic) {
             *ptr_ = value.Get<const typename Traits::Type&>();
+            return {};
         }
         else {
             if (instance.IsVoid()) {
@@ -92,12 +93,10 @@ public:
 
             return {};
         }
-
-        return { RESULT_ERROR(), "unreachable" };
     }
 
     [[nodiscard]]
-    Result<Variant> GetRef(const Variant& instance) const override {
+    Result<Variant> GetRef(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsConst) {
             // Use 'GetValue', since it will use a const reference when it can.
             return { RESULT_ERROR(), "cannot get reference to a const type" };

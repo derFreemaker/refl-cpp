@@ -14,17 +14,9 @@ private:
 
 public:
     template <typename T_>
-    static Result<Field> Create(const FieldData<T_>& data) noexcept {
-        try {
-            return Field {
-                .base_ = std::make_shared<FieldWrapper<T_>>(data.ptr),
-                .name_ = data.name,
-            };
-        }
-        catch (const std::exception& e) {
-            return {RESULT_ERROR(), "unable to create field reflection"};
-        }
-    }
+    Field(const FieldData<T_>& data)
+        : base_(std::make_shared<FieldWrapper<T_>>(data.ptr)),
+          name_(data.name) {}
 
     [[nodiscard]]
     const char* GetName() const noexcept {

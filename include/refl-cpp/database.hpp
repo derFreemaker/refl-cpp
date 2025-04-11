@@ -28,7 +28,15 @@ public:
             };
         }
 
-        TypeData type_data = TRY(ReflectData<T_>::Create());
+        TypeData type_data;
+        // We wrap this, because inside the constructors we use for
+        // creating the type data exceptions can be thrown.
+        try {
+            type_data = TRY(ReflectData<T_>::Create());
+        }
+        catch (const std::exception& e) {
+            return { RESULT_ERROR(), "unable to create type data: {0}", e.what() };
+        }
         const auto type_id = TypeID(types_.size() + 1);
 
         TypeOptions type_options{};

@@ -81,8 +81,9 @@ target_precompile_headers(refl-cpp INTERFACE
         include/refl-cpp/refl-cpp.hpp
 )
 
-# small test project
-add_subdirectory(test-project)
+if (ENABLE_REFLCPP_EXAMPLE_PROJECT)
+    add_subdirectory(example)
+endif ()
 
 if (ENABLE_REFLCPP_GENERATOR)
     add_subdirectory(generator)

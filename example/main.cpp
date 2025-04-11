@@ -1,9 +1,6 @@
 #include <optional>
 #include <print>
-
-#include "refl-cpp/refl-cpp.hpp"
-
-#include "refl-cpp/common/result.hpp"
+#include <refl-cpp/refl-cpp.hpp>
 
 #include "test.hpp"
 

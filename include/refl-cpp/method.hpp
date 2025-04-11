@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 
 #include "refl-cpp/method_data.hpp"
@@ -12,16 +13,9 @@ private:
     std::vector<std::shared_ptr<MethodFunc>> funcs_;
 
 public:
-    static Result<Method> Create(const MethodData& data) {
-        try {
-            return Method{
-                .name_ = data.name,
-                .funcs_ = data.funcs,
-            };
-        }
-        catch (const std::exception& e) {}
-    }
-    
+    Method(const MethodData& data)
+        : name_(data.name), funcs_(data.funcs) {}
+
     [[nodiscard]]
     const char* GetName() const {
         return name_;
@@ -47,7 +41,7 @@ public:
         }
 
         //TODO: better error give feedback about passed types
-        return {RESULT_ERROR(), "no matching static function found"};
+        return { RESULT_ERROR(), "no matching static function found" };
     }
 
     [[nodiscard]]
@@ -60,7 +54,7 @@ public:
         }
 
         //TODO: better error give feedback about passed types
-        return {RESULT_ERROR(), "no matching function found"};
+        return { RESULT_ERROR(), "no matching function found" };
     }
 };
 }
