@@ -14,44 +14,52 @@ private:
 
 public:
     template <typename T_>
-    Field(const FieldData<T_>& data) noexcept
-        : base_(std::make_shared<FieldWrapper<T_>>(data.ptr)),
-          name_(data.name) {}
-    
+    static Result<Field> Create(const FieldData<T_>& data) noexcept {
+        try {
+            return Field {
+                .base_ = std::make_shared<FieldWrapper<T_>>(data.ptr),
+                .name_ = data.name,
+            };
+        }
+        catch (const std::exception& e) {
+            return {RESULT_ERROR(), "unable to create field reflection"};
+        }
+    }
+
     [[nodiscard]]
-    const char* GetName() const {
+    const char* GetName() const noexcept {
         return name_;
     }
 
     [[nodiscard]]
-    Result<TypeID> GetType() const {
+    Result<TypeID> GetType() const noexcept {
         return base_->GetType();
     }
 
     [[nodiscard]]
-    Result<void> SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
+    Result<void> SetValue(const Variant& value, const Variant& instance = Variant::Void()) const noexcept {
         return base_->SetValue(value, instance);
     }
 
     [[nodiscard]]
-    Result<Variant> GetValue(const Variant& instance = Variant::Void()) const {
+    Result<Variant> GetValue(const Variant& instance = Variant::Void()) const noexcept {
         return base_->GetValue(instance);
     }
 
     template <typename T_>
     [[nodiscard]]
-    Result<T_> GetValue(const Variant& instance = Variant::Void()) const {
+    Result<T_> GetValue(const Variant& instance = Variant::Void()) const noexcept {
         return TRY(base_->GetValue(instance)).Get<T_>();
     }
-    
+
     [[nodiscard]]
-    Result<Variant> GetRef(const Variant& instance = Variant::Void()) const {
+    Result<Variant> GetRef(const Variant& instance = Variant::Void()) const noexcept {
         return base_->GetRef(instance);
     }
-    
+
     template <typename T_>
     [[nodiscard]]
-    Result<T_&> GetRef(const Variant& instance = Variant::Void()) const {
+    Result<T_&> GetRef(const Variant& instance = Variant::Void()) const noexcept {
         return TRY(base_->GetRef(instance)).Get<T_&>();
     }
 };

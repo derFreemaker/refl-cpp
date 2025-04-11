@@ -6,10 +6,10 @@ ReflCpp::Result<ReflCpp::TypeData> ReflCpp::ReflectData<kpop::Test>::Create() {
         .name = "Test",
         ._namespace = "kpop",
         .fields = {
-            FieldData{
+            TRY(Field::Create(FieldData{
                 .ptr = &kpop::Test::test,
                 .name = "test",
-            }
+            })),
         },
         .methods = {
             MethodData{
