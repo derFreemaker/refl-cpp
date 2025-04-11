@@ -53,7 +53,7 @@ public:
     template <typename T_>
     [[nodiscard]]
     bool Equals() const noexcept {
-        const TypeID other = CUSTOM_TRY(
+        const TypeID other = TRY_IMPL(
             ReflectID<T_>(),
             return false;
         );

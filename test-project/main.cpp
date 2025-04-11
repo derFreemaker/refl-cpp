@@ -8,8 +8,8 @@
 #include "test.hpp"
 
 #define EXIT_MAIN_TRY(...) \
-    CUSTOM_TRY((__VA_ARGS__), { \
-        std::print("%s\n", __result__.Error().Str().c_str()); \
+    TRY_IMPL((__VA_ARGS__), { \
+        printf("%s\n", __result__.Error().Str().c_str()); \
         return 1; \
     })
 
@@ -33,8 +33,6 @@ int main() {
         ReflCpp::Variant::Create<const char*>("test")
         }
     ));
-
-    std::print("$END$");
 
     return 0;
 }

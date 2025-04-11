@@ -292,18 +292,18 @@ typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) noexcept 
 /// the 'expr' parameter has to be in parentheses for this to work!
 /// otherwise we get macro comma problems
 /// '__result__' is the variable name of the result
-#define CUSTOM_TRY(expr, on_error) \
+#define TRY_IMPL(expr, ...) \
     (::ReflCpp::detail::TryHelper( \
         ({ \
             auto __result__ = (expr); \
             if (__result__.HasError()) { \
-                on_error \
+                __VA_ARGS__ \
             } \
             &__result__; \
         }) \
     ))
 
 #define TRY(...) \
-    CUSTOM_TRY((__VA_ARGS__), return __result__.Error();)
+    TRY_IMPL((__VA_ARGS__), return __result__.Error();)
 
 }
