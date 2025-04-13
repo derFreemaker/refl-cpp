@@ -16,6 +16,10 @@ public:
         return TypeID(invalid_);
     }
 
+    uint32_t Value() const noexcept {
+        return id_;
+    }
+    
     operator uint32_t() const noexcept {
         return id_;
     }
@@ -53,8 +57,9 @@ public:
     template <typename T_>
     [[nodiscard]]
     bool Equals() const noexcept {
+        auto result = ReflectID<T_>();
         const TypeID other = TRY_IMPL(
-            ReflectID<T_>(),
+            result,
             return false;
         );
         return id_ == other.id_;

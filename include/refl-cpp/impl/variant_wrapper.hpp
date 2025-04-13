@@ -175,7 +175,7 @@ public:
 };
 
 template <typename T_, typename CleanT>
-std::shared_ptr<VariantBase> MakeValueWrapper(T_&& data) noexcept {
+std::shared_ptr<VariantBase> MakeValueWrapper(T_&& data) {
     if constexpr (std::is_copy_constructible_v<T_>) {
         if constexpr (std::is_const_v<T_>) {
             return std::make_shared<ConstValueVariantWrapper<CleanT>>(data);
@@ -193,7 +193,7 @@ std::shared_ptr<VariantBase> MakeValueWrapper(T_&& data) noexcept {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-std::shared_ptr<VariantBase> MakeLValueRefWrapper(T_&& data) noexcept {
+std::shared_ptr<VariantBase> MakeLValueRefWrapper(T_&& data) {
     if constexpr (IsConst_) {
         return std::make_shared<ConstLValueRefVariantWrapper<CleanT_>>(data);
     }
@@ -203,7 +203,7 @@ std::shared_ptr<VariantBase> MakeLValueRefWrapper(T_&& data) noexcept {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-std::shared_ptr<VariantBase> MakeRValueRefWrapper(T_&& data) noexcept {
+std::shared_ptr<VariantBase> MakeRValueRefWrapper(T_&& data) {
     if constexpr (IsConst_) {
         return std::make_shared<ConstRValueRefVariantWrapper<CleanT_>>(std::forward<T_>(data));
     }
@@ -213,7 +213,7 @@ std::shared_ptr<VariantBase> MakeRValueRefWrapper(T_&& data) noexcept {
 }
 
 template <typename T_, bool IsConst_ = false, typename CleanT_>
-std::shared_ptr<VariantBase> MakePointerWrapper(T_&& data) noexcept {
+std::shared_ptr<VariantBase> MakePointerWrapper(T_&& data) {
     if constexpr (IsConst_) {
         return std::make_shared<ConstPointerVariantWrapper<CleanT_>>(data);
     }
@@ -223,26 +223,31 @@ std::shared_ptr<VariantBase> MakePointerWrapper(T_&& data) noexcept {
 }
 
 template <typename T_>
-std::shared_ptr<VariantBase> MakeWrapper(T_&& data) noexcept {
+Result<std::shared_ptr<VariantBase>> MakeWrapper(T_&& data) {
     using CleanT = std::remove_const_t<std::remove_pointer_t<std::remove_reference_t<T_>>>;
 
-    if constexpr (std::is_lvalue_reference_v<T_>) {
-        return MakeLValueRefWrapper<T_, std::is_const_v<std::remove_reference_t<T_>>, CleanT>(std::forward<T_>(data));
-    }
-    else if constexpr (std::is_rvalue_reference_v<T_>) {
-        return MakeRValueRefWrapper<T_, std::is_const_v<std::remove_reference_t<T_>>, CleanT>(std::forward<T_>(data));
-    }
-    else if constexpr (std::is_pointer_v<T_>) {
-        return MakePointerWrapper<T_, std::is_const_v<std::remove_pointer_t<T_>>, CleanT>(std::forward<T_>(data));
-    }
-    else {
-        if constexpr (std::is_copy_constructible_v<CleanT> || std::is_move_constructible_v<CleanT>) {
-            // we don't care about const since we copy the value anyway
-            return MakeValueWrapper<T_, CleanT>(std::forward<T_>(data));
+    try {
+        if constexpr (std::is_lvalue_reference_v<T_>) {
+            return MakeLValueRefWrapper<T_, std::is_const_v<std::remove_reference_t<T_>>, CleanT>(std::forward<T_>(data));
+        }
+        else if constexpr (std::is_rvalue_reference_v<T_>) {
+            return MakeRValueRefWrapper<T_, std::is_const_v<std::remove_reference_t<T_>>, CleanT>(std::forward<T_>(data));
+        }
+        else if constexpr (std::is_pointer_v<T_>) {
+            return MakePointerWrapper<T_, std::is_const_v<std::remove_pointer_t<T_>>, CleanT>(std::forward<T_>(data));
         }
         else {
-            return MakeLValueRefWrapper<T_, std::is_const_v<T_>, CleanT>(std::forward<T_>(data));
+            if constexpr (std::is_copy_constructible_v<CleanT> || std::is_move_constructible_v<CleanT>) {
+                // we don't care about const since we copy the value anyway
+                return MakeValueWrapper<T_, CleanT>(std::forward<T_>(data));
+            }
+            else {
+                return MakeLValueRefWrapper<T_, std::is_const_v<T_>, CleanT>(std::forward<T_>(data));
+            }
         }
+    }
+    catch (const std::exception& e) {
+        return { RESULT_ERROR(), "unable to create variant wrapper for type: {0}", TRY(ReflCpp::Reflect<T_>()).Dump() };
     }
 
     static_assert("should be unreachable");

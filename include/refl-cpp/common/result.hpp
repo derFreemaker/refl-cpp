@@ -18,11 +18,11 @@ template <typename T_>
 struct ResultBase {
     using StoredT = T_;
     using StoringT = std::conditional_t<std::is_reference_v<StoredT>,
-                           reference_wrapper<StoredT>,
-                           StoredT>;
-    using StoredReturnT = std::conditional_t<std::is_reference_v<StoredT>,
-                                             StoredT,
-                                             make_lvalue_reference_t<StoredT>>;
+                                        reference_wrapper<StoredT>,
+                                        StoredT>;
+    using ReturnT = std::conditional_t<std::is_reference_v<StoredT>,
+                                       StoredT,
+                                       make_lvalue_reference_t<StoredT>>;
 
 private:
     union {
@@ -48,7 +48,7 @@ public:
     ResultBase(T_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
         : value_(std::forward<T_>(value)),
           hasError_(false) {}
-    
+
     template <typename T2_>
         requires (!std::is_same_v<T2_, T_> && std::is_nothrow_convertible_v<T2_, T_>)
     ResultBase(T2_&& value) noexcept // NOLINT(*-forwarding-reference-overload)
@@ -58,16 +58,34 @@ public:
     //NOTE: we need this deconstructor since it is implicitly deleted
     ~ResultBase() noexcept {}
 
-    ResultBase(const ResultBase& other) noexcept
-        : hasError_(other.hasError_) {
-        hasError_ = other.hasError_;
-        if (hasError_) {
-            error_ = other.error_;
-        } else {
-            value_ = other.value_;
+    ResultBase(const ResultBase& other) noexcept {
+        this->~ResultBase();
+        this->hasError_ = other.hasError_;
+        if (this->hasError_) {
+            this->error_ = other.error_;
+        }
+        else {
+            this->value_ = std::move(other.value_);
         }
     }
-    
+
+    ResultBase& operator=(const ResultBase& other) noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
+        this->~ResultBase();
+        this->hasError_ = other.hasError_;
+        if (this->hasError_) {
+            this->error_ = other.error_;
+        }
+        else {
+            this->value_ = other.value_;
+        }
+
+        return *this;
+    }
+
     [[nodiscard]]
     bool HasError() const noexcept {
         return hasError_;
@@ -82,7 +100,7 @@ public:
     }
 
 
-    StoredReturnT Value() & {
+    ReturnT Value() & {
         if (this->HasError()) {
             this->m_ThrowBadValueAccessException();
         }
@@ -97,7 +115,7 @@ public:
         }
     }
 
-    make_const_t<StoredReturnT> Value() const & {
+    make_const_t<ReturnT> Value() const & {
         if (this->HasError()) {
             this->m_ThrowBadValueAccessException();
         }
@@ -112,7 +130,7 @@ public:
         }
     }
 
-    StoredReturnT Value() && {
+    ReturnT Value() && {
         if (this->HasError()) {
             this->m_ThrowBadValueAccessException();
         }
@@ -127,7 +145,7 @@ public:
         }
     }
 
-    make_const_t<StoredReturnT> Value() const && {
+    make_const_t<ReturnT> Value() const && {
         if (this->HasError()) {
             this->m_ThrowBadValueAccessException();
         }
@@ -146,7 +164,7 @@ public:
 template <>
 struct ResultBase<void> {
 private:
-    const std::optional<ResultError> error_;
+    std::optional<ResultError> error_;
 
 public:
     ResultBase(ErrorTag, ResultError&& error) noexcept
@@ -156,6 +174,22 @@ public:
         : error_(error) {}
 
     ResultBase() noexcept = default;
+
+    ResultBase(const ResultBase& other) noexcept {
+        this->~ResultBase();
+        this->error_ = other.Error();
+    }
+
+    ResultBase& operator=(const ResultBase& other) noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
+        this->~ResultBase();
+        this->error_ = other.Error();
+
+        return *this;
+    }
 
     [[nodiscard]]
     bool HasError() const noexcept {
@@ -248,34 +282,34 @@ struct Result : detail::ResultBase<T_> {
 };
 
 namespace detail {
-inline void TryHelper(const Result<void>* _) noexcept {}
+template <typename T_>
+T_& TryResultStorage() {
+    static thread_local std::aligned_storage_t<sizeof(T_), alignof(T_)> result_storage;
+    return *reinterpret_cast<T_*>(&result_storage);
+}
+
+inline void TryHelper(Result<void>*) noexcept {}
+inline void TryHelper(const Result<void>*) noexcept {}
 
 template <typename T_>
 [[nodiscard]]
-typename Result<T_>::StoredReturnT TryHelper(Result<T_>* result) noexcept {
+typename Result<T_>::ReturnT TryHelper(Result<T_>*) noexcept {
     // result->Value could throw an exception but since we only use this
     // function normally after checking if result has an error we should be good
-    return result->Value();
+    return TryResultStorage<Result<T_>>().Value();
 }
 
 template <typename T_>
 [[nodiscard]]
-typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) noexcept {
+typename Result<T_>::ReturnT TryHelper(const Result<T_>*) noexcept {
     // result->Value could throw an exception but since we only use this
     // function normally after checking if result has an error we should be good
-    return result->Value();
+    return TryResultStorage<Result<T_>>().Value();
 }
 }
 
 //TODO: maybe include the expression as well for debug purposes?
 //TODO: improve debug information using std::stacktrace is unnecessary long
-//TODO: create TRY macro for functions that don't return a result on error,
-// with custom error handling and clean syntax
-
-// The TRY macro uses a little bit of a lifetime hack,
-// since we use '_result' after its scope through a pointer.
-// This only works because '_result' lives in the enclosing
-// function stack.
 
 #if REFLCPP_ENABLE_STACK_TRACING_ERROR == 1
 
@@ -295,15 +329,21 @@ typename Result<T_>::StoredReturnT TryHelper(const Result<T_>* result) noexcept 
 #define TRY_IMPL(expr, ...) \
     (::ReflCpp::detail::TryHelper( \
         ({ \
-            auto __result__ = (expr); \
-            if (__result__.HasError()) { \
+            using __result_type__ = decltype(expr); \
+            __result_type__* __result__ = nullptr; \
+            { \
+                void* __result_ptr__ = reinterpret_cast<void*>(&::ReflCpp::detail::TryResultStorage<__result_type__>()); \
+                new (__result_ptr__) __result_type__(expr); \
+                __result__ = reinterpret_cast<__result_type__*>(__result_ptr__); \
+            } \
+            if (__result__->HasError()) { \
                 __VA_ARGS__ \
             } \
-            &__result__; \
+            __result__; \
         }) \
     ))
 
 #define TRY(...) \
-    TRY_IMPL((__VA_ARGS__), return __result__.Error();)
+    TRY_IMPL((__VA_ARGS__), return __result__->Error();)
 
 }

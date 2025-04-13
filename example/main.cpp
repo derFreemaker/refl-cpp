@@ -19,15 +19,15 @@ int main() {
     const auto method = EXIT_MAIN_TRY(type.GetMethod("foo"));
 
     (void)EXIT_MAIN_TRY(method.Invoke(
-        ReflCpp::Variant::Create<kpop::Test&>(test),
+        EXIT_MAIN_TRY(ReflCpp::Variant::Create<kpop::Test&>(test)),
         {
-        ReflCpp::Variant::Create<int>(123)
+        EXIT_MAIN_TRY(ReflCpp::Variant::Create<int>(123))
         }
     ));
     (void)EXIT_MAIN_TRY(method.Invoke(
-        ReflCpp::Variant::Create<kpop::Test&>(test),
+        EXIT_MAIN_TRY(ReflCpp::Variant::Create<kpop::Test&>(test)),
         {
-        ReflCpp::Variant::Create<const char*>("test")
+        EXIT_MAIN_TRY(ReflCpp::Variant::Create<const char*>("test"))
         }
     ));
 

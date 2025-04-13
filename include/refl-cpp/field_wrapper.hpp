@@ -7,7 +7,7 @@
 
 namespace ReflCpp {
 struct FieldBase {
-    virtual ~FieldBase() = default;
+    virtual ~FieldBase() noexcept = default;
 
     [[nodiscard]]
     virtual bool IsStatic() const noexcept = 0;
@@ -36,7 +36,7 @@ private:
 public:
     using Traits = FieldTraits<T_>;
 
-    FieldWrapper(T_ ptr)
+    FieldWrapper(T_ ptr) noexcept
         : ptr_(ptr) {}
 
     [[nodiscard]]
@@ -102,7 +102,9 @@ public:
             return { RESULT_ERROR(), "cannot get reference to a const type" };
         }
         else if constexpr (Traits::IsStatic) {
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<typename Traits::Type&>(*ptr_));
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(
+                static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_)
+            );
         }
         else {
             if (instance.IsVoid()) {
@@ -110,7 +112,9 @@ public:
             }
 
             auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
+            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(
+                static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_)
+            );
         }
     }
 };

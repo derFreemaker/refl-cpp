@@ -24,4 +24,15 @@ struct TypeInstance {
         return database.GetType(id);
     }
 };
+
+template <>
+struct TypeInstance<void> {
+    static Result<TypeID> ID() noexcept {
+        return ReflectionDatabase::Void().GetID();
+    }
+
+    static Result<const Type&> Type() noexcept {
+        return ReflectionDatabase::Void();
+    }
+};
 }

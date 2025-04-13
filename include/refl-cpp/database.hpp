@@ -7,12 +7,43 @@
 #include "refl-cpp/type.hpp"
 #include "refl-cpp/reflect_printer.hpp"
 
+template <>
+struct ReflCpp::ReflectData<void> {
+    static TypeData Create() noexcept {
+        return TypeData{ .name = "Void" };
+    }
+};
+
+template <>
+struct ReflCpp::ReflectPrinter<void> {
+    static void Print(std::ostream& stream, const Type& type) noexcept {
+        stream << "void";
+    }
+};
+
 namespace ReflCpp {
 struct ReflectionDatabase {
 private:
     std::vector<std::unique_ptr<Type>> types_;
 
 public:
+    static const Type& Void() noexcept { // NOLINT(*-exception-escape)
+        static std::optional<Type> type{};
+        if (type.has_value()) {
+            return type.value();
+        }
+
+        const TypeData data = ReflectData<void>::Create();
+        constexpr auto id = TypeID(0);
+
+        TypeOptions options{};
+        options.printFunc = ReflectPrinter<void>::Print;
+
+        type.emplace(id, data, options);
+
+        return type.value();
+    }
+
     static ReflectionDatabase& Instance() noexcept {
         static ReflectionDatabase instance;
         return instance;

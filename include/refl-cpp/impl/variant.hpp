@@ -16,7 +16,8 @@ inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, co
 }
 
 inline Variant& Variant::Void() noexcept {
-    static auto instance = Variant(
+    // static detail::VoidVariantWrapper wrapper;
+    static Variant instance = Variant(
         std::make_shared<detail::VoidVariantWrapper>(),
         ReflectID<void>().Value()
     );
@@ -25,26 +26,26 @@ inline Variant& Variant::Void() noexcept {
 
 template <typename T_>
     requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-Variant Variant::Create(T_& data) noexcept {
-    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
+Result<Variant> Variant::Create(T_& data) noexcept {
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
 }
 
 template <typename T_>
     requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-Variant Variant::Create(T_&& data) noexcept {
-    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
+Result<Variant> Variant::Create(T_&& data) noexcept {
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
 }
 
 template <typename T_>
     requires (std::is_reference_v<T_>)
-Variant Variant::Create(T_&& data) noexcept {
-    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
+Result<Variant> Variant::Create(T_&& data) noexcept {
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
 }
 
 template <typename T_>
     requires (std::is_pointer_v<T_>)
-Variant Variant::Create(T_ data) noexcept {
-    return Variant(detail::MakeWrapper<T_>(std::forward<T_>(data)), ReflectID<T_>().Value());
+Result<Variant> Variant::Create(T_ data) noexcept {
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
 }
 
 template <typename T_>
@@ -86,6 +87,13 @@ Result<void> Variant::CanGetWithError() const noexcept {
     const Type& type = TRY(type_.GetType());
     const Type& passed_type = TRY(Reflect<T_>());
     return { RESULT_ERROR(), CanNotGetFromVariantWithType(type, passed_type) };
+}
+
+namespace detail {
+template <VariantWrapperType Type, typename R_>
+concept HasVariantMatcher = requires(VariantBase* base) {
+    { VariantMatcher<Type, R_>::Get(base) };
+};
 }
 
 #define REFLCPP_MATCH_VARIANT(Type) \

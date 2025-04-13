@@ -1,6 +1,4 @@
-#include <gtest/gtest.h>
-
-#include "refl-cpp/common/result.hpp"
+#include "config.hpp"
 #include "helper/variant_helper.hpp"
 
 namespace ReflCpp {
@@ -11,19 +9,20 @@ struct TestStruct {
 template <>
 struct ReflectData<TestStruct> {
     static Result<TypeData> Create() {
-        return TypeData { .name = "TestStruct" };
+        return TypeData{ .name = "TestStruct" };
     }
 };
 
 // Helper function to create variants for testing
 template <typename T>
-Variant CreateVariant(T value) {
+Result<Variant> CreateVariant(T value) {
     return Variant::Create<T>(std::forward<T>(value));
 }
 
 // Test void variant
 TEST(Variant, Void) {
     const auto& variant = Variant::Void();
+
 
     EXPECT_FALSE(variant.CanGet<int>());
     EXPECT_FALSE(variant.CanGet<const int>());
@@ -41,7 +40,7 @@ TEST(Variant, Void) {
 
 TEST(Variant, Value) {
     constexpr int value = 42;
-    const auto variant = CreateVariant<int>(value);
+    const auto variant = FAIL_TRY(CreateVariant<int>(value));
 
     EXPECT_TRUE(variant.CanGet<int>());
     EXPECT_TRUE(variant.CanGet<const int>());
@@ -61,7 +60,7 @@ TEST(Variant, Value) {
 // Test const value handling
 TEST(Variant, ConstValue) {
     constexpr int value = 42;
-    const auto variant = CreateVariant<const int>(value);
+    const auto variant = FAIL_TRY(CreateVariant<const int>(value));
 
     // Test CanGet
     EXPECT_FALSE(variant.CanGet<int>()); // Can't get non-const from const
@@ -79,7 +78,7 @@ TEST(Variant, ConstValue) {
 // Test reference handling
 TEST(Variant, LValueReference) {
     int value = 42;
-    const auto variant = CreateVariant<int&>(value);
+    const auto variant = FAIL_TRY(CreateVariant<int&>(value));
 
     EXPECT_TRUE(variant.CanGet<int>());
     EXPECT_TRUE(variant.CanGet<const int>());
@@ -99,7 +98,7 @@ TEST(Variant, LValueReference) {
 
 TEST(Variant, ConstLValueReference) {
     int value = 42;
-    const auto variant = CreateVariant<const int&>(value);
+    const auto variant = FAIL_TRY(CreateVariant<const int&>(value));
 
     EXPECT_FALSE(variant.CanGet<int>()); // Can't get non-const from const
     EXPECT_TRUE(variant.CanGet<const int>());
@@ -116,20 +115,20 @@ TEST(Variant, ConstLValueReference) {
     EXPECT_EQ(variant.Get<const int>().Value(), 100);
 }
 
-
 TEST(Variant, RValueReference) {
-    const auto variant = CreateVariant<int&&>(42);
+    // const auto variant = FAIL_TRY(CreateVariant<int&&>(42));
+    const auto variant = CreateVariant<int&&>(42).Value();
 
     EXPECT_TRUE(variant.CanGet<int&&>());
     EXPECT_TRUE(variant.CanGet<const int&&>());
-
+    
     EXPECT_EQ(variant.Get<int&&>().Value(), 42);
     EXPECT_EQ(variant.Get<const int&&>().Value(), 42);
 }
 
 TEST(Variant, ConstRValueReference) {
     int value = 42;
-    const auto variant = CreateVariant<const int&&>(std::move(value));
+    const auto variant = FAIL_TRY(CreateVariant<const int&&>(std::move(value)));
 
     // Test CanGet for rvalue reference
     EXPECT_TRUE(variant.CanGet<const int&&>());
@@ -140,7 +139,7 @@ TEST(Variant, ConstRValueReference) {
 
 TEST(Variant, Pointer) {
     int value = 42;
-    const auto variant = CreateVariant<int*>(&value);
+    const auto variant = FAIL_TRY(CreateVariant<int*>(&value));
 
     EXPECT_TRUE(variant.CanGet<int*>());
     EXPECT_TRUE(variant.CanGet<const int*>());
@@ -156,7 +155,7 @@ TEST(Variant, Pointer) {
 
 TEST(Variant, ConstPointer) {
     int value = 42;
-    const auto variant = CreateVariant<const int*>(&value);
+    const auto variant = FAIL_TRY(CreateVariant<const int*>(&value));
 
     EXPECT_FALSE(variant.CanGet<int*>()); // Can't get non-const from const
     EXPECT_TRUE(variant.CanGet<const int*>());
@@ -173,7 +172,7 @@ TEST(Variant, ConstPointer) {
 TEST(Variant, CustomClassGet) {
     TestStruct obj;
     obj.value = 42;
-    const auto variant = CreateVariant<TestStruct>(obj);
+    const auto variant = FAIL_TRY(CreateVariant<TestStruct>(obj));
 
     EXPECT_TRUE(variant.CanGet<TestStruct>());
     EXPECT_TRUE(variant.CanGet<const TestStruct>());
@@ -193,7 +192,7 @@ TEST(Variant, CustomClassGet) {
 // Test type mismatches
 TEST(Variant, TypeMismatch) {
     constexpr int value = 42;
-    const auto variant = CreateVariant<int>(value);
+    const auto variant = FAIL_TRY(CreateVariant<int>(value));
 
     // Test CanGet with wrong types
     EXPECT_FALSE(variant.CanGet<double>());
@@ -212,10 +211,10 @@ TEST(Variant, ComplexTypeConversions) {
     obj.value = 42;
 
     // Create variants with different reference/pointer types
-    const auto v1 = CreateVariant<TestStruct>(obj); // value
-    const auto v2 = CreateVariant<TestStruct&>(obj); // reference
-    const auto v3 = CreateVariant<TestStruct*>(&obj); // pointer
-    const auto v4 = CreateVariant<TestStruct&&>(std::move(obj)); // rvalue
+    const auto v1 = FAIL_TRY(CreateVariant<TestStruct>(obj)); // value
+    const auto v2 = FAIL_TRY(CreateVariant<TestStruct&>(obj)); // reference
+    const auto v3 = FAIL_TRY(CreateVariant<TestStruct*>(&obj)); // pointer
+    const auto v4 = FAIL_TRY(CreateVariant<TestStruct&&>(std::move(obj))); // rvalue
 
     // Check value copy
     EXPECT_TRUE(v1.CanGet<TestStruct>());

@@ -40,11 +40,6 @@ struct VariantMatcher {
         return false;
     }
 };
-
-template <VariantWrapperType Type, typename R_>
-concept HasVariantMatcher = requires(VariantBase* base) {
-    { VariantMatcher<Type, R_>::Get(base) };
-};
 }
 
 
@@ -53,7 +48,7 @@ struct Variant {
 private:
     std::shared_ptr<detail::VariantBase> base_;
 
-    const TypeID type_;
+    TypeID type_;
 
     [[nodiscard]]
     Result<void> CheckVoid() const {
@@ -77,19 +72,19 @@ public:
 
     template <typename T_>
         requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-    static Variant Create(T_& data);
+    static Result<Variant> Create(T_& data);
 
     template <typename T_>
         requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-    static Variant Variant::Create(T_&& data);
+    static Result<Variant> Create(T_&& data);
 
     template <typename T_>
         requires (std::is_reference_v<T_>)
-    static Variant Create(T_&& data);
+    static Result<Variant> Create(T_&& data);
 
     template <typename T_>
         requires (std::is_pointer_v<T_>)
-    static Variant Create(T_ data);
+    static Result<Variant> Create(T_ data);
 
     [[nodiscard]]
     bool IsVoid() const {
