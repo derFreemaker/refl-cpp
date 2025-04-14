@@ -15,8 +15,6 @@ CPMAddPackage(
 add_executable(refl-cpp_tests config.hpp
         helper/variant_helper.hpp
 
-        common/result.cpp
-        
         variant.cpp
         function_wrapper.cpp
         fields.cpp
