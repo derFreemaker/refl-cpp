@@ -1,5 +1,6 @@
 #pragma once
 
+#include "refl-cpp/common/type_traits.hpp"
 #include "refl-cpp/common/result.hpp"
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/declare_reflect.hpp"

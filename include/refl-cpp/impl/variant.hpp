@@ -7,8 +7,8 @@
 #include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
-inline FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) noexcept {
-    return FormattedError{
+inline ResCpp::FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) noexcept {
+    return ResCpp::FormattedError{
         "cannot get from Variant ({0}) with passed type: {1}",
         type.Dump(),
         passed_type.Dump()

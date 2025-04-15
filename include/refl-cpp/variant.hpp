@@ -1,7 +1,5 @@
 #pragma once
 
-#include <concepts>
-
 #include "refl-cpp/common/result.hpp"
 #include "refl-cpp/type_id.hpp"
 
@@ -61,7 +59,7 @@ private:
     Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type)
         : base_(base), type_(type) {}
 
-    static FormattedError CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+    static ResCpp::FormattedError CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
 
     friend struct VariantTestHelper;
 
