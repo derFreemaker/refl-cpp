@@ -19,7 +19,7 @@ inline Variant& Variant::Void() noexcept {
     // static detail::VoidVariantWrapper wrapper;
     static Variant instance = Variant(
         std::make_shared<detail::VoidVariantWrapper>(),
-        ReflectID<void>().Value()
+        ReflectID<void>().value()
     );
     return instance;
 }
@@ -27,25 +27,25 @@ inline Variant& Variant::Void() noexcept {
 template <typename T_>
     requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
 Result<Variant> Variant::Create(T_& data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
 }
 
 template <typename T_>
     requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
 Result<Variant> Variant::Create(T_&& data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
 }
 
 template <typename T_>
     requires (std::is_reference_v<T_>)
 Result<Variant> Variant::Create(T_&& data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
 }
 
 template <typename T_>
     requires (std::is_pointer_v<T_>)
 Result<Variant> Variant::Create(T_ data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), ReflectID<T_>().Value());
+    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
 }
 
 template <typename T_>

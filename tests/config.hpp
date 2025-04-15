@@ -5,5 +5,5 @@
 
 #define FAIL_TRY(...) \
     TRY_IMPL((__VA_ARGS__), { \
-        FAIL() << __result__.Error().str(); \
+        FAIL() << __result__.error().str(); \
     })

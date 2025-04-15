@@ -18,11 +18,11 @@ private:
     Result<void> CheckArgs(const ArgumentList& args) const {
         constexpr size_t arg_count = sizeof...(Indices);
         std::array<Result<void>, arg_count> args_results = {
-            args[Indices].template CanGetWithError<typename Traits::template Arg<Indices>::Type>()...
+            args[Indices].template CanGetWithError<typename Traits::template Arg<Indices>::Type>().Hold()...
         };
 
         auto error_it = std::find_if(args_results.begin(), args_results.end(), [](const auto& result) {
-            return result.HasError();
+            return result.has_error();
         });
 
         if (error_it != args_results.end()) {
@@ -46,7 +46,7 @@ private:
             typename Traits::template Arg<Indices>::Type, \
             typename Traits::template Arg<Indices>::Type& \
         > \
-    >>().Value()...
+    >>().value()...
 
     template <size_t... Indices> requires (Traits::IsStatic && Traits::HasReturn)
     Result<Variant> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
@@ -131,7 +131,7 @@ public:
     bool CanInvokeWithArgs(const ArgumentList& args) const {
         return !CheckArgs(args, std::make_index_sequence<Traits::ArgCount>()).HasError();
     }
-    
+
     [[nodiscard]]
     Result<Variant> Invoke(const ArgumentList& args, const Variant& obj) const {
         if (args.size() != Traits::ArgCount) {

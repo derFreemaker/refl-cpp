@@ -4,5 +4,5 @@
 
 namespace ReflCpp {
 template <typename T>
-using Result = ResCpp::Result<T, ResCpp::FormattedError>;
+using Result = ResCpp:esult<T, ResCpp::FormattedError>;
 }
