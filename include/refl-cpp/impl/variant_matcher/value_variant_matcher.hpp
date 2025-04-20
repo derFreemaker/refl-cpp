@@ -3,49 +3,49 @@
 #include "refl-cpp/variant.hpp"
 
 namespace ReflCpp::detail {
-template <typename R_>
-    requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
-struct VariantMatcher<VariantWrapperType::VALUE, R_> {
+template <typename R>
+    requires (!std::is_pointer_v<R> && !std::is_reference_v<R>)
+struct VariantMatcher<VariantWrapperType::VALUE, R> {
     static bool Match(const TypeID type) noexcept {
-        return type.Equals<R_>();
+        return type.Equals<R>();
     }
 
-    static R_& Get(VariantBase* base) noexcept {
-        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
+    static R& Get(VariantBase* base) noexcept {
+        return static_cast<VariantWrapper<R&>*>(base)->GetValue();
     }
 };
 
-template <typename R_>
-    requires (!std::is_pointer_v<R_> && !std::is_reference_v<R_>)
-struct VariantMatcher<VariantWrapperType::VALUE, const R_> {
+template <typename R>
+    requires (!std::is_pointer_v<R> && !std::is_reference_v<R>)
+struct VariantMatcher<VariantWrapperType::VALUE, const R> {
     static bool Match(const TypeID type) noexcept {
-        return type.Equals<R_>();
+        return type.Equals<R>();
     }
 
-    static const R_& Get(VariantBase* base) noexcept {
-        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
+    static const R& Get(VariantBase* base) noexcept {
+        return static_cast<VariantWrapper<R&>*>(base)->GetValue();
     }
 };
 
-template <typename R_>
-struct VariantMatcher<VariantWrapperType::VALUE, R_&> {
+template <typename R>
+struct VariantMatcher<VariantWrapperType::VALUE, R&> {
     static bool Match(const TypeID type) noexcept {
-        return type.Equals<R_>();
+        return type.Equals<R>();
     }
 
-    static R_& Get(VariantBase* base) noexcept {
-        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
+    static R& Get(VariantBase* base) noexcept {
+        return static_cast<VariantWrapper<R&>*>(base)->GetValue();
     }
 };
 
-template <typename R_>
-struct VariantMatcher<VariantWrapperType::VALUE, const R_&> {
+template <typename R>
+struct VariantMatcher<VariantWrapperType::VALUE, const R&> {
     static bool Match(const TypeID type) noexcept {
-        return type.Equals<R_>();
+        return type.Equals<R>();
     }
 
-    static const R_& Get(VariantBase* base) noexcept {
-        return static_cast<VariantWrapper<R_&>*>(base)->GetValue();
+    static const R& Get(VariantBase* base) noexcept {
+        return static_cast<VariantWrapper<R&>*>(base)->GetValue();
     }
 };
 }

@@ -51,17 +51,17 @@ public:
           printFunc_(options.printFunc) {}
 
     [[nodiscard]]
-    TypeID GetID() const noexcept {
+    TypeID GetID() const {
         return id_;
     }
 
     [[nodiscard]]
-    const char* GetName() const noexcept {
+    const char* GetName() const {
         return name_;
     }
 
     [[nodiscard]]
-    const char* GetNamespace() const noexcept { // NOLINT(*-exception-escape)
+    const char* GetNamespace() const { // NOLINT(*-exception-escape)
         if (namespace_.has_value()) {
             return namespace_.value();
         }
@@ -69,37 +69,37 @@ public:
     }
 
     [[nodiscard]]
-    bool InNamespace() const noexcept {
+    bool InNamespace() const {
         return namespace_.has_value();
     }
 
     [[nodiscard]]
-    bool HasBases() const noexcept {
+    bool HasBases() const {
         return !bases_.empty();
     }
 
     [[nodiscard]]
-    const std::vector<TypeID>& GetBases() const noexcept {
+    const std::vector<TypeID>& GetBases() const {
         return bases_;
     }
 
     [[nodiscard]]
-    Result<const Type&> GetBase(const size_t index) const noexcept {
+    const Type& GetBase(const size_t index) const {
         return bases_[index].GetType();
     }
 
     [[nodiscard]]
-    bool HasInners() const noexcept {
+    bool HasInners() const {
         return !inners_.empty();
     }
 
     [[nodiscard]]
-    const std::vector<TypeID>& GetInners() const noexcept {
+    const std::vector<TypeID>& GetInners() const {
         return inners_;
     }
 
     [[nodiscard]]
-    Result<const Type&> GetInner(const size_t index) const noexcept {
+    const Type& GetInner(const size_t index) const noexcept {
         return inners_[index].GetType();
     }
 
@@ -122,13 +122,13 @@ public:
         return fields_;
     }
 
-    Result<const Field&> GetField(const char* name) const noexcept {
+    std::optional<std::reference_wrapper<const Field>> GetField(const char* name) const noexcept {
         for (const auto& field : fields_) {
             if (field.GetName() == name) {
                 return field;
             }
         }
-        return { RESULT_ERROR(), "no field found with name: {0}", name };
+        return std::nullopt;
     }
 
     // methods
@@ -138,13 +138,13 @@ public:
         return methods_;
     }
 
-    Result<const Method&> GetMethod(const char* name) const noexcept {
+    std::optional<std::reference_wrapper<const Method>> GetMethod(const char* name) const noexcept {
         for (const auto& method : methods_) {
             if (method.GetName() == name) {
                 return method;
             }
         }
-        return { RESULT_ERROR(), "no function found with name: {0}", name };
+        return std::nullopt;
     }
 
     // utils

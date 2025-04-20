@@ -12,57 +12,59 @@ private:
     uint32_t id_ = invalid_;
 
 public:
-    static constexpr auto Invalid() noexcept {
+    static constexpr auto Invalid() {
         return TypeID(invalid_);
     }
 
-    uint32_t Value() const noexcept {
+    [[nodiscard]]
+    uint32_t Value() const {
         return id_;
     }
-    
-    operator uint32_t() const noexcept {
+
+    operator uint32_t() const {
         return id_;
     }
 
     constexpr TypeID(const uint32_t id) noexcept
         : id_(id) {}
 
-    bool operator==(const TypeID other) const noexcept {
+    bool operator==(const TypeID other) const {
         return id_ == other.id_;
     }
 
     [[nodiscard]]
-    bool IsValid() const noexcept {
+    bool IsValid() const {
         return this->id_ != invalid_;
     }
 
     [[nodiscard]]
-    bool IsInvalid() const noexcept {
+    bool IsInvalid() const {
         return this->id_ == invalid_;
     }
 
     [[nodiscard]]
-    Result<const Type&> GetType() const noexcept {
+    const Type& GetType() const {
         if (IsInvalid()) {
-            return { RESULT_ERROR(), "invalid type id" };
+            throw std::invalid_argument("invalid type id");
         }
 
         return detail::Reflect(id_);
     }
 
-    operator Result<const Type&>() const noexcept {
+    operator const Type&() const {
         return GetType();
     }
 
-    template <typename T_>
     [[nodiscard]]
-    bool Equals() const noexcept {
-        auto result = ReflectID<T_>();
-        const TypeID other = TRY_IMPL(
-            result,
-            return false;
-        );
+    bool Equals(const TypeID& other) const {
         return id_ == other.id_;
+    }
+
+    template <typename T>
+    [[nodiscard]]
+    bool Equals() const {
+        const TypeID other = ReflectID<T>();
+        return Equals(other);
     }
 };
 }

@@ -12,7 +12,7 @@ CPMAddPackage(
         "BUILD_GMOCK ON"
 )
 
-add_executable(refl-cpp_tests config.hpp
+add_executable(refl-cpp_tests
         helper/variant_helper.hpp
 
         variant.cpp

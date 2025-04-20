@@ -1,22 +1,19 @@
 #pragma once
 
-#include "refl-cpp/common/result.hpp"
-
 namespace ReflCpp {
 struct Type;
 struct TypeID;
 
-template <typename T_>
+template <typename T>
 [[nodiscard]]
-Result<const Type&> Reflect() noexcept;
+const Type& Reflect();
 
-template <typename T_>
+template <typename T>
 [[nodiscard]]
-Result<TypeID> ReflectID() noexcept;
+TypeID ReflectID();
 
 namespace detail {
 [[nodiscard]]
-Result<const Type&> Reflect(TypeID id) noexcept;
-
+const Type& Reflect(TypeID id);
 }
 }

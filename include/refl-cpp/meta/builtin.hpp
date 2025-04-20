@@ -6,13 +6,13 @@
 #define REFLECT_BUILTIN_TYPE_IMPL(TEMPLATE, TYPE, NAME, PRINT) \
     template <TEMPLATE> \
     struct ReflCpp::ReflectData<TYPE> { \
-        static Result<TypeData> Create() noexcept { \
+        static TypeData Create() { \
             return TypeData { .name = NAME }; \
         } \
     }; \
     template <TEMPLATE> \
     struct ReflCpp::ReflectPrinter<TYPE> { \
-        static void Print(std::ostream& stream, const Type& type) noexcept { \
+        static void Print(std::ostream& stream, const Type& type) { \
             stream << PRINT; \
         } \
     };

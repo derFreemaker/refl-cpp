@@ -1,6 +1,5 @@
 #pragma once
 
-#include "refl-cpp/common/result.hpp"
 #include "refl-cpp/type_id.hpp"
 
 namespace ReflCpp {
@@ -26,13 +25,13 @@ struct VariantBase {
     virtual VariantWrapperType GetType() const = 0;
 };
 
-template <typename R_>
+template <typename R>
 struct VariantWrapper : public VariantBase {
     [[nodiscard]]
-    virtual R_ GetValue() = 0;
+    virtual R GetValue() = 0;
 };
 
-template <VariantWrapperType Type, typename R_>
+template <VariantWrapperType Type, typename R>
 struct VariantMatcher {
     static bool Match(const TypeID) {
         return false;
@@ -48,18 +47,16 @@ private:
 
     TypeID type_;
 
-    [[nodiscard]]
-    Result<void> CheckVoid() const {
+    void CheckVoid() const {
         if (IsVoid()) {
-            return { RESULT_ERROR(), "cannot get reference or value from void variant" };
+            throw std::logic_error("cannot get reference or value from void variant");
         }
-        return {};
     }
 
     Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type)
         : base_(base), type_(type) {}
 
-    static ResCpp::FormattedError CanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
+    static void ThrowCanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
 
     friend struct VariantTestHelper;
 
@@ -68,21 +65,21 @@ public:
 
     Variant() = delete;
 
-    template <typename T_>
-        requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-    static Result<Variant> Create(T_& data);
+    template <typename T>
+        requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
+    static Variant Create(T& data);
 
-    template <typename T_>
-        requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-    static Result<Variant> Create(T_&& data);
+    template <typename T>
+        requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
+    static Variant Create(T&& data);
 
-    template <typename T_>
-        requires (std::is_reference_v<T_>)
-    static Result<Variant> Create(T_&& data);
+    template <typename T>
+        requires (std::is_reference_v<T>)
+    static Variant Create(T&& data);
 
-    template <typename T_>
-        requires (std::is_pointer_v<T_>)
-    static Result<Variant> Create(T_ data);
+    template <typename T>
+        requires (std::is_pointer_v<T>)
+    static Variant Create(T data);
 
     [[nodiscard]]
     bool IsVoid() const {
@@ -94,29 +91,33 @@ public:
         return type_;
     }
 
-    template <typename T_>
+    template <typename T>
     [[nodiscard]]
     bool CanGet() const;
 
-    template <typename T_>
+    template <typename T>
+    void CheckGet() const;
+
+private:
+    template <typename ReturnT, typename T>
+    ReturnT Variant::GetImpl() const;
+
+public:
+    template <typename T>
+        requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
     [[nodiscard]]
-    Result<void> CanGetWithError() const;
+    std::remove_volatile_t<T>& Get() const;
 
-    template <typename T_>
-        requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-    [[nodiscard]]
-    Result<std::remove_volatile_t<T_>&> Get() const;
+    template <typename T>
+        requires (std::is_lvalue_reference_v<T>)
+    std::remove_volatile_t<std::remove_reference_t<T>>& Get() const;
 
-    template <typename T_>
-        requires (std::is_lvalue_reference_v<T_>)
-    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Get() const;
+    template <typename T>
+        requires (std::is_rvalue_reference_v<T>)
+    std::remove_volatile_t<std::remove_reference_t<T>>&& Get() const;
 
-    template <typename T_>
-        requires (std::is_rvalue_reference_v<T_>)
-    Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Get() const;
-
-    template <typename T_>
-        requires (std::is_pointer_v<T_>)
-    Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Get() const;
+    template <typename T>
+        requires (std::is_pointer_v<T>)
+    std::remove_volatile_t<std::remove_pointer_t<T>>* Get() const;
 };
 }

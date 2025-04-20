@@ -2,13 +2,13 @@
 
 #include "refl-cpp/variant.hpp"
 
-template <typename R_>
-struct ReflCpp::detail::VariantMatcher<ReflCpp::detail::VariantWrapperType::CONST_RVALUE_REF, const R_&&> {
+template <typename R>
+struct ReflCpp::detail::VariantMatcher<ReflCpp::detail::VariantWrapperType::CONST_RVALUE_REF, const R&&> {
     static bool Match(const TypeID type) {
-        return type.Equals<const R_&&>();
+        return type.Equals<const R&&>();
     }
 
-    static const R_&& Get(VariantBase* base) {
-        return std::forward<const R_>(static_cast<VariantWrapper<const R_&&>*>(base)->GetValue());
+    static const R&& Get(VariantBase* base) {
+        return std::forward<const R>(static_cast<VariantWrapper<const R&&>*>(base)->GetValue());
     }
 };

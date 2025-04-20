@@ -10,28 +10,28 @@ struct MethodBase {
 
 protected:
     [[nodiscard]]
-    virtual Result<Variant> InvokeImpl(const ArgumentList& args, const Variant& instance) const = 0;
+    virtual Variant InvokeImpl(const ArgumentList& args, const Variant& instance) const = 0;
 
 public:
     [[nodiscard]]
-    virtual Result<Variant> InvokeStatic(const ArgumentList& args) const {
+    virtual Variant InvokeStatic(const ArgumentList& args) const {
         return InvokeImpl(args, Variant::Void());
     }
 
     [[nodiscard]]
-    virtual Result<Variant> Invoke(const Variant& instance, const ArgumentList& args) const {
+    virtual Variant Invoke(const Variant& instance, const ArgumentList& args) const {
         return InvokeImpl(args, instance);
     }
 };
 
-template <typename T_>
+template <typename T>
 struct MethodWrapper final : public MethodBase {
 private:
-    FunctionWrapper<T_> func_;
+    FunctionWrapper<T> func_;
     std::vector<const char*> argsNames_;
 
 public:
-    MethodWrapper(T_ func, const std::vector<const char*>& argsNames)
+    MethodWrapper(T func, const std::vector<const char*>& argsNames)
         : func_(func), argsNames_(argsNames) {}
 
     [[nodiscard]]
@@ -40,7 +40,7 @@ public:
     }
 
     [[nodiscard]]
-    Result<Variant> InvokeImpl(const ArgumentList& args, const Variant& instance) const override {
+    Variant InvokeImpl(const ArgumentList& args, const Variant& instance) const override {
         return func_.Invoke(args, instance);
     }
 };

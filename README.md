@@ -8,6 +8,7 @@ implementation header so to say. You should always `include<refl-cpp/refl-cpp.hp
 It is also marked as precompile-header to further speed up the build process.
 
 ## TODO
+- [critical] better error handling (tried Result type)
 - [critical] add code generator
 - [critical] add easy build hook for projects
 - support template parameters?

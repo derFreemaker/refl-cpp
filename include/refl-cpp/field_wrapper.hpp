@@ -1,106 +1,101 @@
 #pragma once
 
 #include "refl-cpp/common/type_traits.hpp"
-#include "refl-cpp/common/result.hpp"
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/declare_reflect.hpp"
 #include "refl-cpp/field_traits.hpp"
 
 namespace ReflCpp {
 struct FieldBase {
-    virtual ~FieldBase() noexcept = default;
+    virtual ~FieldBase() = default;
 
     [[nodiscard]]
-    virtual bool IsStatic() const noexcept = 0;
+    virtual bool IsStatic() const = 0;
 
     [[nodiscard]]
-    virtual bool IsConst() const noexcept = 0;
+    virtual bool IsConst() const = 0;
 
     [[nodiscard]]
-    virtual Result<TypeID> GetType() const noexcept = 0;
+    virtual TypeID GetType() const = 0;
 
     [[nodiscard]]
-    virtual Result<Variant> GetValue(const Variant& instance) const noexcept = 0;
+    virtual Variant GetValue(const Variant& instance) const = 0;
+
+    virtual void SetValue(const Variant& value, const Variant& instance) const = 0;
 
     [[nodiscard]]
-    virtual Result<void> SetValue(const Variant& value, const Variant& instance) const noexcept = 0;
-
-    [[nodiscard]]
-    virtual Result<Variant> GetRef(const Variant& instance) const noexcept = 0;
+    virtual Variant GetRef(const Variant& instance) const = 0;
 };
 
-template <typename T_>
+template <typename T>
 struct FieldWrapper final : public FieldBase {
 private:
-    T_ ptr_;
+    T ptr_;
 
 public:
-    using Traits = FieldTraits<T_>;
+    using Traits = FieldTraits<T>;
 
-    FieldWrapper(T_ ptr) noexcept
+    FieldWrapper(T ptr) noexcept
         : ptr_(ptr) {}
 
     [[nodiscard]]
-    constexpr bool IsStatic() const noexcept override {
+    constexpr bool IsStatic() const override {
         return Traits::IsStatic;
     }
 
     [[nodiscard]]
-    constexpr bool IsConst() const noexcept override {
+    constexpr bool IsConst() const override {
         return Traits::IsConst;
     }
 
     [[nodiscard]]
-    Result<TypeID> GetType() const noexcept override {
+    TypeID GetType() const override {
         return ReflectID<typename Traits::Type>();
     }
 
     [[nodiscard]]
-    Result<Variant> GetValue(const Variant& instance) const noexcept override {
+    Variant GetValue(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsStatic) {
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
-                return { RESULT_ERROR(), "instance is needed for non-static member fields" };
+                throw std::logic_error("instance is needed for non-static member fields");
             }
 
-            typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
+            typename Traits::ClassType& obj = instance.Get<typename Traits::ClassType&>();
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
         }
     }
 
-    [[nodiscard]]
-    Result<void> SetValue(const Variant& value, const Variant& instance) const noexcept override {
+    void SetValue(const Variant& value, const Variant& instance) const noexcept override {
+        const auto& type = Reflect<const typename Traits::Type>();
         if constexpr (Traits::IsConst) {
-            const auto& type = TRY(Reflect<const typename Traits::Type>());
-            return { RESULT_ERROR(), "cannot set value on type: {0}", type.Dump() };
+            throw std::logic_error("cannot set value on type: " + type.Dump());
         }
         if constexpr (!std::is_copy_constructible_v<typename Traits::Type> || !std::is_copy_assignable_v<typename Traits::Type>) {
             //TODO: make it so that it only errors if there is no possible way
-            return { RESULT_ERROR(), "cannot set value on not copy construct or copy assignable" };
+            throw std::logic_error("cannot set value on not copy construct or copy assignable: " + type.Dump());
         }
         else if constexpr (Traits::IsStatic) {
             *ptr_ = value.Get<const typename Traits::Type&>();
-            return {};
         }
         else {
             if (instance.IsVoid()) {
-                return { RESULT_ERROR(), "instance is needed for non-static member fields" };
+                throw std::logic_error("instance is needed for non-static member fields");
             }
 
-            typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            obj.*ptr_ = TRY(value.Get<make_lvalue_reference_t<make_const_t<typename Traits::Type>>>());
-
-            return {};
+            typename Traits::ClassType& obj = instance.Get<typename Traits::ClassType&>();
+            obj.*ptr_ = value.Get<make_lvalue_reference_t<make_const_t<typename Traits::Type>>>();
         }
     }
 
+    //TODO: make one function for getting value or reference
     [[nodiscard]]
-    Result<Variant> GetRef(const Variant& instance) const noexcept override {
+    Variant GetRef(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsConst) {
             // Use 'GetValue', since it will use a const reference when it can.
-            return { RESULT_ERROR(), "cannot get reference to a const type" };
+            throw std::logic_error("cannot get reference to a const type");
         }
         else if constexpr (Traits::IsStatic) {
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(
@@ -109,10 +104,10 @@ public:
         }
         else {
             if (instance.IsVoid()) {
-                return { RESULT_ERROR(), "instance is needed for a non-static member field" };
+                throw std::logic_error("instance is needed for a non-static member field");
             }
 
-            auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
+            auto& obj = instance.Get<typename Traits::ClassType&>();
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(
                 static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_)
             );

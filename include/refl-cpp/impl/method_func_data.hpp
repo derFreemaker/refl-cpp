@@ -4,8 +4,8 @@
 #include "refl-cpp/method_func.hpp"
 
 namespace ReflCpp {
-template <typename T_>
-MethodFuncData<T_>::operator std::shared_ptr<MethodFunc>() const noexcept {
-    return std::make_shared<MethodFuncWrapper<T_>>(*this);
+template <typename T>
+MethodFuncData<T>::operator std::shared_ptr<MethodFunc>() const {
+    return std::make_shared<MethodFuncWrapper<T>>(*this);
 }
 }

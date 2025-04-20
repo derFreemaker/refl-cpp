@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility>
+#include <optional>
 #include <vector>
 
 #include "refl-cpp/method_data.hpp"
@@ -32,7 +32,7 @@ public:
     }
 
     [[nodiscard]]
-    Result<Variant> Invoke(const ArgumentList& args) const {
+    std::optional<Variant> Invoke(const ArgumentList& args) const {
         for (const auto& func : funcs_) {
             if (!func->IsStatic() && !func->CanInvokeWithArgs(args)) {
                 continue;
@@ -40,12 +40,11 @@ public:
             return func->Invoke(Variant::Void(), args);
         }
 
-        //TODO: better error give feedback about passed types
-        return { RESULT_ERROR(), "no matching static function found" };
+        return std::nullopt;
     }
 
     [[nodiscard]]
-    Result<Variant> Invoke(const Variant& obj, const ArgumentList& args) const {
+    std::optional<Variant> Invoke(const Variant& obj, const ArgumentList& args) const {
         for (const auto& func : funcs_) {
             if (!func->CanInvokeWithArgs(args)) {
                 continue;
@@ -53,8 +52,7 @@ public:
             return func->Invoke(obj, args);
         }
 
-        //TODO: better error give feedback about passed types
-        return { RESULT_ERROR(), "no matching function found" };
+        return std::nullopt;
     }
 };
 }

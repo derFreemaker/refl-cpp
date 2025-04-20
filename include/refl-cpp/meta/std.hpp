@@ -8,7 +8,7 @@
 
 template <>
 struct ReflCpp::ReflectData<std::string> {
-    static Result<TypeData> Create() noexcept {
+    static TypeData Create() {
         return TypeData {
             .name = "string",
             ._namespace = "std"
@@ -16,14 +16,14 @@ struct ReflCpp::ReflectData<std::string> {
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectData<std::reference_wrapper<T_>> {
-    static Result<TypeData> Create() noexcept {
+template <typename T>
+struct ReflCpp::ReflectData<std::reference_wrapper<T>> {
+    static TypeData Create() {
         return TypeData {
             .name = "reference_wrapper",
             ._namespace = "std",
             .inners = {
-                TRY(ReflectID<T_>()),
+                ReflectID<T>(),
             },
         };
     }
@@ -31,40 +31,40 @@ struct ReflCpp::ReflectData<std::reference_wrapper<T_>> {
 
 template <typename T>
 struct ReflCpp::ReflectPrinter<std::reference_wrapper<T>> {
-    static void Print(std::ostream& stream, const Type& type) noexcept {
+    static void Print(std::ostream& stream, const Type& type) {
         stream << "std::reference_wrapper<";
-        type.GetInner(0).value().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectData<std::optional<T_>> {
-    static Result<TypeData> Create() noexcept {
+template <typename T>
+struct ReflCpp::ReflectData<std::optional<T>> {
+    static TypeData Create() {
         return TypeData {
             .name = "optional",
             ._namespace = "std",
             .inners = {
-                TRY(ReflectID<T_>()),
+                ReflectID<T>(),
             },
 
             //TODO: take care of lvalue and rvalue references
 
             // .methods = {
-            //     MethodData<const T_& (std::optional<T_>::*)() const&> {
-            //         .ptr = &std::optional<T_>::value,
+            //     MethodData<const T& (std::optional<T>::*)() const&> {
+            //         .ptr = &std::optional<T>::value,
             //         .name = "value",
             //     },
-            //     MethodData<T_& (std::optional<T_>::*)() &> {
-            //         .ptr = &std::optional<T_>::value,
+            //     MethodData<T& (std::optional<T>::*)() &> {
+            //         .ptr = &std::optional<T>::value,
             //         .name = "value",
             //     },
-            //     MethodData<const T_&& (std::optional<T_>::*)() const&&> {
-            //         .ptr = &std::optional<T_>::value,
+            //     MethodData<const T&& (std::optional<T>::*)() const&&> {
+            //         .ptr = &std::optional<T>::value,
             //         .name = "value",
             //     },
-            //     MethodData<T_&& (std::optional<T_>::*)() &&> {
-            //         .ptr = &std::optional<T_>::value,
+            //     MethodData<T&& (std::optional<T>::*)() &&> {
+            //         .ptr = &std::optional<T>::value,
             //         .name = "value",
             //     },
             // }
@@ -74,21 +74,21 @@ struct ReflCpp::ReflectData<std::optional<T_>> {
 
 template <typename T>
 struct ReflCpp::ReflectPrinter<std::optional<T>> {
-    static void Print(std::ostream& stream, const Type& type) noexcept {
+    static void Print(std::ostream& stream, const Type& type) {
         stream << "std::optional<";
-        type.GetInner(0).value().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };
 
 template <typename T>
 struct ReflCpp::ReflectData<std::vector<T>> {
-    static Result<TypeData> Create() noexcept {
+    static TypeData Create() {
         return TypeData {
             .name = "vector",
             ._namespace = "std",
             .inners = {
-                TRY(ReflectID<T>())
+                ReflectID<T>()
             },
         };
     }
@@ -96,16 +96,16 @@ struct ReflCpp::ReflectData<std::vector<T>> {
 
 template <typename T>
 struct ReflCpp::ReflectPrinter<std::vector<T>> {
-    static void Print(std::ostream& stream, const Type& type) noexcept {
+    static void Print(std::ostream& stream, const Type& type) {
         stream << "std::vector<";
-        type.GetInner(0).value().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };
 
 template <>
 struct ReflCpp::ReflectData<std::nullptr_t> {
-    static Result<TypeData> Create() noexcept {
+    static TypeData Create() {
         return TypeData {
             .name = "Null Pointer",
             ._namespace = "std",
@@ -120,71 +120,71 @@ struct ReflCpp::ReflectPrinter<std::nullptr_t> {
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectData<std::unique_ptr<T_>> {
-    static Result<TypeData> Create() noexcept {
+template <typename T>
+struct ReflCpp::ReflectData<std::unique_ptr<T>> {
+    static TypeData Create() noexcept {
         return TypeData {
             .name = "Unique Pointer",
             ._namespace = "std",
             .inners = {
-                TRY(ReflectID<T_>()),
+                ReflectID<T>(),
             },
             .flags = TypeFlags::IsPointer
         };
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectPrinter<std::unique_ptr<T_>> {
+template <typename T>
+struct ReflCpp::ReflectPrinter<std::unique_ptr<T>> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "std::unique_ptr<";
-        type.GetInner(0).value().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectData<std::shared_ptr<T_>> {
-    static Result<TypeData> Create() noexcept {
+template <typename T>
+struct ReflCpp::ReflectData<std::shared_ptr<T>> {
+    static TypeData Create() noexcept {
         return TypeData {
             .name = "Shared Pointer",
             ._namespace = "std",
             .inners = {
-                TRY(ReflectID<T_>()),
+                ReflectID<T>(),
             },
             .flags = TypeFlags::IsPointer
         };
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectPrinter<std::shared_ptr<T_>> {
+template <typename T>
+struct ReflCpp::ReflectPrinter<std::shared_ptr<T>> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "std::shared_ptr<";
-        type.GetInner(0).value().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectData<std::weak_ptr<T_>> {
-    static Result<TypeData> Create() noexcept {
+template <typename T>
+struct ReflCpp::ReflectData<std::weak_ptr<T>> {
+    static TypeData Create() noexcept {
         return {
             .name = "Weak Pointer",
             ._namespace = "std",
             .inners = {
-                TRY(ReflectID<T_>()),
+                ReflectID<T>(),
             },
             .flags = TypeFlags::IsPointer
         };
     }
 };
 
-template <typename T_>
-struct ReflCpp::ReflectPrinter<std::weak_ptr<T_>> {
+template <typename T>
+struct ReflCpp::ReflectPrinter<std::weak_ptr<T>> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "std::weak_ptr<";
-        type.GetInner(0).value().Print(stream);
+        type.GetInner(0).Print(stream);
         stream << ">";
     }
 };

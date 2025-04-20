@@ -13,46 +13,45 @@ private:
     const char* name_;
 
 public:
-    template <typename T_>
-    Field(const FieldData<T_>& data)
-        : base_(std::make_shared<FieldWrapper<T_>>(data.ptr)),
+    template <typename T>
+    Field(const FieldData<T>& data)
+        : base_(std::make_shared<FieldWrapper<T>>(data.ptr)),
           name_(data.name) {}
 
     [[nodiscard]]
-    const char* GetName() const noexcept {
+    const char* GetName() const {
         return name_;
     }
 
     [[nodiscard]]
-    Result<TypeID> GetType() const noexcept {
+    TypeID GetType() const {
         return base_->GetType();
     }
 
-    [[nodiscard]]
-    Result<void> SetValue(const Variant& value, const Variant& instance = Variant::Void()) const noexcept {
+    void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
         return base_->SetValue(value, instance);
     }
 
     [[nodiscard]]
-    Result<Variant> GetValue(const Variant& instance = Variant::Void()) const noexcept {
+    Variant GetValue(const Variant& instance = Variant::Void()) const {
         return base_->GetValue(instance);
     }
 
-    template <typename T_>
+    template <typename T>
     [[nodiscard]]
-    Result<T_> GetValue(const Variant& instance = Variant::Void()) const noexcept {
-        return TRY(base_->GetValue(instance)).Get<T_>();
+    T GetValue(const Variant& instance = Variant::Void()) const {
+        return base_->GetValue(instance).Get<T>();
     }
 
     [[nodiscard]]
-    Result<Variant> GetRef(const Variant& instance = Variant::Void()) const noexcept {
+    Variant GetRef(const Variant& instance = Variant::Void()) const {
         return base_->GetRef(instance);
     }
 
-    template <typename T_>
+    template <typename T>
     [[nodiscard]]
-    Result<T_&> GetRef(const Variant& instance = Variant::Void()) const noexcept {
-        return TRY(base_->GetRef(instance)).Get<T_&>();
+    T& GetRef(const Variant& instance = Variant::Void()) const {
+        return base_->GetRef(instance).Get<T&>();
     }
 };
 }

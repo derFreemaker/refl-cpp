@@ -3,25 +3,25 @@
 #include "refl-cpp/variant.hpp"
 
 namespace ReflCpp::detail {
-template <typename R_>
-struct VariantMatcher<VariantWrapperType::POINTER, R_*> {
-    static bool Match(const TypeID type) noexcept {
-        return type.Equals<R_*>();
+template <typename R>
+struct VariantMatcher<VariantWrapperType::POINTER, R*> {
+    static bool Match(const TypeID type) {
+        return type.Equals<R*>();
     }
 
-    static R_* Get(VariantBase* base) noexcept {
-        return static_cast<VariantWrapper<R_*>*>(base)->GetValue();
+    static R* Get(VariantBase* base) noexcept {
+        return static_cast<VariantWrapper<R*>*>(base)->GetValue();
     }
 };
 
-template <typename R_>
-struct VariantMatcher<VariantWrapperType::POINTER, const R_*> {
+template <typename R>
+struct VariantMatcher<VariantWrapperType::POINTER, const R*> {
     static bool Match(const TypeID type) noexcept {
-        return type.Equals<R_*>();
+        return type.Equals<R*>();
     }
 
-    static const R_* Get(VariantBase* base) noexcept {
-        return static_cast<VariantWrapper<R_*>*>(base)->GetValue();
+    static const R* Get(VariantBase* base) noexcept {
+        return static_cast<VariantWrapper<R*>*>(base)->GetValue();
     }
 };
 }

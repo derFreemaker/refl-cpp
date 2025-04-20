@@ -7,52 +7,51 @@
 #include "refl-cpp/reflect.hpp"
 
 namespace ReflCpp {
-inline ResCpp::FormattedError Variant::CanNotGetFromVariantWithType(const Type& type, const Type& passed_type) noexcept {
-    return ResCpp::FormattedError{
-        "cannot get from Variant ({0}) with passed type: {1}",
-        type.Dump(),
-        passed_type.Dump()
-    };
+inline void Variant::ThrowCanNotGetFromVariantWithType(const Type& type, const Type& passed_type) {
+    throw std::logic_error(
+        "cannot get from Variant (" + type.Dump() + ")"
+        " with passed type: {1}" + passed_type.Dump()
+    );
 }
 
-inline Variant& Variant::Void() noexcept {
+inline Variant& Variant::Void() {
     // static detail::VoidVariantWrapper wrapper;
-    static Variant instance = Variant(
+    static Variant instance(
         std::make_shared<detail::VoidVariantWrapper>(),
-        ReflectID<void>().value()
+        ReflectID<void>()
     );
     return instance;
 }
 
-template <typename T_>
-    requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-Result<Variant> Variant::Create(T_& data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
+template <typename T>
+    requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
+Variant Variant::Create(T& data) {
+    return Variant(detail::MakeWrapper<T>(std::forward<T>(data)), ReflectID<T>());
 }
 
-template <typename T_>
-    requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-Result<Variant> Variant::Create(T_&& data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
+template <typename T>
+    requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
+Variant Variant::Create(T&& data) {
+    return Variant(detail::MakeWrapper<T>(std::forward<T>(data)), ReflectID<T>());
 }
 
-template <typename T_>
-    requires (std::is_reference_v<T_>)
-Result<Variant> Variant::Create(T_&& data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
+template <typename T>
+    requires (std::is_reference_v<T>)
+Variant Variant::Create(T&& data) {
+    return Variant(detail::MakeWrapper<T>(std::forward<T>(data)), ReflectID<T>());
 }
 
-template <typename T_>
-    requires (std::is_pointer_v<T_>)
-Result<Variant> Variant::Create(T_ data) noexcept {
-    return Variant(TRY(detail::MakeWrapper<T_>(std::forward<T_>(data))), TRY(ReflectID<T_>()));
+template <typename T>
+    requires (std::is_pointer_v<T>)
+Variant Variant::Create(T data) {
+    return Variant(detail::MakeWrapper<T>(std::forward<T>(data)), ReflectID<T>());
 }
 
-template <typename T_>
-bool Variant::CanGet() const noexcept {
+template <typename T>
+bool Variant::CanGet() const {
 #define REFLCPP_VARIANT_MATCH(TYPE) \
     case detail::VariantWrapperType::TYPE: { \
-        if (detail::VariantMatcher<detail::VariantWrapperType::TYPE, T_>::Match(type_)) { \
+        if (detail::VariantMatcher<detail::VariantWrapperType::TYPE, T>::Match(type_)) { \
             return true; \
         } \
         break; \
@@ -78,28 +77,33 @@ bool Variant::CanGet() const noexcept {
     return false;
 }
 
-template <typename T_>
-Result<void> Variant::CanGetWithError() const noexcept {
-    if (CanGet<T_>()) {
-        return {};
+template <typename T>
+void Variant::CheckGet() const {
+    if (CanGet<T>()) {
+        return;
     }
 
-    const Type& type = TRY(type_.GetType());
-    const Type& passed_type = TRY(Reflect<T_>());
-    return { RESULT_ERROR(), CanNotGetFromVariantWithType(type, passed_type) };
+    const Type& type = type_.GetType();
+    const Type& passed_type = Reflect<T>();
+    ThrowCanNotGetFromVariantWithType(type, passed_type);
 }
 
 namespace detail {
-template <VariantWrapperType Type, typename R_>
+template <VariantWrapperType Type, typename R>
 concept HasVariantMatcher = requires(VariantBase* base) {
-    { VariantMatcher<Type, R_>::Get(base) };
+    { VariantMatcher<Type, R>::Get(base) };
 };
 }
 
+template <typename ReturnT, typename T>
+ReturnT Variant::GetImpl() const {
+    CheckVoid();
+    CheckGet<T>();
+
 #define REFLCPP_MATCH_VARIANT(Type) \
-    if constexpr (detail::HasVariantMatcher<detail::VariantWrapperType::Type, T_>) { \
+    if constexpr (detail::HasVariantMatcher<detail::VariantWrapperType::Type, T>) { \
         if (wrapperType == detail::VariantWrapperType::Type) { \
-            return detail::VariantMatcher<detail::VariantWrapperType::Type, T_>::Get(base_.get()); \
+            return detail::VariantMatcher<detail::VariantWrapperType::Type, T>::Get(base_.get()); \
         } \
     }
 
@@ -113,44 +117,36 @@ concept HasVariantMatcher = requires(VariantBase* base) {
     REFLCPP_MATCH_VARIANT(CONST_RVALUE_REF) \
     REFLCPP_MATCH_VARIANT(POINTER) \
     REFLCPP_MATCH_VARIANT(CONST_POINTER) \
-    return { RESULT_ERROR(), "unreachable" };
+    throw std::logic_error("unreachable");
 
-template <typename T_>
-    requires (!std::is_reference_v<T_> && !std::is_pointer_v<T_>)
-Result<std::remove_volatile_t<T_>&> Variant::Get() const noexcept {
-    TRY(CheckVoid());
-    TRY(CanGetWithError<T_>());
 
     REFLCPP_MATCH_VARIANTS()
-}
-
-template <typename T_>
-    requires (std::is_lvalue_reference_v<T_>)
-Result<std::remove_volatile_t<std::remove_reference_t<T_>>&> Variant::Get() const noexcept {
-    TRY(CheckVoid());
-    TRY(CanGetWithError<T_>());
-
-    REFLCPP_MATCH_VARIANTS()
-}
-
-template <typename T_>
-    requires (std::is_rvalue_reference_v<T_>)
-Result<std::remove_volatile_t<std::remove_reference_t<T_>>&&> Variant::Get() const noexcept {
-    TRY(CheckVoid());
-    TRY(CanGetWithError<T_>());
-
-    REFLCPP_MATCH_VARIANTS()
-}
-
-template <typename T_>
-    requires (std::is_pointer_v<T_>)
-Result<std::remove_volatile_t<std::remove_pointer_t<T_>>*> Variant::Get() const noexcept {
-    TRY(CheckVoid());
-    TRY(CanGetWithError<T_>());
-
-    REFLCPP_MATCH_VARIANTS()
-}
 
 #undef REFLCPP_MATCH_VARIANTS
 #undef REFLCPP_MATCH_VARIANT
+}
+
+template <typename T>
+    requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
+std::remove_volatile_t<T>& Variant::Get() const {
+    return GetImpl<std::remove_volatile_t<T>&, T>();
+}
+
+template <typename T>
+    requires (std::is_lvalue_reference_v<T>)
+std::remove_volatile_t<std::remove_reference_t<T>>& Variant::Get() const {
+    return GetImpl<std::remove_volatile_t<std::remove_reference_t<T>>&, T>();
+}
+
+template <typename T>
+    requires (std::is_rvalue_reference_v<T>)
+std::remove_volatile_t<std::remove_reference_t<T>>&& Variant::Get() const {
+    return GetImpl<std::remove_volatile_t<std::remove_reference_t<T>>&&, T>();
+}
+
+template <typename T>
+    requires (std::is_pointer_v<T>)
+std::remove_volatile_t<std::remove_pointer_t<T>>* Variant::Get() const noexcept {
+    return GetImpl<std::remove_volatile_t<std::remove_pointer_t<T>>*, T>();
+}
 }

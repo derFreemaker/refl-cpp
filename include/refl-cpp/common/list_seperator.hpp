@@ -14,7 +14,7 @@ public:
     ListSeperator(const std::string& sep) noexcept
         : sep_(sep) {}
 
-    const char* Get() noexcept {
+    const char* get() noexcept {
         if (first_) {
             first_ = false;
             return "";
@@ -24,7 +24,7 @@ public:
     }
 
     operator const char*() noexcept {
-        return Get();
+        return get();
     }
 };
 }

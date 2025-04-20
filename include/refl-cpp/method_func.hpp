@@ -11,24 +11,24 @@ struct MethodFunc {
     virtual bool IsStatic() const = 0;
 
     [[nodiscard]]
-    virtual Result<const std::vector<ArgumentInfo>&> GetArgs() const = 0;
+    virtual const std::vector<ArgumentInfo>& GetArgs() const = 0;
 
     [[nodiscard]]
     virtual bool CanInvokeWithArgs(const ArgumentList& args) const = 0;
 
     [[nodiscard]]
-    virtual Result<Variant> Invoke(const Variant& obj, const ArgumentList& args) const = 0;
+    virtual Variant Invoke(const Variant& obj, const ArgumentList& args) const = 0;
 };
 
-template <typename T_>
+template <typename T>
 struct MethodFuncWrapper final : MethodFunc {
 private:
-    using Traits = FunctionTraits<T_>;
-    FunctionWrapper<T_> func_;
+    using Traits = FunctionTraits<T>;
+    FunctionWrapper<T> func_;
     std::vector<const char*> args_;
 
 public:
-    MethodFuncWrapper(const MethodFuncData<T_>& data)
+    MethodFuncWrapper(const MethodFuncData<T>& data)
         : func_(data.ptr), args_(data.args) {}
 
     [[nodiscard]]
@@ -39,7 +39,7 @@ public:
     //TODO: function to get argument information
 
     [[nodiscard]]
-    Result<const std::vector<ArgumentInfo>&> GetArgs() const override {
+    const std::vector<ArgumentInfo>& GetArgs() const override {
         std::vector<ArgumentInfo> infoArgs{};
         if (!infoArgs.empty()) {
             return infoArgs;
@@ -66,7 +66,7 @@ public:
     }
 
     [[nodiscard]]
-    Result<Variant> Invoke(const Variant& obj, const ArgumentList& args) const override {
+    Variant Invoke(const Variant& obj, const ArgumentList& args) const override {
         return func_.Invoke(args, obj);
     }
 };

@@ -14,13 +14,6 @@ CPMAddPackage(
         patches/ccache.cmake.patch
 )
 
-CPMAddPackage(
-        NAME res-cpp
-        GITHUB_REPOSITORY derFreemaker/res-cpp
-        VERSION 0.1.0
-        GIT_SHALLOW ON
-)
-
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
         include/refl-cpp/common/flags.hpp
@@ -64,12 +57,9 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/impl/variant_matcher/const_lvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/variant_matcher/rvalue_ref_variant_matcher.hpp
         include/refl-cpp/impl/method_func_data.hpp
-        include/refl-cpp/common/result.hpp
 )
 target_include_directories(refl-cpp INTERFACE include)
-target_link_libraries(refl-cpp INTERFACE
-        res-cpp
-)
+target_link_libraries(refl-cpp INTERFACE)
 target_precompile_headers(refl-cpp INTERFACE
         include/refl-cpp/refl-cpp.hpp
 )
