@@ -1,6 +1,7 @@
 #pragma once
 
 #include "refl-cpp/variant.hpp"
+#include "refl-cpp/common/unreachable.hpp"
 
 namespace ReflCpp::detail {
 struct VoidVariantWrapper final : public VariantWrapper<void> {
@@ -245,6 +246,6 @@ std::shared_ptr<VariantBase> MakeWrapper(T&& data) {
         }
     }
 
-    static_assert("unreachable");
+    unreachable<true>();
 }
 }

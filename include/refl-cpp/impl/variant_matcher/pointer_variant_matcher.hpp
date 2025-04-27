@@ -5,7 +5,7 @@
 namespace ReflCpp::detail {
 template <typename R>
 struct VariantMatcher<VariantWrapperType::POINTER, R*> {
-    static bool Match(const TypeID type) {
+    static bool Match(const TypeID type) noexcept {
         return type.Equals<R*>();
     }
 

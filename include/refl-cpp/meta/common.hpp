@@ -16,7 +16,7 @@ struct ReflCpp::ReflectData<T[]> {
 template <typename T>
 struct ReflCpp::ReflectPrinter<T[]> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << "[]";
     }
 };
@@ -27,7 +27,7 @@ struct ReflCpp::ReflectData<T*> {
         return TypeData{
             .name = "Pointer",
             .inners = {
-                ReflectID<T>()
+                ReflectID<T>().value()
             },
             .flags = TypeFlags::IsPointer,
         };
@@ -37,7 +37,7 @@ struct ReflCpp::ReflectData<T*> {
 template <typename T>
 struct ReflCpp::ReflectPrinter<T*> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << "*";
     }
 };
@@ -48,7 +48,7 @@ struct ReflCpp::ReflectData<T* const> {
         return TypeData{
             .name = "Constant Pointer",
             .inners = {
-                ReflectID<T>()
+                ReflectID<T>().value()
             },
             .flags = TypeFlags::IsPointer | TypeFlags::IsConst,
         };
@@ -58,7 +58,7 @@ struct ReflCpp::ReflectData<T* const> {
 template <typename T>
 struct ReflCpp::ReflectPrinter<T* const> {
     static void Print(std::ostream& stream, const Type& type) {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << "* const";
     }
 };
@@ -69,7 +69,7 @@ struct ReflCpp::ReflectData<T&> {
         return TypeData{
             .name = "LValue Reference",
             .inners = {
-                ReflectID<T>()
+                ReflectID<T>().value()
             },
             .flags = TypeFlags::IsLValueReference,
         };
@@ -79,7 +79,7 @@ struct ReflCpp::ReflectData<T&> {
 template <typename T>
 struct ReflCpp::ReflectPrinter<T&> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << "&";
     }
 };
@@ -90,7 +90,7 @@ struct ReflCpp::ReflectData<T&&> {
         return TypeData{
             .name = "RValue Reference",
             .inners = {
-                ReflectID<T>()
+                ReflectID<T>().value()
             },
             .flags = TypeFlags::IsRValueReference,
         };
@@ -100,7 +100,7 @@ struct ReflCpp::ReflectData<T&&> {
 template <typename T>
 struct ReflCpp::ReflectPrinter<T&&> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << "&&";
     }
 };
@@ -111,7 +111,7 @@ struct ReflCpp::ReflectData<const T> {
         return TypeData{
             .name = "Constant",
             .inners = {
-                ReflectID<T>()
+                ReflectID<T>().value()
             },
             .flags = TypeFlags::IsConst,
         };
@@ -122,7 +122,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<const T> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "const ";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
     }
 };
 
@@ -132,7 +132,7 @@ struct ReflCpp::ReflectData<volatile T> {
         return TypeData{
             .name = "Volatile",
             .inners = {
-                ReflectID<T>()
+                ReflectID<T>().value()
             },
             .flags = TypeFlags::IsVolatile,
         };
@@ -143,6 +143,6 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<volatile T> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "volatile ";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
     }
 };

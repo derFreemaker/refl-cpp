@@ -28,18 +28,40 @@ struct VariantBase {
 template <typename R>
 struct VariantWrapper : public VariantBase {
     [[nodiscard]]
-    virtual R GetValue() = 0;
+    virtual R GetValue() noexcept = 0;
 };
 
 template <VariantWrapperType Type, typename R>
 struct VariantMatcher {
-    static bool Match(const TypeID) {
+    static bool Match(const TypeID) noexcept {
         return false;
     }
 };
 }
 
+namespace testing {
+struct VariantTestHelper;
+}
 
+enum class VariantIsVoidError : uint8_t {
+    IsVoid = 0,
+};
+
+enum class VariantGetError : uint8_t {
+    IsVoid = 0,
+    CanNotGet,
+};
+}
+
+template <>
+struct rescpp::type_converter<ReflCpp::VariantIsVoidError,
+                              ReflCpp::VariantGetError> {
+    static constexpr ReflCpp::VariantGetError convert(const ReflCpp::VariantIsVoidError&) noexcept {
+        return ReflCpp::VariantGetError::IsVoid;
+    }
+};
+
+namespace ReflCpp {
 //TODO: decide if we want variant to be copy able
 struct Variant {
 private:
@@ -47,39 +69,39 @@ private:
 
     TypeID type_;
 
-    void CheckVoid() const {
+    [[nodiscard]]
+    rescpp::result<void, VariantIsVoidError> CheckVoid() const noexcept {
         if (IsVoid()) {
-            throw std::logic_error("cannot get reference or value from void variant");
+            return rescpp::fail(VariantIsVoidError::IsVoid);
         }
+        return {};
     }
 
     Variant(const std::shared_ptr<detail::VariantBase>& base, const TypeID type)
         : base_(base), type_(type) {}
 
-    static void ThrowCanNotGetFromVariantWithType(const Type& type, const Type& passed_type);
-
-    friend struct VariantTestHelper;
+    friend struct testing::VariantTestHelper;
 
 public:
-    static Variant& Void();
+    static Variant& Void() noexcept;
 
     Variant() = delete;
 
     template <typename T>
         requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
-    static Variant Create(T& data);
+    static rescpp::result<Variant, ReflectError> Create(T& data);
 
     template <typename T>
         requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
-    static Variant Create(T&& data);
+    static rescpp::result<Variant, ReflectError> Create(T&& data);
 
     template <typename T>
         requires (std::is_reference_v<T>)
-    static Variant Create(T&& data);
+    static rescpp::result<Variant, ReflectError> Create(T&& data);
 
     template <typename T>
         requires (std::is_pointer_v<T>)
-    static Variant Create(T data);
+    static rescpp::result<Variant, ReflectError> Create(T data);
 
     [[nodiscard]]
     bool IsVoid() const {
@@ -96,28 +118,29 @@ public:
     bool CanGet() const;
 
     template <typename T>
-    void CheckGet() const;
+    [[nodiscard]]
+    rescpp::result<void, VariantGetError> CheckGet() const;
 
 private:
     template <typename ReturnT, typename T>
-    ReturnT Variant::GetImpl() const;
+    rescpp::result<ReturnT, VariantGetError> Variant::GetImpl() const;
 
 public:
     template <typename T>
         requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
     [[nodiscard]]
-    std::remove_volatile_t<T>& Get() const;
+    rescpp::result<std::remove_volatile_t<T>&, VariantGetError> Get() const;
 
     template <typename T>
         requires (std::is_lvalue_reference_v<T>)
-    std::remove_volatile_t<std::remove_reference_t<T>>& Get() const;
+    rescpp::result<std::remove_volatile_t<std::remove_reference_t<T>>&, VariantGetError> Get() const;
 
     template <typename T>
         requires (std::is_rvalue_reference_v<T>)
-    std::remove_volatile_t<std::remove_reference_t<T>>&& Get() const;
+    rescpp::result<std::remove_volatile_t<std::remove_reference_t<T>>&&, VariantGetError> Get() const;
 
     template <typename T>
         requires (std::is_pointer_v<T>)
-    std::remove_volatile_t<std::remove_pointer_t<T>>* Get() const;
+    rescpp::result<std::remove_volatile_t<std::remove_pointer_t<T>>*, VariantGetError> Get() const;
 };
 }

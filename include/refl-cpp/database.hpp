@@ -7,13 +7,6 @@
 #include "refl-cpp/reflect_printer.hpp"
 
 template <>
-struct ReflCpp::ReflectData<void> {
-    static TypeData Create() {
-        return TypeData{ .name = "Void" };
-    }
-};
-
-template <>
 struct ReflCpp::ReflectPrinter<void> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "void";
@@ -26,21 +19,17 @@ private:
     std::vector<std::unique_ptr<Type>> types_;
 
 public:
-    static const Type& Void() { // NOLINT(*-exception-escape)
-        static std::optional<Type> type{};
-        if (type.has_value()) {
-            return type.value();
-        }
-
-        const TypeData data = ReflectData<void>::Create();
-        constexpr auto id = TypeID(0);
-
-        TypeOptions options{};
-        options.printFunc = ReflectPrinter<void>::Print;
-
-        type.emplace(id, data, options);
-
-        return type.value();
+    static const Type& Void() noexcept {
+        static Type type{
+            TypeID(0),
+            {
+                .name = "Void"
+            },
+            {
+                .printFunc = ReflectPrinter<void>::Print
+            }
+        };
+        return type;
     }
 
     static ReflectionDatabase& Instance() {
@@ -49,15 +38,19 @@ public:
     }
 
     template <typename T>
-    TypeID RegisterType() {
+    rescpp::result<TypeID, ReflectError> RegisterType() noexcept {
         if (types_.size() == SIZE_MAX) {
-            throw std::runtime_error(
-                "Reflection database size is hitting more than 'SIZE_MAX'."
-                "This is probably not normal and should be investigated."
-            );
+            return rescpp::fail(ReflectError::MaxLimitReached);
         }
 
-        TypeData type_data = ReflectData<T>::Create();
+        TypeData type_data;
+
+        try {
+            type_data = ReflectData<T>::Create();
+        }
+        catch (const std::exception&) {
+            return rescpp::fail<ReflectError>(ReflectError::CreationFailed);
+        }
         const auto type_id = TypeID(types_.size() + 1);
 
         TypeOptions type_options{};
@@ -66,14 +59,23 @@ public:
             type_options.printFunc = ReflectPrinter<T>::Print;
         }
 
-        const auto& type = types_.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
-        return type->GetID();
+        try {
+            const auto& type = types_.emplace_back(std::make_unique<Type>(type_id, type_data, type_options));
+            return type->GetID();
+        }
+        catch (const std::exception&) {
+            return rescpp::fail<ReflectError>(ReflectError::OutOfMemory);
+        }
     }
 
     [[nodiscard]]
-    const Type& GetType(const TypeID id) const {
-        if (id.IsInvalid() || id > types_.size()) {
-            throw std::logic_error("invalid type id");
+    rescpp::result<const Type&, GetTypeError> GetType(const TypeID id) const noexcept {
+        if (id.IsInvalid()) {
+            return rescpp::fail(GetTypeError::InvalidID);
+        }
+
+        if (id.Value() > types_.size()) {
+            return rescpp::fail(GetTypeError::NotFound);
         }
 
         return *types_[id - 1];

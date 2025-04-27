@@ -17,7 +17,8 @@ add_executable(refl-cpp_tests
 
         variant.cpp
         function_wrapper.cpp
-        fields.cpp
+        method.cpp
+        no_copy_or_move_struct.hpp
 )
 target_link_libraries(refl-cpp_tests PRIVATE
         gtest

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 set(CMAKE_CXX_STANDARD 23)
 
-project(refl-cpp)
+project(refl-cpp CXX)
 
 include(cmake/CPM.cmake)
 
@@ -14,10 +14,31 @@ CPMAddPackage(
         patches/ccache.cmake.patch
 )
 
+CPMAddPackage(
+        NAME res-cpp
+        GITHUB_REPOSITORY derFreemaker/res-cpp
+        GIT_TAG freemaker
+        GIT_SHALLOW ON
+        OPTIONS
+        "RESCPP_DISABLE_EXCEPTIONS ON"
+        "RESCPP_DISABLE_CHECKS_IN_RELEASE ON"
+)
+
+CPMAddPackage(
+        NAME fmt
+        GITHUB_REPOSITORY fmtlib/fmt
+        VERSION 11.1.4
+        GIT_TAG 11.1.4
+        OPTIONS
+        "FMT_INSTALL OFF"
+)
+
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
         include/refl-cpp/common/flags.hpp
         include/refl-cpp/common/type_traits.hpp
+        include/refl-cpp/common/result.hpp
+        include/refl-cpp/common/unreachable.hpp
 
         include/refl-cpp/type_id.hpp
         include/refl-cpp/type.hpp
@@ -59,7 +80,9 @@ add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/impl/method_func_data.hpp
 )
 target_include_directories(refl-cpp INTERFACE include)
-target_link_libraries(refl-cpp INTERFACE)
+target_link_libraries(refl-cpp INTERFACE
+        res-cpp
+)
 target_precompile_headers(refl-cpp INTERFACE
         include/refl-cpp/refl-cpp.hpp
 )

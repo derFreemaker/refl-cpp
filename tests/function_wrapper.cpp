@@ -2,25 +2,9 @@
 
 #include "helper/variant_helper.hpp"
 
+#include "no_copy_or_move_struct.hpp"
+
 namespace ReflCpp {
-struct NoCopyOrMoveStruct {
-    int foo = 893745;
-
-    NoCopyOrMoveStruct() = delete;
-    NoCopyOrMoveStruct(NoCopyOrMoveStruct&) = delete;
-    NoCopyOrMoveStruct(const NoCopyOrMoveStruct&) = delete;
-    NoCopyOrMoveStruct(NoCopyOrMoveStruct&&) = delete;
-    NoCopyOrMoveStruct(const NoCopyOrMoveStruct&&) = delete;
-
-    explicit NoCopyOrMoveStruct(std::nullptr_t) {}
-};
-
-template <>
-struct ReflectData<NoCopyOrMoveStruct> {
-    static TypeData Create() {
-        return TypeData{ .name = "NoCopyOrMoveStruct" };
-    }
-};
 
 struct TestStruct {
 #define CREATE_TEST_METHOD(BEFORE, NAME, ARGS, AFTER) \
@@ -60,13 +44,14 @@ struct ReflectData<TestStruct> {
     }
 };
 
+namespace testing {
 #define CREATE_METHOD_TEST_IMPL(NAME, INSTANCE_TYPE, RETURN, ARG, ...) \
     TEST(FunctionWrapper, NAME) { \
         const FunctionWrapper funcWrapper(&TestStruct::NAME); \
         ARG NoCopyOrMoveStruct test(nullptr); \
         INSTANCE_TYPE __VA_ARGS__; \
-        const auto result = funcWrapper.Invoke({ Variant::Create<ARG NoCopyOrMoveStruct&>(test) }, instance); \
-        const auto& value = result.Get<RETURN NoCopyOrMoveStruct&>(); \
+        const auto result = funcWrapper.Invoke({ Variant::Create<ARG NoCopyOrMoveStruct&>(test).value() }, instance).value(); \
+        const auto& value = result.Get<RETURN NoCopyOrMoveStruct&>().value(); \
         ASSERT_EQ(value.foo, 893745); \
     }
 
@@ -78,29 +63,30 @@ struct ReflectData<TestStruct> {
 
 #define CREATE_METHOD_TESTS(NAME, ...) \
     CREATE_METHOD_TEST(NAME, auto, __VA_ARGS__) \
-    CREATE_METHOD_TEST(NAME##Const, const auto&, __VA_ARGS__)
+    CREATE_METHOD_TEST(NAME##Const, const auto, __VA_ARGS__)
 
 CREATE_METHOD_TEST(Static, auto, instance = Variant::Void())
 
-CREATE_METHOD_TESTS(Normal, instance = Variant::Create<TestStruct>(TestStruct()))
-CREATE_METHOD_TESTS(LValueReference, instance = Variant::Create<TestStruct&>(*new TestStruct()))
-CREATE_METHOD_TESTS(RValueReference, instance = Variant::Create<TestStruct&&>(TestStruct()))
+CREATE_METHOD_TESTS(Normal, instance = Variant::Create<TestStruct>(TestStruct()).value())
+CREATE_METHOD_TESTS(LValueReference, instance = Variant::Create<TestStruct&>(*new TestStruct()).value())
+CREATE_METHOD_TESTS(RValueReference, instance = Variant::Create<TestStruct&&>(TestStruct()).value())
 
 TEST(FunctionWrapper, Pointer) {
     const FunctionWrapper funcWrapper(&TestStruct::Pointer);
     NoCopyOrMoveStruct test(nullptr);
-    const auto instance = Variant::Create<TestStruct>(TestStruct());
-    const auto result = funcWrapper.Invoke({ Variant::Create<NoCopyOrMoveStruct*>(&test) }, instance);
-    const auto& value = result.Get<NoCopyOrMoveStruct&>();
+    const auto instance = Variant::Create<TestStruct>(TestStruct()).value();
+    const auto result = funcWrapper.Invoke({ Variant::Create<NoCopyOrMoveStruct*>(&test).value() }, instance).value();
+    const auto& value = result.Get<NoCopyOrMoveStruct&>().value();
     ASSERT_EQ(value.foo, 893745);
 }
 
 TEST(FunctionWrapper, Pointer_Const) {
     const FunctionWrapper funcWrapper(&TestStruct::Pointer_Const);
     const NoCopyOrMoveStruct test(nullptr);
-    const auto instance = Variant::Create<TestStruct>(TestStruct());
-    const auto result = funcWrapper.Invoke({ Variant::Create<const NoCopyOrMoveStruct*>(&test) }, instance);
-    const auto& value = result.Get<NoCopyOrMoveStruct&>();
+    const auto instance = Variant::Create<TestStruct>(TestStruct()).value();
+    const auto result = funcWrapper.Invoke({ Variant::Create<const NoCopyOrMoveStruct*>(&test).value() }, instance).value();
+    const auto& value = result.Get<NoCopyOrMoveStruct&>().value();
     ASSERT_EQ(value.foo, 893745);
+}
 }
 }

@@ -33,7 +33,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::reference_wrapper<T>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::reference_wrapper<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << ">";
     }
 };
@@ -76,7 +76,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::optional<T>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::optional<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << ">";
     }
 };
@@ -98,7 +98,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::vector<T>> {
     static void Print(std::ostream& stream, const Type& type) {
         stream << "std::vector<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << ">";
     }
 };
@@ -138,7 +138,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::unique_ptr<T>> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "std::unique_ptr<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << ">";
     }
 };
@@ -161,7 +161,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::shared_ptr<T>> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "std::shared_ptr<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << ">";
     }
 };
@@ -184,7 +184,7 @@ template <typename T>
 struct ReflCpp::ReflectPrinter<std::weak_ptr<T>> {
     static void Print(std::ostream& stream, const Type& type) noexcept {
         stream << "std::weak_ptr<";
-        type.GetInner(0).Print(stream);
+        type.GetInner(0).value().Print(stream);
         stream << ">";
     }
 };
