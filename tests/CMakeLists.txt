@@ -4,12 +4,9 @@ set(CMAKE_CXX_STANDARD 23)
 project(refl-cpp_tests)
 
 CPMAddPackage(
-        NAME GoogleTest
-        VERSION 1.16.0
-        GITHUB_REPOSITORY google/googletest
-        OPTIONS
-        "INSTALL_GTEST OFF"
-        "BUILD_GMOCK ON"
+        NAME Catch2
+        VERSION 3.8.1
+        GITHUB_REPOSITORY catchorg/Catch2
 )
 
 add_executable(refl-cpp_tests
@@ -21,8 +18,6 @@ add_executable(refl-cpp_tests
         no_copy_or_move_struct.hpp
 )
 target_link_libraries(refl-cpp_tests PRIVATE
-        gtest
-        gtest_main
-        gmock
+        Catch2::Catch2WithMain
         refl-cpp
 )

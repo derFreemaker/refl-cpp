@@ -24,14 +24,14 @@ CPMAddPackage(
         "RESCPP_DISABLE_CHECKS_IN_RELEASE ON"
 )
 
-CPMAddPackage(
-        NAME fmt
-        GITHUB_REPOSITORY fmtlib/fmt
-        VERSION 11.1.4
-        GIT_TAG 11.1.4
-        OPTIONS
-        "FMT_INSTALL OFF"
-)
+#CPMAddPackage(
+#        NAME fmt
+#        GITHUB_REPOSITORY fmtlib/fmt
+#        VERSION 11.1.4
+#        GIT_TAG 11.1.4
+#        OPTIONS
+#        "FMT_INSTALL OFF"
+#)
 
 add_library(refl-cpp INTERFACE include/refl-cpp/refl-cpp.hpp
         include/refl-cpp/common/list_seperator.hpp
