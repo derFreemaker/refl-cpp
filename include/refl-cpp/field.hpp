@@ -24,7 +24,7 @@ public:
     }
 
     [[nodiscard]]
-    TypeID GetType() const {
+    rescpp::result<TypeID, ReflectError> GetType() const {
         return base_->GetType();
     }
 
@@ -33,14 +33,14 @@ public:
     }
 
     [[nodiscard]]
-    Variant GetValue(const Variant& instance = Variant::Void()) const {
+    rescpp::result<Variant, VariantGetError> GetValue(const Variant& instance = Variant::Void()) const {
         return base_->GetValue(instance);
     }
 
     template <typename T>
     [[nodiscard]]
-    T GetValue(const Variant& instance = Variant::Void()) const {
-        return base_->GetValue(instance).Get<T>();
+    rescpp::result<T, VariantGetError> GetValue(const Variant& instance = Variant::Void()) const {
+        return TRY(base_->GetValue(instance)).Get<T>();
     }
 
     [[nodiscard]]

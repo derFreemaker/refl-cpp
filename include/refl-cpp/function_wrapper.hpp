@@ -25,6 +25,8 @@ struct FunctionWrapperInvokeError {
         MaxReflectLimitReached,
         ReflectTypeCreationFailed,
         OutOfMemory,
+
+        NoCompatibleFunctionFound,
     };
 
     Type type;
@@ -66,24 +68,38 @@ private:
                         return rescpp::fail<FunctionWrapperArgumentError>(result_.error(), First);
                         });
 
-        if constexpr (sizeof...(Rest) > 0) {
-            return CheckArgsImpl(args, std::index_sequence<Rest...>{});
+        if constexpr (sizeof...(Rest) == 0) {
+            return {};
         }
         else {
+            return CheckArgsImpl<Rest...>(args);
+        }
+    }
+
+    template <size_t... Indices>
+    [[nodiscard]]
+    rescpp::result<void, FunctionWrapperArgumentError> CheckArgs(const ArgumentList& args) const {
+        if constexpr (sizeof...(Indices) == 0) {
             return {};
+        }
+        else {
+            return CheckArgsImpl<Indices...>(args);
         }
     }
 
     template <size_t... Indices>
     [[nodiscard]]
     rescpp::result<void, FunctionWrapperArgumentError> CheckArgs(const ArgumentList& args, std::index_sequence<Indices...>) const {
-        return CheckArgsImpl<Indices...>(args);
+        return CheckArgs<Indices...>(args);
     }
 
     [[nodiscard]]
     rescpp::result<void, FunctionWrapperArgumentError> CheckArgs(const ArgumentList& args) const noexcept {
         return CheckArgs(args, std::make_index_sequence<Traits::ArgCount>{});
     }
+
+#define REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS() \
+    TRY(CheckArgs<Indices...>(args))
 
 #define REFLCPP_FUNCTION_WRAPPER_GET_ARGS() \
     args[Indices].template Get<std::conditional_t< \
@@ -98,7 +114,7 @@ private:
     template <size_t... Indices>
         requires (Traits::IsStatic && Traits::HasReturn)
     rescpp::result<Variant, FunctionWrapperInvokeError> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
-        TRY(CheckArgsImpl<Indices...>(args));
+        REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS();
 
         return Variant::Create<typename Traits::ReturnType>(
             (ptr_)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
@@ -108,8 +124,8 @@ private:
     template <size_t... Indices>
         requires (Traits::IsStatic && !Traits::HasReturn)
     rescpp::result<void, FunctionWrapperInvokeError> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>) const {
-        TRY(CheckArgsImpl<Indices...>(args));
-
+        REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS();
+        
         (ptr_)(
             REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
@@ -120,13 +136,13 @@ private:
     template <size_t... Indices>
         requires (!Traits::IsStatic && !Traits::HasRReferenceObject && Traits::HasReturn)
     rescpp::result<Variant, FunctionWrapperInvokeError> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArgsImpl<Indices...>(args));
-
+        REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS();
+        
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
         if (!obj.CanGet<ClassT_>()) {
             return rescpp::fail(FunctionWrapperInvokeError::Type::ObjectIsInvalid);
         }
-        
+
         return Variant::Create<typename Traits::ReturnType>(
             (obj.Get<ClassT_>().value().*ptr_)(REFLCPP_FUNCTION_WRAPPER_GET_ARGS())
         );
@@ -135,13 +151,13 @@ private:
     template <size_t... Indices>
         requires (!Traits::IsStatic && !Traits::HasRReferenceObject && !Traits::HasReturn)
     rescpp::result<void, FunctionWrapperInvokeError> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArgsImpl<Indices...>(args));
-
+        REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS();
+        
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&, typename Traits::ClassType&>;
         if (!obj.CanGet<ClassT_>()) {
             return rescpp::fail(FunctionWrapperInvokeError::Type::ObjectIsInvalid);
         }
-        
+
         (obj.Get<ClassT_>().value().*ptr_)(
             REFLCPP_FUNCTION_WRAPPER_GET_ARGS()
         );
@@ -152,8 +168,8 @@ private:
     template <size_t... Indices>
         requires (!Traits::IsStatic && Traits::HasRReferenceObject && Traits::HasReturn)
     rescpp::result<Variant, FunctionWrapperInvokeError> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArgsImpl<Indices...>(args));
-
+        REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS();
+        
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
         if (!obj.CanGet<ClassT_>()) {
             return rescpp::fail(FunctionWrapperInvokeError::Type::ObjectIsInvalid);
@@ -167,8 +183,8 @@ private:
     template <size_t... Indices>
         requires (!Traits::IsStatic && Traits::HasRReferenceObject && !Traits::HasReturn)
     rescpp::result<void, FunctionWrapperInvokeError> InvokeImpl(const ArgumentList& args, std::index_sequence<Indices...>, const Variant& obj) const {
-        TRY(CheckArgsImpl<Indices...>(args));
-
+        REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS();
+        
         using ClassT_ = std::conditional_t<Traits::IsConst, const typename Traits::ClassType&&, typename Traits::ClassType&&>;
         if (!obj.CanGet<ClassT_>()) {
             return rescpp::fail(FunctionWrapperInvokeError::Type::ObjectIsInvalid);
@@ -182,13 +198,14 @@ private:
     }
 
 #undef REFLCPP_FUNCTION_WRAPPER_GET_ARGS
+#undef REFLCPP_FUNCTION_WRAPPER_CHECK_ARGS
 
 public:
     FunctionWrapper(T ptr)
         : ptr_(ptr) {}
 
     [[nodiscard]]
-    std::vector<TypeID> GetArgTypes() const {
+    rescpp::result<const std::vector<TypeID>&, ReflectError> GetArgTypes() const {
         return Traits::GetArgs();
     }
 

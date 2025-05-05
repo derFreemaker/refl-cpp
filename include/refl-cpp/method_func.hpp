@@ -11,13 +11,13 @@ struct MethodFunc {
     virtual bool IsStatic() const = 0;
 
     [[nodiscard]]
-    virtual const std::vector<ArgumentInfo>& GetArgs() const = 0;
+    virtual rescpp::result<const std::vector<ArgumentInfo>&, ReflectError> GetArgs() const = 0;
 
     [[nodiscard]]
     virtual bool CanInvokeWithArgs(const ArgumentList& args) const = 0;
 
     [[nodiscard]]
-    virtual Variant Invoke(const Variant& obj, const ArgumentList& args) const = 0;
+    virtual rescpp::result<Variant, FunctionWrapperInvokeError> Invoke(const Variant& obj, const ArgumentList& args) const = 0;
 };
 
 template <typename T>
@@ -39,22 +39,17 @@ public:
     //TODO: function to get argument information
 
     [[nodiscard]]
-    const std::vector<ArgumentInfo>& GetArgs() const override {
-        std::vector<ArgumentInfo> infoArgs{};
+    rescpp::result<const std::vector<ArgumentInfo>&, ReflectError> GetArgs() const override {
+        static std::vector<ArgumentInfo> infoArgs{};
         if (!infoArgs.empty()) {
             return infoArgs;
         }
 
-        auto types = func_.GetArgTypes();
-        for (const auto& type : types) {
-            if (type.HasError()) {
-                return type.Error();
-            }
-        }
+        auto types = TRY(func_.GetArgTypes());
 
         infoArgs.reserve(types.size());
         for (uint8_t i = 0; i < types.size(); ++i) {
-            infoArgs.emplace_back(args_[i], types[i].Value());
+            infoArgs.emplace_back(args_[i], types[i]);
         }
 
         return infoArgs;
@@ -66,7 +61,7 @@ public:
     }
 
     [[nodiscard]]
-    Variant Invoke(const Variant& obj, const ArgumentList& args) const override {
+    rescpp::result<Variant, FunctionWrapperInvokeError> Invoke(const Variant& obj, const ArgumentList& args) const override {
         return func_.Invoke(args, obj);
     }
 };

@@ -17,16 +17,28 @@ private:
     // If this gets triggered, then something is wrong with YOUR code.
     static_assert(m_ArgCount < 256, "only support up to 255 arguments");
 
-    template <size_t... Indices>
-    static const std::vector<TypeID>& GetArgsImpl(std::index_sequence<Indices...>) {
-        static std::vector<TypeID> results{};
-        if (!results.empty()) {
-            return results;
+    template <size_t First, size_t... Rest>
+    static rescpp::result<void, ReflectError> GetArgsImplImpl(std::vector<TypeID>& args) {
+        args.push_back(TRY(ReflectID<typename Arg<First>::Type>()));
+
+        if constexpr (sizeof...(Rest) == 0) {
+            return {};
         }
-        
-        // results.reserve(sizeof...(Indices));
-        (results.push_back(ReflectID<typename Arg<Indices>::Type>()), ...);
-        return results;
+        else {
+            return GetArgsImplImpl<Rest...>(args);
+        }
+    }
+
+    template <size_t... Indices>
+    static rescpp::result<const std::vector<TypeID>&, ReflectError> GetArgsImpl(std::index_sequence<Indices...>) {
+        static std::vector<TypeID> args{};
+        if (!args.empty()) {
+            return args;
+        }
+
+        args.reserve(sizeof...(Indices));
+        TRY(GetArgsImplImpl<Indices...>(args));
+        return args;
     }
 
 public:
@@ -48,8 +60,14 @@ public:
         using Type = std::tuple_element_t<I, std::tuple<Args_...>>;
     };
 
-    static const std::vector<TypeID>& GetArgs() {
-        return GetArgsImpl(std::make_index_sequence<ArgCount>());
+    static rescpp::result<const std::vector<TypeID>&, ReflectError> GetArgs() {
+        if constexpr (ArgCount == 0) {
+            static std::vector<TypeID> args{};
+            return args;
+        }
+        else {
+            return GetArgsImpl(std::make_index_sequence<ArgCount>());
+        }
     }
 };
 }

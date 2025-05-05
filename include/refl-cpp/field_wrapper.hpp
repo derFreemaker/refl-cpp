@@ -16,10 +16,10 @@ struct FieldBase {
     virtual bool IsConst() const = 0;
 
     [[nodiscard]]
-    virtual TypeID GetType() const = 0;
+    virtual rescpp::result<TypeID, ReflectError> GetType() const = 0;
 
     [[nodiscard]]
-    virtual Variant GetValue(const Variant& instance) const = 0;
+    virtual rescpp::result<Variant, VariantGetError> GetValue(const Variant& instance) const = 0;
 
     virtual void SetValue(const Variant& value, const Variant& instance) const = 0;
 
@@ -49,12 +49,12 @@ public:
     }
 
     [[nodiscard]]
-    TypeID GetType() const override {
+    rescpp::result<TypeID, ReflectError> GetType() const override {
         return ReflectID<typename Traits::Type>();
     }
 
     [[nodiscard]]
-    Variant GetValue(const Variant& instance) const noexcept override {
+    rescpp::result<Variant, VariantGetError> GetValue(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsStatic) {
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_));
         }
@@ -63,7 +63,7 @@ public:
                 throw std::logic_error("instance is needed for non-static member fields");
             }
 
-            typename Traits::ClassType& obj = instance.Get<typename Traits::ClassType&>();
+            typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
         }
     }

@@ -32,7 +32,7 @@ public:
     }
 
     [[nodiscard]]
-    std::optional<Variant> Invoke(const ArgumentList& args) const {
+    rescpp::result<Variant, FunctionWrapperInvokeError> Invoke(const ArgumentList& args) const {
         for (const auto& func : funcs_) {
             if (!func->IsStatic() && !func->CanInvokeWithArgs(args)) {
                 continue;
@@ -40,11 +40,11 @@ public:
             return func->Invoke(Variant::Void(), args);
         }
 
-        return std::nullopt;
+        return rescpp::fail(FunctionWrapperInvokeError::Type::NoCompatibleFunctionFound);
     }
 
     [[nodiscard]]
-    std::optional<Variant> Invoke(const Variant& obj, const ArgumentList& args) const {
+    rescpp::result<Variant, FunctionWrapperInvokeError> Invoke(const Variant& obj, const ArgumentList& args) const {
         for (const auto& func : funcs_) {
             if (!func->CanInvokeWithArgs(args)) {
                 continue;
@@ -52,7 +52,7 @@ public:
             return func->Invoke(obj, args);
         }
 
-        return std::nullopt;
+        return rescpp::fail(FunctionWrapperInvokeError::Type::NoCompatibleFunctionFound);
     }
 };
 }
