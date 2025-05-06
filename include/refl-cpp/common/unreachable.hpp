@@ -12,7 +12,7 @@ namespace ReflCpp {
 template <bool allow_exist = false>
     requires (!allow_exist)
 [[noreturn]]
-void unreachable() {
+void unreachable() noexcept {
     static_assert(allow_exist, "should NOT be reachable");
 }
 
@@ -24,7 +24,7 @@ void unreachable() {
 template <bool allow_exist>
     requires (allow_exist)
 [[noreturn]]
-void unreachable() {
+void unreachable() noexcept {
     std::println("should NOT be reachable:\n{}",
                  std::to_string(std::stacktrace::current(1))
     );

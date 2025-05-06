@@ -28,12 +28,12 @@ public:
         return base_->GetType();
     }
 
-    void SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
+    rescpp::result<void, FieldSetError> SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
         return base_->SetValue(value, instance);
     }
 
     [[nodiscard]]
-    rescpp::result<Variant, VariantGetError> GetValue(const Variant& instance = Variant::Void()) const {
+    rescpp::result<Variant, FieldGetError> GetValue(const Variant& instance = Variant::Void()) const {
         return base_->GetValue(instance);
     }
 
@@ -44,14 +44,14 @@ public:
     }
 
     [[nodiscard]]
-    Variant GetRef(const Variant& instance = Variant::Void()) const {
+    rescpp::result<Variant, FieldGetError> GetRef(const Variant& instance = Variant::Void()) const {
         return base_->GetRef(instance);
     }
 
     template <typename T>
     [[nodiscard]]
-    T& GetRef(const Variant& instance = Variant::Void()) const {
-        return base_->GetRef(instance).Get<T&>();
+    rescpp::result<T&, FieldGetError> GetRef(const Variant& instance = Variant::Void()) const {
+        return TRY(base_->GetRef(instance)).Get<T&>();
     }
 };
 }

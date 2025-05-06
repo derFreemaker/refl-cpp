@@ -92,10 +92,10 @@ template <typename T>
 using remove_const_from_pointer_t = typename remove_const_from_pointer<T>::type;
 
 template <typename T>
-using make_lvalue_reference_t = std::remove_reference_t<T>&;
+using make_lvalue_reference_t = std::_Const_thru_ref<T>&;
 
 template <typename T>
-using make_rvalue_reference_t = std::remove_reference_t<T>&&;
+using make_rvalue_reference_t = std::_Const_thru_ref<T>&&;
 
 namespace detail {
 template <typename T>

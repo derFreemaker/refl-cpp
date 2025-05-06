@@ -1,9 +1,75 @@
 #pragma once
 
+#include "common/unreachable.hpp"
 #include "refl-cpp/common/type_traits.hpp"
 #include "refl-cpp/variant.hpp"
 #include "refl-cpp/declare_reflect.hpp"
 #include "refl-cpp/field_traits.hpp"
+
+namespace ReflCpp {
+enum class FieldGetError : uint8_t {
+    VariantIsVoid,
+    InstanceIsVoid,
+    CanNotGet,
+
+    ReflectMaxLimitReached,
+    ReflectCreationFailed,
+    
+    OutOfMemory,
+};
+}
+
+template <>
+struct ::rescpp::type_converter<ReflCpp::VariantGetError, ReflCpp::FieldGetError> {
+    static ReflCpp::FieldGetError convert(const ReflCpp::VariantGetError& error) noexcept {
+        switch (error) {
+            case ReflCpp::VariantGetError::IsVoid:
+                return ReflCpp::FieldGetError::VariantIsVoid;
+            case ReflCpp::VariantGetError::CanNotGet:
+                return ReflCpp::FieldGetError::CanNotGet;
+        }
+        ReflCpp::unreachable<true>();
+    }
+};
+
+template <>
+struct ::rescpp::type_converter<ReflCpp::ReflectError, ReflCpp::FieldGetError> {
+    static ReflCpp::FieldGetError convert(const ReflCpp::ReflectError& error) noexcept {
+        switch (error) {
+            case ReflCpp::ReflectError::MaxLimitReached:
+                return ReflCpp::FieldGetError::ReflectMaxLimitReached;
+            case ReflCpp::ReflectError::CreationFailed:
+                return ReflCpp::FieldGetError::ReflectCreationFailed;
+            case ReflCpp::ReflectError::OutOfMemory:
+                return ReflCpp::FieldGetError::OutOfMemory;
+        }
+        ReflCpp::unreachable<true>();
+    }
+};
+
+namespace ReflCpp {
+enum class FieldSetError : uint8_t {
+    IsConst,
+    IsNotCopyAssignable,
+    InstanceIsVoid,
+    
+    NewValueIsVoid,
+    CanNotGetNewValue,
+};
+}
+
+template <>
+struct ::rescpp::type_converter<ReflCpp::VariantGetError, ReflCpp::FieldSetError> {
+    static ReflCpp::FieldSetError convert(const ReflCpp::VariantGetError& error) noexcept {
+        switch (error) {
+            case ReflCpp::VariantGetError::IsVoid:
+                return ReflCpp::FieldSetError::NewValueIsVoid;
+            case ReflCpp::VariantGetError::CanNotGet:
+                return ReflCpp::FieldSetError::CanNotGetNewValue;
+        }
+        ReflCpp::unreachable<true>();
+    }
+};
 
 namespace ReflCpp {
 struct FieldBase {
@@ -19,12 +85,13 @@ struct FieldBase {
     virtual rescpp::result<TypeID, ReflectError> GetType() const = 0;
 
     [[nodiscard]]
-    virtual rescpp::result<Variant, VariantGetError> GetValue(const Variant& instance) const = 0;
-
-    virtual void SetValue(const Variant& value, const Variant& instance) const = 0;
+    virtual rescpp::result<Variant, FieldGetError> GetValue(const Variant& instance) const = 0;
 
     [[nodiscard]]
-    virtual Variant GetRef(const Variant& instance) const = 0;
+    virtual rescpp::result<void, FieldSetError> SetValue(const Variant& value, const Variant& instance) const = 0;
+
+    [[nodiscard]]
+    virtual rescpp::result<Variant, FieldGetError> GetRef(const Variant& instance) const = 0;
 };
 
 template <typename T>
@@ -54,13 +121,13 @@ public:
     }
 
     [[nodiscard]]
-    rescpp::result<Variant, VariantGetError> GetValue(const Variant& instance) const noexcept override {
+    rescpp::result<Variant, FieldGetError> GetValue(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsStatic) {
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
-                throw std::logic_error("instance is needed for non-static member fields");
+                return rescpp::fail(FieldGetError::InstanceIsVoid);
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
@@ -68,31 +135,32 @@ public:
         }
     }
 
-    void SetValue(const Variant& value, const Variant& instance) const noexcept override {
+    [[nodiscard]]
+    rescpp::result<void, FieldSetError> SetValue(const Variant& value, const Variant& instance) const noexcept override {
         const auto& type = Reflect<const typename Traits::Type>();
         if constexpr (Traits::IsConst) {
-            throw std::logic_error("cannot set value on type: " + type.Dump());
+            return rescpp::fail(FieldSetError::IsConst);
         }
-        if constexpr (!std::is_copy_constructible_v<typename Traits::Type> || !std::is_copy_assignable_v<typename Traits::Type>) {
+        else if constexpr (!std::is_copy_assignable_v<typename Traits::Type>) {
             //TODO: make it so that it only errors if there is no possible way
-            throw std::logic_error("cannot set value on not copy construct or copy assignable: " + type.Dump());
+            return rescpp::fail(FieldSetError::IsNotCopyAssignable);
         }
         else if constexpr (Traits::IsStatic) {
-            *ptr_ = value.Get<const typename Traits::Type&>();
+            *ptr_ = TRY(value.Get<const typename Traits::Type&>());
         }
         else {
             if (instance.IsVoid()) {
-                throw std::logic_error("instance is needed for non-static member fields");
+                rescpp::fail(FieldSetError::InstanceIsVoid);
             }
 
-            typename Traits::ClassType& obj = instance.Get<typename Traits::ClassType&>();
-            obj.*ptr_ = value.Get<make_lvalue_reference_t<make_const_t<typename Traits::Type>>>();
+            typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
+            obj.*ptr_ = TRY(value.Get<make_lvalue_reference_t<make_const_t<typename Traits::Type>>>());
         }
     }
 
     //TODO: make one function for getting value or reference
     [[nodiscard]]
-    Variant GetRef(const Variant& instance) const noexcept override {
+    rescpp::result<Variant, FieldGetError> GetRef(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsConst) {
             // Use 'GetValue', since it will use a const reference when it can.
             throw std::logic_error("cannot get reference to a const type");
@@ -107,7 +175,7 @@ public:
                 throw std::logic_error("instance is needed for a non-static member field");
             }
 
-            auto& obj = instance.Get<typename Traits::ClassType&>();
+            auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
             return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(
                 static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_)
             );

@@ -298,7 +298,7 @@ TEST_CASE("Field reflection tests", "[field]") {
         REQUIRE(nameField.has_value());
 
         // Get reference to field
-        auto& nameRef = nameField->get().GetRef<std::string>(instanceVariant);
+        auto& nameRef = TRY_FAIL(nameField->get().GetRef<std::string>(instanceVariant));
 
         // Modify through reference
         nameRef = "Modified";
