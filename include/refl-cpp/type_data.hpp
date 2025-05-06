@@ -10,7 +10,6 @@
 #include "refl-cpp/type_flags.hpp"
 
 namespace ReflCpp {
-
 struct TypeData {
     const char* name = "$NONE$";
     std::optional<const char*> _namespace = std::nullopt;
@@ -19,7 +18,7 @@ struct TypeData {
     std::vector<TypeID> inners;
 
     TypeFlags flags;
-    
+
     std::vector<Field> fields;
     std::vector<Method> methods;
 };
@@ -31,3 +30,32 @@ struct TypeOptions {
 template <typename T>
 struct ReflectData;
 }
+
+#include "refl-cpp/reflect_printer.hpp"
+
+#define REFLCPP_REFLECT_TEMPLATE(...) \
+        template <__VA_ARGS__>
+
+#define REFLCPP_REFLECT_DATA(...) \
+    struct ReflCpp::ReflectData<__VA_ARGS__> { \
+    private: \
+        static TypeData CreateImpl() { \
+            return TypeData
+
+#define REFLCPP_REFLECT_DATA_END() \
+                ; \
+        } \
+    public: \
+        static const TypeData& Create() { \
+            static TypeData data = CreateImpl(); \
+            return data; \
+        } \
+    };
+
+#define REFLCPP_REFLECT_PRINTER(...) \
+    struct ReflCpp::ReflectPrinter<__VA_ARGS__> { \
+        static void Print(std::ostream& out, const Type& type) {
+
+#define REFLCPP_REFLECT_PRINTER_END() \
+        } \
+    };

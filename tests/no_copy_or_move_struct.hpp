@@ -14,11 +14,10 @@ struct NoCopyOrMoveStruct {
 
     explicit NoCopyOrMoveStruct(std::nullptr_t) {}
 };
-
-template <>
-struct ReflectData<NoCopyOrMoveStruct> {
-    static TypeData Create() {
-        return TypeData{ .name = "NoCopyOrMoveStruct" };
-    }
-};
 }
+
+REFLCPP_REFLECT_TEMPLATE()
+REFLCPP_REFLECT_DATA(ReflCpp::NoCopyOrMoveStruct){
+    .name = "NoCopyOrMoveStruct"
+}
+REFLCPP_REFLECT_DATA_END()

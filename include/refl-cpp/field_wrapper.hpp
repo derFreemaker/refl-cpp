@@ -123,7 +123,7 @@ public:
     [[nodiscard]]
     rescpp::result<Variant, FieldGetError> GetValue(const Variant& instance) const noexcept override {
         if constexpr (Traits::IsStatic) {
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_));
+            return Variant::Create<typename Traits::Type>(static_cast<typename Traits::Type>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
@@ -131,13 +131,12 @@ public:
             }
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_));
+            return Variant::Create<typename Traits::Type>(static_cast<typename Traits::Type>(obj.*ptr_));
         }
     }
 
     [[nodiscard]]
     rescpp::result<void, FieldSetError> SetValue(const Variant& value, const Variant& instance) const noexcept override {
-        const auto& type = Reflect<const typename Traits::Type>();
         if constexpr (Traits::IsConst) {
             return rescpp::fail(FieldSetError::IsConst);
         }
@@ -147,6 +146,7 @@ public:
         }
         else if constexpr (Traits::IsStatic) {
             *ptr_ = TRY(value.Get<const typename Traits::Type&>());
+            return {};
         }
         else {
             if (instance.IsVoid()) {
@@ -155,6 +155,7 @@ public:
 
             typename Traits::ClassType& obj = TRY(instance.Get<typename Traits::ClassType&>());
             obj.*ptr_ = TRY(value.Get<make_lvalue_reference_t<make_const_t<typename Traits::Type>>>());
+            return {};
         }
     }
 

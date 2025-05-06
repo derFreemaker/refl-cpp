@@ -97,22 +97,21 @@
 #include "no_copy_or_move_struct.hpp"
 
 namespace ReflCpp {
-
 struct TestStruct {
 #define CREATE_TEST_METHOD(BEFORE, NAME, ARGS, AFTER) \
-    BEFORE NoCopyOrMoveStruct& NAME(ARGS NoCopyOrMoveStruct& foo) AFTER { \
-        return const_cast<NoCopyOrMoveStruct&>(foo); \
-    }
+BEFORE NoCopyOrMoveStruct& NAME(ARGS NoCopyOrMoveStruct& foo) AFTER { \
+return const_cast<NoCopyOrMoveStruct&>(foo); \
+}
 
 #define CREATE_TEST_METHODS_IMPL(BEFORE, NAME, AFTER) \
-    CREATE_TEST_METHOD(BEFORE, NAME, , AFTER) \
-    CREATE_TEST_METHOD(BEFORE, NAME##_Const, const, AFTER) \
-    CREATE_TEST_METHOD(BEFORE const, Const_##NAME, , AFTER) \
-    CREATE_TEST_METHOD(BEFORE const, Const_##NAME##_Const, const, AFTER)
+CREATE_TEST_METHOD(BEFORE, NAME, , AFTER) \
+CREATE_TEST_METHOD(BEFORE, NAME##_Const, const, AFTER) \
+CREATE_TEST_METHOD(BEFORE const, Const_##NAME, , AFTER) \
+CREATE_TEST_METHOD(BEFORE const, Const_##NAME##_Const, const, AFTER)
 
 #define CREATE_TEST_METHODS(NAME, AFTER) \
-    CREATE_TEST_METHODS_IMPL(, NAME, AFTER) \
-    CREATE_TEST_METHODS_IMPL(, NAME##Const, const AFTER)
+CREATE_TEST_METHODS_IMPL(, NAME, AFTER) \
+CREATE_TEST_METHODS_IMPL(, NAME##Const, const AFTER)
 
     CREATE_TEST_METHODS_IMPL(static, Static,)
 
@@ -129,14 +128,16 @@ struct TestStruct {
     }
 };
 
-template <>
-struct ReflectData<TestStruct> {
-    static TypeData Create() {
-        return TypeData{ .name = "TestStruct" };
-    }
-};
+}
 
-namespace testing {
+REFLCPP_REFLECT_TEMPLATE()
+REFLCPP_REFLECT_DATA(ReflCpp::TestStruct) {
+    .name = "TestStruct",
+    ._namespace = "ReflCpp"
+}
+REFLCPP_REFLECT_DATA_END()
+
+namespace ReflCpp::testing {
 
 #define CREATE_METHOD_TEST_IMPL(NAME, INSTANCE_TYPE, RETURN, ARG, ...) \
     TEST_CASE("FunctionWrapper::" #NAME, "[FunctionWrapper]") { \
@@ -182,5 +183,4 @@ TEST_CASE("FunctionWrapper::Pointer_Const", "[FunctionWrapper]") {
     REQUIRE(value.foo == 893745);
 }
 
-} // namespace testing
-} // namespace ReflCpp
+} // namespace ReflCpp::testing

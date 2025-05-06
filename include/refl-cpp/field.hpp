@@ -17,7 +17,7 @@ public:
     Field(const FieldData<T>& data)
         : base_(std::make_shared<FieldWrapper<T>>(data.ptr)),
           name_(data.name) {}
-
+    
     [[nodiscard]]
     const char* GetName() const {
         return name_;
@@ -28,6 +28,7 @@ public:
         return base_->GetType();
     }
 
+    [[nodiscard]]
     rescpp::result<void, FieldSetError> SetValue(const Variant& value, const Variant& instance = Variant::Void()) const {
         return base_->SetValue(value, instance);
     }

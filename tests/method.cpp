@@ -65,142 +65,133 @@ public:
 };
 } // namespace TestClasses
 
-template <>
-struct ReflCpp::ReflectData<TestClasses::SimpleClass> {
-    static TypeData Create() {
-        return TypeData{
-            .name = "SimpleClass",
-            ._namespace = "TestClasses",
-            .fields = {
-                FieldData{
-                    .ptr = &TestClasses::SimpleClass::publicValue,
-                    .name = "publicValue",
-                },
-                FieldData{
-                    .ptr = &TestClasses::SimpleClass::constValue,
-                    .name = "constValue",
-                },
-                FieldData{
-                    .ptr = &TestClasses::SimpleClass::name,
-                    .name = "name",
-                },
-                FieldData{
-                    .ptr = &TestClasses::SimpleClass::staticValue,
-                    .name = "staticValue",
-                }
-            },
-            .methods = {
-                MethodData{
-                    .name = "getValue",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::getValue,
-                        },
-                    },
-                },
-                MethodData{
-                    .name = "setValue",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::setValue,
-                            .args = { "val" },
-                        },
-                    },
-                },
-                MethodData{
-                    .name = "getValue",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::getValue,
-                        }
-                    },
-                },
-                MethodData{
-                    .name = "setValue",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::setValue,
-                            .args = { "val" },
-                        }
-                    },
-                },
-                MethodData{
-                    .name = "getStaticValue",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::getStaticValue,
-                        }
-                    },
-                },
-                MethodData{
-                    .name = "setStaticValue",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::setStaticValue,
-                            .args = { "val" },
-                        }
-                    },
-                },
-                MethodData{
-                    .name = "add",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::add,
-                            .args = { "a", "b" },
-                        }
-                    },
-                },
-                MethodData{
-                    .name = "getName",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::getName,
-                        }
-                    },
-                },
-                MethodData{
-                    .name = "setName",
-                    .funcs = {
-                        MethodFuncData{
-                            .ptr = &TestClasses::SimpleClass::setName,
-                            .args = { "newName" },
-                        }
-                    },
+REFLCPP_REFLECT_TEMPLATE()
+REFLCPP_REFLECT_DATA(TestClasses::SimpleClass){
+    .name = "SimpleClass",
+    ._namespace = "TestClasses",
+    .fields = {
+        FieldData{
+            .ptr = &TestClasses::SimpleClass::publicValue,
+            .name = "publicValue",
+        },
+        FieldData{
+            .ptr = &TestClasses::SimpleClass::constValue,
+            .name = "constValue",
+        },
+        FieldData{
+            .ptr = &TestClasses::SimpleClass::name,
+            .name = "name",
+        },
+        FieldData{
+            .ptr = &TestClasses::SimpleClass::staticValue,
+            .name = "staticValue",
+        }
+    },
+    .methods = {
+        MethodData{
+            .name = "getValue",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::getValue,
                 },
             },
-        };
-    }
-};
-
-template <>
-struct ReflCpp::ReflectData<TestClasses::ContainerClass> {
-    static TypeData Create() {
-        return TypeData{
-            .name = "ContainerClass",
-            ._namespace = "TestClasses",
-        };
-    }
-};
-
-template <>
-struct ReflCpp::ReflectData<TestClasses::ContainerClass::InnerClass> {
-    static TypeData Create() {
-        return TypeData{
-            .name = "InnerClass",
-            ._namespace = "TestClasses::ContainerClass",
-            .fields = {
-                FieldData{
-                    .ptr = &TestClasses::ContainerClass::InnerClass::value,
-                    .name = "value",
+        },
+        MethodData{
+            .name = "setValue",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::setValue,
+                    .args = { "val" },
+                },
+            },
+        },
+        MethodData{
+            .name = "getValue",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::getValue,
                 }
-            }
-        };
+            },
+        },
+        MethodData{
+            .name = "setValue",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::setValue,
+                    .args = { "val" },
+                }
+            },
+        },
+        MethodData{
+            .name = "getStaticValue",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::getStaticValue,
+                }
+            },
+        },
+        MethodData{
+            .name = "setStaticValue",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::setStaticValue,
+                    .args = { "val" },
+                }
+            },
+        },
+        MethodData{
+            .name = "add",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::add,
+                    .args = { "a", "b" },
+                }
+            },
+        },
+        MethodData{
+            .name = "getName",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::getName,
+                }
+            },
+        },
+        MethodData{
+            .name = "setName",
+            .funcs = {
+                MethodFuncData{
+                    .ptr = &TestClasses::SimpleClass::setName,
+                    .args = { "newName" },
+                }
+            },
+        },
+    },
+}
+REFLCPP_REFLECT_DATA_END()
+
+REFLCPP_REFLECT_TEMPLATE()
+REFLCPP_REFLECT_DATA(TestClasses::ContainerClass){
+    .name = "ContainerClass",
+    ._namespace = "TestClasses",
+}
+REFLCPP_REFLECT_DATA_END()
+
+REFLCPP_REFLECT_TEMPLATE()
+REFLCPP_REFLECT_DATA(TestClasses::ContainerClass::InnerClass){
+    .name = "InnerClass",
+    ._namespace = "TestClasses::ContainerClass",
+    .fields = {
+        FieldData{
+            .ptr = &TestClasses::ContainerClass::InnerClass::value,
+            .name = "value",
+        }
     }
-};
+}
+REFLCPP_REFLECT_DATA_END()
 
 #define TRY_FAIL(...) \
     RESCPP_TRY_IMPL((__VA_ARGS__), { \
-        FAIL("result was bad" << std::stacktrace::current(1)); \
+        FAIL("result was bad\n" << std::stacktrace::current(1)); \
     })
 
 TEST_CASE("Field reflection tests", "[field]") {
@@ -210,7 +201,7 @@ TEST_CASE("Field reflection tests", "[field]") {
 
     SECTION("GetFields count") {
         // Verify that we get the correct number of fields
-        REQUIRE(testType.GetFields().size() == 5);
+        REQUIRE(testType.GetFields().size() == 4);
     }
 
     SECTION("GetField by name") {
@@ -248,7 +239,7 @@ TEST_CASE("Field reflection tests", "[field]") {
         ReflCpp::Variant newValue = TRY_FAIL(ReflCpp::Variant::Create<int>(42));
 
         // Set the value through reflection
-        publicValueField->get().SetValue(newValue, instanceVariant);
+        TRY_FAIL(publicValueField->get().SetValue(newValue, instanceVariant));
 
         // Verify the value was changed
         REQUIRE(testInstance.publicValue == 42);
@@ -269,7 +260,7 @@ TEST_CASE("Field reflection tests", "[field]") {
         ReflCpp::Variant newValue = TRY_FAIL(ReflCpp::Variant::Create<int>(123));
 
         // Set the static value through reflection
-        staticValueField->get().SetValue(newValue);
+        TRY_FAIL(staticValueField->get().SetValue(newValue));
 
         // Verify the value was changed
         REQUIRE(TestClasses::SimpleClass::staticValue == 123);

@@ -8,27 +8,31 @@
 
 template <>
 struct ReflCpp::ReflectPrinter<void> {
-    static void Print(std::ostream& stream, const Type& type) {
+    static void Print(std::ostream& stream, const Type& _) {
         stream << "void";
     }
 };
 
 namespace ReflCpp {
+namespace detail {
+template <typename T>
+concept HasReflectData = requires() {
+    { ReflectData<T>::Create() } -> std::same_as<const TypeData&>;
+};
+}
+
 struct ReflectionDatabase {
 private:
     std::vector<std::unique_ptr<Type>> types_;
 
 public:
     static const Type& Void() noexcept {
-        static Type type{
-            TypeID(0),
-            {
-                .name = "Void"
-            },
-            {
-                .printFunc = ReflectPrinter<void>::Print
-            }
+        static TypeData data{
+            .name = "Void"
         };
+        static Type type(TypeID(0), &data, {
+                             .printFunc = ReflectPrinter<void>::Print
+                         });
         return type;
     }
 
@@ -38,15 +42,18 @@ public:
     }
 
     template <typename T>
+        requires detail::HasReflectData<T>
     rescpp::result<TypeID, ReflectError> RegisterType() noexcept {
         if (types_.size() == SIZE_MAX) {
             return rescpp::fail(ReflectError::MaxLimitReached);
         }
 
-        TypeData type_data;
-
+        const TypeData* type_data;
         try {
-            type_data = ReflectData<T>::Create();
+            type_data = &ReflectData<T>::Create();
+            if (!type_data) {
+                return rescpp::fail<ReflectError>(ReflectError::CreationFailed);
+            }
         }
         catch (const std::exception&) {
             return rescpp::fail<ReflectError>(ReflectError::CreationFailed);
