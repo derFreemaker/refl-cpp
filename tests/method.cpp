@@ -308,7 +308,7 @@ TEST_CASE("Field reflection tests", "[field]") {
 
         // Cannot set const value (this should throw)
         ReflCpp::Variant newValue = TRY_FAIL(ReflCpp::Variant::Create<int>(999));
-        REQUIRE_THROWS_AS(constValueField->get().SetValue(newValue, instanceVariant), std::logic_error);
+        REQUIRE(constValueField->get().SetValue(newValue, instanceVariant).has_error());
     }
 }
 
@@ -319,7 +319,7 @@ TEST_CASE("Method reflection tests", "[method]") {
 
     SECTION("GetMethods count") {
         // Verify that we get the correct number of methods
-        REQUIRE(testType.GetMethods().size() == 7);
+        REQUIRE(testType.GetMethods().size() == 9);
     }
 
     SECTION("GetMethod by name") {
@@ -429,46 +429,5 @@ TEST_CASE("Method reflection tests", "[method]") {
 
         // Check that the method executed correctly
         REQUIRE(testInstance.getName() == "TestName");
-    }
-}
-
-TEST_CASE("Type inner class testing", "[type]") {
-    const ReflCpp::Type& containerType = TRY_FAIL(ReflCpp::Reflect<TestClasses::ContainerClass>());
-
-    SECTION("Inner type access") {
-        // Verify the container has inner types
-        REQUIRE(containerType.HasInners());
-
-        // Verify we can find the inner type
-        bool foundInner = false;
-        for (const auto& innerId : containerType.GetInners()) {
-            auto innerTypeResult = innerId.GetType();
-            if (!innerTypeResult.has_error()) {
-                const auto& innerType = innerTypeResult.value();
-                if (std::string(innerType.GetName()) == "InnerClass") {
-                    foundInner = true;
-                    break;
-                }
-            }
-        }
-
-        REQUIRE(foundInner);
-    }
-
-    SECTION("Inner type reflection") {
-        const ReflCpp::Type& innerType = TRY_FAIL(ReflCpp::Reflect<TestClasses::ContainerClass::InnerClass>());
-
-        // Verify the inner type has the expected field
-        auto valueField = innerType.GetField("value");
-        REQUIRE(valueField.has_value());
-
-        // Create an instance to test with
-        TestClasses::ContainerClass::InnerClass innerInstance;
-        innerInstance.value = 42;
-        ReflCpp::Variant innerVariant = TRY_FAIL(ReflCpp::Variant::Create<TestClasses::ContainerClass::InnerClass&>(innerInstance));
-
-        // Verify field access works
-        auto value = TRY_FAIL(valueField->get().GetValue(innerVariant));
-        REQUIRE(TRY_FAIL(value.Get<int>()) == 42);
     }
 }

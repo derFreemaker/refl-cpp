@@ -91,8 +91,27 @@ struct remove_const_from_pointer {
 template <typename T>
 using remove_const_from_pointer_t = typename remove_const_from_pointer<T>::type;
 
+namespace detail {
+
 template <typename T>
-using make_lvalue_reference_t = std::_Const_thru_ref<T>&;
+struct make_lvalue_reference {
+    using type = T&;
+};
+
+template <typename T>
+struct make_lvalue_reference<T&> {
+    using type = T&;
+};
+
+template <typename T>
+struct make_lvalue_reference<T&&> {
+    using type = T&;
+};
+
+}
+
+template <typename T>
+using make_lvalue_reference_t = typename detail::make_lvalue_reference<T>::type;
 
 template <typename T>
 using make_rvalue_reference_t = std::_Const_thru_ref<T>&&;

@@ -90,7 +90,7 @@ public:
     template <typename T>
         requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
     static rescpp::result<Variant, ReflectError> Create(T& data);
-
+    
     template <typename T>
         requires (!std::is_reference_v<T> && !std::is_pointer_v<T>)
     static rescpp::result<Variant, ReflectError> Create(T&& data);

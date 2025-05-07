@@ -40,7 +40,7 @@ public:
 
     template <typename T>
     [[nodiscard]]
-    rescpp::result<T, VariantGetError> GetValue(const Variant& instance = Variant::Void()) const {
+    rescpp::result<T, FieldGetError> GetValue(const Variant& instance = Variant::Void()) const {
         return TRY(base_->GetValue(instance)).Get<T>();
     }
 

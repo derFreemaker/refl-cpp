@@ -11,10 +11,10 @@ enum class FieldGetError : uint8_t {
     VariantIsVoid,
     InstanceIsVoid,
     CanNotGet,
-    
+
     ReflectMaxLimitReached,
     ReflectCreationFailed,
-    
+
     OutOfMemory,
 };
 }
@@ -52,7 +52,7 @@ enum class FieldSetError : uint8_t {
     IsConst,
     IsNotCopyAssignable,
     InstanceIsVoid,
-    
+
     NewValueIsVoid,
     CanNotGetNewValue,
 };
@@ -159,11 +159,14 @@ public:
         }
     }
 
-    //TODO: make one function for getting value or reference
     [[nodiscard]]
     rescpp::result<Variant, FieldGetError> GetRef(const Variant& instance) const noexcept override {
-        using return_type = std::conditional_t<Traits::IsConst, const make_lvalue_reference_t<typename Traits::Type>, make_lvalue_reference_t<typename Traits::Type>>;
-        
+        using return_type = std::conditional_t<
+            Traits::IsConst,
+            make_lvalue_reference_t<const typename Traits::Type>,
+            make_lvalue_reference_t<typename Traits::Type>
+        >;
+
         if constexpr (Traits::IsStatic) {
             return Variant::Create<return_type>(static_cast<return_type>(*ptr_));
         }

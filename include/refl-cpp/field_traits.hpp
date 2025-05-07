@@ -16,10 +16,6 @@ struct FieldTraitsBase {
 };
 }
 
-template <typename T>
-struct FieldTraits<T*>
-    : public detail::FieldTraitsBase<true, false, void, T> {};
-
 template <typename C, typename T>
 struct FieldTraits<T C::*>
     : public detail::FieldTraitsBase<false, false, C, T> {};
@@ -27,5 +23,13 @@ struct FieldTraits<T C::*>
 template <typename C, typename T>
 struct FieldTraits<const T C::*>
     : public detail::FieldTraitsBase<false, true, C, T> {};
+
+template <typename T>
+struct FieldTraits<T*>
+    : public detail::FieldTraitsBase<true, false, void, T> {};
+
+template <typename T>
+struct FieldTraits<const T*>
+    : public detail::FieldTraitsBase<true, true, void, T> {};
 
 }
