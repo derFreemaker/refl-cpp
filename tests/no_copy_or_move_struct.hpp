@@ -17,7 +17,6 @@ struct NoCopyOrMoveStruct {
 }
 
 REFLCPP_REFLECT_TEMPLATE()
-REFLCPP_REFLECT_DATA(ReflCpp::NoCopyOrMoveStruct){
-    .name = "NoCopyOrMoveStruct"
-}
+REFLCPP_REFLECT_DATA(ReflCpp::NoCopyOrMoveStruct)
+    { .name = "NoCopyOrMoveStruct" }
 REFLCPP_REFLECT_DATA_END()
