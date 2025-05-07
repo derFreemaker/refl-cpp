@@ -11,7 +11,7 @@ enum class FieldGetError : uint8_t {
     VariantIsVoid,
     InstanceIsVoid,
     CanNotGet,
-
+    
     ReflectMaxLimitReached,
     ReflectCreationFailed,
     
@@ -162,24 +162,18 @@ public:
     //TODO: make one function for getting value or reference
     [[nodiscard]]
     rescpp::result<Variant, FieldGetError> GetRef(const Variant& instance) const noexcept override {
-        if constexpr (Traits::IsConst) {
-            // Use 'GetValue', since it will use a const reference when it can.
-            throw std::logic_error("cannot get reference to a const type");
-        }
-        else if constexpr (Traits::IsStatic) {
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(
-                static_cast<make_lvalue_reference_t<typename Traits::Type>>(*ptr_)
-            );
+        using return_type = std::conditional_t<Traits::IsConst, const make_lvalue_reference_t<typename Traits::Type>, make_lvalue_reference_t<typename Traits::Type>>;
+        
+        if constexpr (Traits::IsStatic) {
+            return Variant::Create<return_type>(static_cast<return_type>(*ptr_));
         }
         else {
             if (instance.IsVoid()) {
-                throw std::logic_error("instance is needed for a non-static member field");
+                return rescpp::fail(FieldGetError::InstanceIsVoid);
             }
 
             auto& obj = TRY(instance.Get<typename Traits::ClassType&>());
-            return Variant::Create<make_lvalue_reference_t<typename Traits::Type>>(
-                static_cast<make_lvalue_reference_t<typename Traits::Type>>(obj.*ptr_)
-            );
+            return Variant::Create<return_type>(static_cast<return_type>(obj.*ptr_));
         }
     }
 };
