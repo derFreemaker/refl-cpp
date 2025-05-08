@@ -1,4 +1,7 @@
-# refl-cpp [WIP]
+# Iced Project
+This project is on ice since there is a builtin reflection comming for c++.
+
+# refl-cpp
 A simple reflection library for `C++`, with a hands-off approach.
 Only one macro to mark the `class/struct` to be reflected.
 
@@ -12,15 +15,6 @@ It is also marked as precompile-header to further speed up the build process.
 - [critical] add easy build hook for projects
 - add reflection for enums
 - more error information
-
-## Limitations
-
-### Template Functions, ...
-Anything that needs a template parameter is out of the question.
-
-## Contribute
-The project is not in a state where contribution is easily possible.
-If necessity comes I will work on that just open a pull request.
 
 ## Dependencies
 these are getting managed through [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
