@@ -1,12 +1,10 @@
 #pragma once
 
-#include "refl-cpp.generated/kpop/test.generated.hpp"
-
 #include <iostream>
+#include <refl-cpp/refl-cpp.hpp>
 
 namespace kpop {
-
-struct REFLECT() Test {
+struct Test {
     int test;
 
     void foo(const char* _foo) {
@@ -18,3 +16,5 @@ struct REFLECT() Test {
     }
 };
 }
+
+#include "refl-cpp.generated/kpop/test.generated.reflection"

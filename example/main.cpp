@@ -1,22 +1,23 @@
 #include <optional>
 #include <print>
+#include <stacktrace>
 #include <refl-cpp/refl-cpp.hpp>
 
 #include "test.hpp"
 
 #define EXIT_MAIN_TRY(...) \
-    TRY_IMPL((__VA_ARGS__), { \
-        printf("%s\n", __result__.Error().Str().c_str()); \
+    RESCPP_TRY_IMPL((__VA_ARGS__), { \
+        printf("%s\n", std::to_string(std::stacktrace::current(0)).c_str()); \
         return 1; \
     })
 
 int main() {
     kpop::Test test{};
-
+    
     const auto& type = EXIT_MAIN_TRY(ReflCpp::Reflect<kpop::Test>());
 
-    const auto field = EXIT_MAIN_TRY(type.GetField("test"));
-    const auto method = EXIT_MAIN_TRY(type.GetMethod("foo"));
+    const auto field = type.GetField("test")->get();
+    const auto method = type.GetMethod("foo")->get();
 
     (void)EXIT_MAIN_TRY(method.Invoke(
         EXIT_MAIN_TRY(ReflCpp::Variant::Create<kpop::Test&>(test)),

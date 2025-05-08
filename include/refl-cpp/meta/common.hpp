@@ -5,12 +5,16 @@
 // Array
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
-REFLCPP_REFLECT_DATA(T[]){
-    .name = "Array",
-    .inners = ReflectID<T>().value(),
-    .flags = TypeFlags::IsArray,
-}
-REFLCPP_REFLECT_DATA_END()
+REFLCPP_REFLECT_DATA_DECL(T[])
+
+REFLCPP_REFLECT_TEMPLATE(typename T)
+REFLCPP_REFLECT_DATA_DEF(T[])
+    {
+        .name = "Array",
+        .inners = ReflCpp::ReflectID<T>().value(),
+        .flags = ReflCpp::TypeFlags::IsArray,
+    }
+REFLCPP_REFLECT_DATA_DEF_END()
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
 REFLCPP_REFLECT_PRINTER(T[])
@@ -21,14 +25,19 @@ REFLCPP_REFLECT_PRINTER_END()
 // Pointer
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
-REFLCPP_REFLECT_DATA(T*){
-    .name = "Pointer",
-    .inners = {
-        ReflectID<T>().value()
-    },
-    .flags = TypeFlags::IsPointer,
-}
-REFLCPP_REFLECT_DATA_END()
+REFLCPP_REFLECT_DATA_DECL(T*)
+
+REFLCPP_REFLECT_TEMPLATE(typename T)
+REFLCPP_REFLECT_DATA_DEF(T*)
+    {
+        .name = "Pointer",
+        .inners = {
+            ReflCpp::ReflectID<T>().value()
+        },
+        .flags = ReflCpp::TypeFlags::IsPointer,
+    }
+
+REFLCPP_REFLECT_DATA_DEF_END()
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
 REFLCPP_REFLECT_PRINTER(T*)
@@ -39,14 +48,18 @@ REFLCPP_REFLECT_PRINTER_END()
 // Const Pointer
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
-REFLCPP_REFLECT_DATA(T* const){
-    .name = "Const Pointer",
-    .inners = {
-        ReflectID<T>().value()
-    },
-    .flags = TypeFlags::IsPointer | TypeFlags::IsConst,
-}
-REFLCPP_REFLECT_DATA_END()
+REFLCPP_REFLECT_DATA_DECL(T* const)
+
+REFLCPP_REFLECT_TEMPLATE(typename T)
+REFLCPP_REFLECT_DATA_DEF(T* const)
+    {
+        .name = "Const Pointer",
+        .inners = {
+            ReflCpp::ReflectID<T>().value()
+        },
+        .flags = ReflCpp::TypeFlags::IsPointer | ReflCpp::TypeFlags::IsConst,
+    }
+REFLCPP_REFLECT_DATA_DEF_END()
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
 REFLCPP_REFLECT_PRINTER(T* const)
@@ -57,14 +70,18 @@ REFLCPP_REFLECT_PRINTER_END()
 // LValue Reference
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
-REFLCPP_REFLECT_DATA(T&){
-    .name = "LValue Reference",
-    .inners = {
-        ReflectID<T>().value()
-    },
-    .flags = TypeFlags::IsLValueReference,
-}
-REFLCPP_REFLECT_DATA_END()
+REFLCPP_REFLECT_DATA_DECL(T&)
+
+REFLCPP_REFLECT_TEMPLATE(typename T)
+REFLCPP_REFLECT_DATA_DEF(T&)
+    {
+        .name = "LValue Reference",
+        .inners = {
+            ReflCpp::ReflectID<T>().value()
+        },
+        .flags = ReflCpp::TypeFlags::IsLValueReference,
+    }
+REFLCPP_REFLECT_DATA_DEF_END()
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
 REFLCPP_REFLECT_PRINTER(T&)
@@ -75,14 +92,18 @@ REFLCPP_REFLECT_PRINTER_END()
 // RValue Reference
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
-REFLCPP_REFLECT_DATA(T&&){
-    .name = "RValue Reference",
-    .inners = {
-        ReflectID<T>().value()
-    },
-    .flags = TypeFlags::IsRValueReference,
-}
-REFLCPP_REFLECT_DATA_END()
+REFLCPP_REFLECT_DATA_DECL(T&&)
+
+REFLCPP_REFLECT_TEMPLATE(typename T)
+REFLCPP_REFLECT_DATA_DEF(T&&)
+    {
+        .name = "RValue Reference",
+        .inners = {
+            ReflCpp::ReflectID<T>().value()
+        },
+        .flags = ReflCpp::TypeFlags::IsRValueReference,
+    }
+REFLCPP_REFLECT_DATA_DEF_END()
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
 REFLCPP_REFLECT_PRINTER(T&&)
@@ -93,14 +114,18 @@ REFLCPP_REFLECT_PRINTER_END()
 // Const
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
-REFLCPP_REFLECT_DATA(const T){
-    .name = "Constant",
-    .inners = {
-        ReflectID<T>().value()
-    },
-    .flags = TypeFlags::IsConst,
-}
-REFLCPP_REFLECT_DATA_END()
+REFLCPP_REFLECT_DATA_DECL(const T)
+
+REFLCPP_REFLECT_TEMPLATE(typename T)
+REFLCPP_REFLECT_DATA_DEF(const T)
+    {
+        .name = "Constant",
+        .inners = {
+            ReflCpp::ReflectID<T>().value()
+        },
+        .flags = ReflCpp::TypeFlags::IsConst,
+    }
+REFLCPP_REFLECT_DATA_DEF_END()
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
 REFLCPP_REFLECT_PRINTER(const T)
@@ -111,14 +136,18 @@ REFLCPP_REFLECT_PRINTER_END()
 // Volatile
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
-REFLCPP_REFLECT_DATA(volatile T){
-    .name = "Volatile",
-    .inners = {
-        ReflectID<T>().value()
-    },
-    .flags = TypeFlags::IsVolatile,
-}
-REFLCPP_REFLECT_DATA_END()
+REFLCPP_REFLECT_DATA_DECL(volatile T)
+
+REFLCPP_REFLECT_TEMPLATE(typename T)
+REFLCPP_REFLECT_DATA_DEF(volatile T)
+    {
+        .name = "Volatile",
+        .inners = {
+            ReflCpp::ReflectID<T>().value()
+        },
+        .flags = ReflCpp::TypeFlags::IsVolatile,
+    }
+REFLCPP_REFLECT_DATA_DEF_END()
 
 REFLCPP_REFLECT_TEMPLATE(typename T)
 REFLCPP_REFLECT_PRINTER(volatile T)

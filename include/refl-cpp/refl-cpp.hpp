@@ -3,7 +3,7 @@
 #include "refl-cpp/reflect.hpp"
 
 #ifdef REFLECT_PARSER
-#define REFLECT() [[reflect]]
+#define REFLECT() __attribute__((annotate("reflect")))
 #else
 #define REFLECT()
 #endif

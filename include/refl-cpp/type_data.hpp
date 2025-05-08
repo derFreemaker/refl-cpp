@@ -36,21 +36,24 @@ struct ReflectData;
 #define REFLCPP_REFLECT_TEMPLATE(...) \
         template <__VA_ARGS__>
 
-#define REFLCPP_REFLECT_DATA(...) \
+#define REFLCPP_REFLECT_DATA_DECL(...) \
     struct ReflCpp::ReflectData<__VA_ARGS__> { \
     private: \
-        static TypeData CreateImpl() { \
-            return TypeData
-
-#define REFLCPP_REFLECT_DATA_END() \
-                ; \
-        } \
+        static ReflCpp::TypeData CreateImpl(); \
     public: \
         static const TypeData& Create() { \
             static TypeData data = CreateImpl(); \
             return data; \
         } \
     };
+
+#define REFLCPP_REFLECT_DATA_DEF(...) \
+    inline ReflCpp::TypeData ReflCpp::ReflectData<__VA_ARGS__>::CreateImpl() { \
+        return ReflCpp::TypeData
+
+#define REFLCPP_REFLECT_DATA_DEF_END() \
+        ; \
+    }
 
 #define REFLCPP_REFLECT_PRINTER(...) \
     struct ReflCpp::ReflectPrinter<__VA_ARGS__> { \

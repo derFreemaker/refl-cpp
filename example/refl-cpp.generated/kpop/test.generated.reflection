@@ -1,0 +1,36 @@
+REFLCPP_REFLECT_TEMPLATE()
+REFLCPP_REFLECT_DATA_DECL(kpop::Test)
+REFLCPP_REFLECT_DATA_DEF(kpop::Test)
+{
+    .name = "Test",
+    ._namespace = "kpop",
+    .fields = {
+        FieldData{
+            .ptr = &kpop::Test::test,
+            .name = "test",
+        },
+    },
+    .methods = {
+        MethodData{
+            .name = "foo",
+            .funcs = {
+                MethodFuncData<void(kpop::Test::*)(const char*)>{
+                    .ptr = &kpop::Test::foo,
+                    .args = { "_foo" },
+                },
+                MethodFuncData<void(kpop::Test::*)(int)>{
+                    .ptr = &kpop::Test::foo,
+                    .args = { "_foo" },
+                },
+            },
+        },
+        //     MethodData{
+        //         .ptr = &kpop::Test::foo,
+        //         .name = "foo",
+        //         .arguments = {
+        //             "_foo",
+        //         }
+        //     },
+    },
+}
+REFLCPP_REFLECT_DATA_DEF_END()
