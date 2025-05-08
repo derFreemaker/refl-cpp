@@ -5,6 +5,7 @@
 #include "refl-cpp/declare_reflect.hpp"
 
 namespace ReflCpp {
+
 struct TypeID {
 private:
     static constexpr auto invalid_ = 0;
@@ -12,50 +13,57 @@ private:
     uint32_t id_ = invalid_;
 
 public:
-    static constexpr auto Invalid() {
-        return TypeID(invalid_);
+    static constexpr TypeID Invalid() noexcept {
+        return { invalid_ };
     }
 
-    operator uint32_t() const {
+    [[nodiscard]]
+    uint32_t Value() const noexcept {
         return id_;
     }
-    
-    constexpr TypeID(const uint32_t id)
+
+    operator uint32_t() const noexcept {
+        return id_;
+    }
+
+    constexpr TypeID(const uint32_t id) noexcept
         : id_(id) {}
 
-    bool operator==(const TypeID other) const {
+    bool operator==(const TypeID other) const noexcept {
         return id_ == other.id_;
     }
 
     [[nodiscard]]
-    bool IsValid() const {
+    bool IsValid() const noexcept {
         return this->id_ != invalid_;
     }
 
     [[nodiscard]]
-    bool IsInvalid() const {
+    bool IsInvalid() const noexcept {
         return this->id_ == invalid_;
     }
 
     [[nodiscard]]
-    Result<const Type&> GetType() const {
+    rescpp::result<const Type&, GetTypeError> GetType() const noexcept {
         if (IsInvalid()) {
-            return { RESULT_ERROR(), "invalid type id" };
+            return rescpp::fail(GetTypeError::InvalidID);
         }
 
         return detail::Reflect(id_);
     }
-    
-    operator Result<const Type&>() const {
-        return GetType();
+
+    [[nodiscard]]
+    bool Equals(const TypeID& other) const noexcept {
+        return id_ == other.id_;
     }
 
-    template <typename T_>
+    template <typename T>
     [[nodiscard]]
-    bool Equals() const {
-        const auto result = ReflectID<T_>();
-        const auto other = result.Value();
-        return !result.HasError() && id_ == other.id_;
+    bool Equals() const noexcept {
+        const TypeID other = RESCPP_TRY_IMPL(ReflectID<T>(), {
+            return false;
+        });
+        return Equals(other);
     }
 };
 }

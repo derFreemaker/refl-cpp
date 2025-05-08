@@ -1,9 +1,9 @@
 #pragma once
 
 namespace ReflCpp {
-template <typename T_>
+template <typename T>
 struct FieldData {
-    T_ ptr;
+    T ptr;
 
     const char* name;
 };

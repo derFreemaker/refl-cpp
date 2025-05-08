@@ -12,8 +12,8 @@
 #include "refl-cpp/impl/variant_matcher/const_pointer_variant_matcher.hpp"
 
 // There is technically no need for this since we just default to 'false' anyway
-template <typename R_>
-struct ReflCpp::detail::VariantMatcher<ReflCpp::detail::VariantWrapperType::VOID, R_> {
+template <typename R>
+struct ReflCpp::detail::VariantMatcher<ReflCpp::detail::VariantWrapperType::VOID, R> {
     static bool Match(const TypeID) {
         return false;
     }

@@ -47,39 +47,39 @@ void GenerateReflectionCode(const std::string& output_dir, const std::vector<Ref
         for (const auto* type : types) {
             // Create the specialized template function
             output_file << "TypeData ReflectData<" << type->qualified_name << ">::Create() {\n";
-            output_file << "    return TypeData {\n";
-            output_file << "        .name = \"" << type->name << "\",\n";
-            output_file << "        ._namespace = \"" << type->_namespace << "\",\n";
+            output_file << "{\n";
+            output_file << "    .name = \"" << type->name << "\",\n";
+            output_file << "    ._namespace = \"" << type->_namespace << "\",\n";
             
             // Fields
-            output_file << "        .fields = {\n";
+            output_file << "    .fields = {\n";
             for (const auto& field : type->fields) {
-                output_file << "            FieldData {\n";
-                output_file << "                .ptr = &" << type->qualified_name << "::" << field.name << ",\n";
-                output_file << "                .name = \"" << field.name << "\",\n";
-                output_file << "            },\n";
+                output_file << "        FieldData {\n";
+                output_file << "            .ptr = &" << type->qualified_name << "::" << field.name << ",\n";
+                output_file << "            .name = \"" << field.name << "\",\n";
+                output_file << "        },\n";
             }
-            output_file << "        },\n";
+            output_file << "    },\n";
             
             // Methods
-            output_file << "        .methods = {\n";
-            for (const auto& method : type->methods) {
-                output_file << "            MethodData {\n";
-                output_file << "                .ptr = &" << type->qualified_name << "::" << method.name << ",\n";
-                output_file << "                .name = \"" << method.name << "\",\n";
-                
-                // Method arguments
-                if (!method.arg_names.empty()) {
-                    output_file << "                .arguments = {\n";
-                    for (const auto& arg : method.arg_names) {
-                        output_file << "                    \"" << arg << "\",\n";
-                    }
-                    output_file << "                },\n";
-                }
-                
-                output_file << "            },\n";
-            }
-            output_file << "        },\n";
+            // output_file << "    .methods = {\n";
+            // for (const auto& method : type->methods) {
+            //     output_file << "        MethodData {\n";
+            //     output_file << "            .ptr = &" << type->qualified_name << "::" << method.name << ",\n";
+            //     output_file << "            .name = \"" << method.name << "\",\n";
+            //     
+            //     // Method arguments
+            //     if (!method.arg_names.empty()) {
+            //         output_file << "                .arguments = {\n";
+            //         for (const auto& arg : method.arg_names) {
+            //             output_file << "                    \"" << arg << "\",\n";
+            //         }
+            //         output_file << "                },\n";
+            //     }
+            //     
+            //     output_file << "            },\n";
+            // }
+            // output_file << "        },\n";
             
             output_file << "    };\n";
             output_file << "}\n";

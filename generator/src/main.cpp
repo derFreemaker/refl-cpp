@@ -17,9 +17,11 @@ std::vector<ReflCpp::ReflectData> G_ReflectData;
 
 bool isMarked(const clang::TagDecl* Decl) {
     return std::any_of(Decl->attrs().begin(), Decl->attrs().end(), [](const auto* Attr) {
-        if (const auto* Ann = dyn_cast<clang::AnnotateAttr>(Attr))
-            if (Ann->getAnnotation() == "reflect")
+        if (const auto* Ann = dyn_cast<clang::AnnotateAttr>(Attr)) {
+            if (Ann->getAnnotation() == "reflect") {
                 return true;
+            }
+        }
 
         return false;
     });
@@ -48,6 +50,8 @@ public:
 
     // ReSharper disable once CppDFAConstantFunctionResult
     bool VisitCXXRecordDecl(const clang::CXXRecordDecl* decl) const {
+        (llvm::outs() << decl->getQualifiedNameAsString() << "\n").flush();
+
         if (!decl->isCompleteDefinition() || !isMarked(decl))
             return true;
 
@@ -68,13 +72,9 @@ public:
                 data.source_file = fileEntry->tryGetRealPathName().str();
             }
         }
-        
-        const clang::SourceManager& SM = Context->getSourceManager();
+
         if (const clang::SourceLocation Loc = decl->getLocation(); Loc.isValid()) {
-            const clang::FileID FID = SM.getFileID(Loc);
-            if (const clang::FileEntry* FileEntry = SM.getFileEntryForID(FID)) {
-                data.source_file = src_manager.getFilename(loc).str();
-            }
+            data.source_file = src_manager.getFilename(loc).str();
         }
 
         if (decl->getNumBases() + decl->getNumVBases() > 0) {
@@ -143,7 +143,7 @@ public:
 
 int main(int argc, const char** argv) {
     G_ReflectData.reserve(50);
-    
+
     static llvm::cl::opt<std::string> OutputDir("o",
                                                 llvm::cl::desc("Output directory for generated reflection data"),
                                                 llvm::cl::value_desc("directory"),
@@ -160,6 +160,8 @@ int main(int argc, const char** argv) {
         return 1;
     }
     clang::tooling::ClangTool Tool(OptionsParser->getCompilations(), OptionsParser->getSourcePathList());
+    Tool.appendArgumentsAdjuster(clang::tooling::getInsertArgumentAdjuster("-DREFLECT_PARSER", clang::tooling::ArgumentInsertPosition::BEGIN));
+
     const auto clang_result = Tool.run(clang::tooling::newFrontendActionFactory<ReflectFrontendAction>().get());
 
     if (clang_result != 0) {
@@ -167,7 +169,7 @@ int main(int argc, const char** argv) {
         printf("clang didn't finish with error\n");
     }
 
-    // ReflCpp::GenerateReflectionCode(OutputDir, G_ReflectData);
+    ReflCpp::GenerateReflectionCode(OutputDir, G_ReflectData);
 
-    printf("%llu\n", IncludeDirs.size());
+    printf("%llu\n", G_ReflectData.size());
 }

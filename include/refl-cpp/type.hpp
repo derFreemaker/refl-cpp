@@ -17,113 +17,96 @@ namespace ReflCpp {
 struct Type {
 private:
     const TypeID id_;
-
-    const char* name_;
-    std::optional<const char*> namespace_;
-    const std::vector<TypeID> bases_;
-    const std::vector<TypeID> inners_;
-
-    const TypeFlags flags_;
-
-    const std::vector<Method> methods_;
-    const std::vector<Field> fields_;
-
+    const TypeData* data_;
     const ReflectPrintFunc printFunc_;
 
 public:
     Type() = delete;
     Type(const Type&) = delete;
-    Type(const Type&&) = delete;
+    Type(Type&&) = delete;
 
-    Type(const TypeID id, const TypeData& data, const TypeOptions& options)
+    Type(const TypeID id, const TypeData* data, const TypeOptions& options) noexcept
         : id_(id),
-
-          name_(data.name),
-          namespace_(data._namespace),
-          bases_(data.bases),
-          inners_(data.inners),
-
-          flags_(data.flags),
-
-          // m_Methods(data.methods),
-          fields_(data.fields),
-
+          data_(data),
           printFunc_(options.printFunc) {}
 
     [[nodiscard]]
-    TypeID GetID() const {
+    TypeID GetID() const noexcept {
         return id_;
     }
 
     [[nodiscard]]
-    const char* GetName() const {
-        return name_;
+    const char* GetName() const noexcept {
+        return data_->name;
     }
 
     [[nodiscard]]
-    const char* GetNamespace() const {
-        if (namespace_.has_value()) {
-            return namespace_.value();
+    const char* GetNamespace() const noexcept { // NOLINT(*-exception-escape)
+        if (data_->_namespace.has_value()) {
+            return data_->_namespace.value();
         }
-        return "";
+        return "::";
     }
 
     [[nodiscard]]
-    bool InNamespace() const {
-        return namespace_.has_value();
+    bool InNamespace() const noexcept {
+        return data_->_namespace.has_value();
     }
 
     [[nodiscard]]
-    bool HasBases() const {
-        return !bases_.empty();
-    }
-    
-    [[nodiscard]]
-    const std::vector<TypeID>& GetBases() const {
-        return bases_;
+    bool HasBases() const noexcept {
+        return !data_->bases.empty();
     }
 
     [[nodiscard]]
-    Result<const Type&> GetBase(const size_t index) const {
-        return bases_[index].GetType();
-    }
-    
-    [[nodiscard]]
-    bool HasInners() const {
-        return !inners_.empty();
+    const std::vector<TypeID>& GetBases() const noexcept {
+        return data_->bases;
     }
 
     [[nodiscard]]
-    const std::vector<TypeID>& GetInners() const {
-        return inners_;
+    rescpp::result<const Type&, GetTypeError> GetBase(const size_t index) const {
+        return data_->bases[index].GetType();
     }
 
     [[nodiscard]]
-    Result<const Type&> GetInner(const size_t index) const {
-        return inners_[index].GetType();
+    bool HasInners() const noexcept {
+        return !data_->inners.empty();
     }
 
     [[nodiscard]]
-    bool HasInner(const TypeID id) const {
-        return std::ranges::any_of(inners_, [id](const TypeID t) {
-            return t == id;
-        });
+    const std::vector<TypeID>& GetInners() const noexcept {
+        return data_->inners;
     }
 
     [[nodiscard]]
-    const TypeFlags& GetFlags() const {
-        return flags_;
+    rescpp::result<const Type&, GetTypeError> GetInner(const size_t index) const noexcept {
+        return data_->inners[index].GetType();
+    }
+
+    [[nodiscard]]
+    bool HasInner(const TypeID id) const noexcept {
+        for (const auto& inner : data_->inners) {
+            if (inner == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [[nodiscard]]
+    const TypeFlags& GetFlags() const noexcept {
+        return data_->flags;
     }
 
     // fields
 
     [[nodiscard]]
-    const std::vector<Field>& GetFields() const {
-        return fields_;
+    const std::vector<Field>& GetFields() const noexcept {
+        return data_->fields;
     }
 
-    std::optional<std::reference_wrapper<const Field>> GetField(const char* name) const {
-        for (const auto& field : fields_) {
+    std::optional<std::reference_wrapper<const Field>> GetField(const char* name) const noexcept {
+        for (const auto& field : data_->fields) {
             if (field.GetName() == name) {
                 return field;
             }
@@ -134,12 +117,12 @@ public:
     // methods
 
     [[nodiscard]]
-    const std::vector<Method>& GetMethods() const {
-        return methods_;
+    const std::vector<Method>& GetMethods() const noexcept {
+        return data_->methods;
     }
 
-    std::optional<std::reference_wrapper<const Method>> GetMethod(const char* name) const {
-        for (const auto& method : methods_) {
+    std::optional<std::reference_wrapper<const Method>> GetMethod(const char* name) const noexcept {
+        for (const auto& method : data_->methods) {
             if (method.GetName() == name) {
                 return method;
             }
@@ -150,24 +133,25 @@ public:
     // utils
 
     [[nodiscard]]
-    bool Is(const TypeID id) const {
+    bool Is(const TypeID id) const noexcept {
         return id_ == id;
     }
 
     [[nodiscard]]
-    bool Is(const Type& type) const {
+    bool Is(const Type& type) const noexcept {
         return Is(type.GetID());
     }
 
     template <typename T>
     [[nodiscard]]
-    bool Is() const {
+    bool Is() const noexcept {
         return Is(ReflectID<T>());
     }
 
     void Print(std::ostream& stream) const {
         if (printFunc_ != nullptr) {
-            return printFunc_(stream, *this);
+            printFunc_(stream, *this);
+            return;
         }
 
         if (InNamespace()) {

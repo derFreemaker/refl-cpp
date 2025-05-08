@@ -6,16 +6,28 @@ namespace ReflCpp {
 struct Type;
 struct TypeID;
 
-template <typename T>
-[[nodiscard]]
-Result<const Type&> Reflect();
+enum class ReflectError : uint8_t {
+    MaxLimitReached,
+    CreationFailed,
+    OutOfMemory,
+};
 
 template <typename T>
 [[nodiscard]]
-Result<TypeID> ReflectID();
+rescpp::result<const Type&, ReflectError> Reflect() noexcept;
+
+template <typename T>
+[[nodiscard]]
+rescpp::result<TypeID, ReflectError> ReflectID() noexcept;
+
+enum class GetTypeError {
+    None,
+    InvalidID,
+    NotFound,
+};
 
 namespace detail {
 [[nodiscard]]
-Result<const Type&> Reflect(TypeID id);
+rescpp::result<const Type&, GetTypeError> Reflect(TypeID id) noexcept;
 }
 }

@@ -1,46 +1,58 @@
 #pragma once
 
+#include <optional>
 #include <vector>
 
 #include "refl-cpp/method_data.hpp"
-#include "refl-cpp/variant.hpp"
-#include "refl-cpp/argument.hpp"
 #include "refl-cpp/method_wrapper.hpp"
 
 namespace ReflCpp {
 struct Method {
 private:
-    std::vector<MethodBase> funcs_;
-
     const char* name_;
-    const std::vector<const char*> argsNames_;
+    std::vector<std::shared_ptr<MethodFunc>> funcs_;
 
 public:
-    template <typename... Funcs_>
-    Method(const MethodData<Funcs_...>& builder)
-        : funcs_({ MethodWrapper<Funcs_>(builder.ptr)... }),
-          name_(builder.name),
-          argsNames_(builder.arguments) {}
+    Method(const MethodData& data)
+        : name_(data.name), funcs_(data.funcs) {}
 
     [[nodiscard]]
     const char* GetName() const {
         return name_;
     }
 
-    // [[nodiscard]]
-    // Result<Variant> InvokeStatic(const ArgumentList& args) const {
-    //     return m_Funcs->InvokeStatic(args);
-    // }
+    [[nodiscard]]
+    const std::vector<std::shared_ptr<MethodFunc>>& GetFunctions() const {
+        return funcs_;
+    }
 
-    // [[nodiscard]]
-    // Result<Variant> Invoke(const Variant& instance, const ArgumentList& args = {}) const {
-    //     return m_Funcs->Invoke(instance, args);
-    // }
+    [[nodiscard]]
+    std::shared_ptr<MethodFunc> GetFunction(const size_t index) const {
+        return funcs_[index];
+    }
 
-    // template <typename... Args>
-    // [[nodiscard]]
-    // Variant Invoke(const Variant& instance, Args&&... args) const {
-    //     return m_Funcs->Invoke(instance, { Variant::Create<Args>(std::forward<Args>(args))... });
-    // }
+    [[nodiscard]]
+    rescpp::result<Variant, FunctionWrapperInvokeError> Invoke(const ArgumentList& args) const {
+        for (const auto& func : funcs_) {
+            if (!func->IsStatic() && !func->CanInvokeWithArgs(args)) {
+                continue;
+            }
+            return func->Invoke(Variant::Void(), args);
+        }
+
+        return rescpp::fail(FunctionWrapperInvokeError::Type::NoCompatibleFunctionFound);
+    }
+
+    [[nodiscard]]
+    rescpp::result<Variant, FunctionWrapperInvokeError> Invoke(const Variant& obj, const ArgumentList& args) const {
+        for (const auto& func : funcs_) {
+            if (!func->CanInvokeWithArgs(args)) {
+                continue;
+            }
+            return func->Invoke(obj, args);
+        }
+
+        return rescpp::fail(FunctionWrapperInvokeError::Type::NoCompatibleFunctionFound);
+    }
 };
 }
