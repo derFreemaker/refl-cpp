@@ -21,6 +21,6 @@ these are getting managed through [CPM.cmake](https://github.com/cpm-cmake/CPM.c
 
 - [ccache.cmake](https://github.com/TheLartians/Ccache.cmake)
 - [LLVM / Clang](https://github.com/llvm/llvm-project)
-- [googletest](https://github.com/google/googletest)
+- [catch2](https://github.com/catchorg/Catch2)
 - [fmt](https://github.com/fmtlib/fmt)
 - [res-cpp](https://github.com/derFreemaker/res-cpp)
